@@ -1,0 +1,308 @@
+/* Matugen userChrome.css*/
+
+:root {
+  --background: {{colors.surface.default.hex}} !important;
+  --dynamic-background: color-mix(in srgb, var(--background), white 3%);
+
+  --zen-primary-color: {{colors.primary.default.hex}} !important;
+  --zen-colors-primary: {{colors.surface_container_high.default.hex}} !important;
+  --zen-colors-secondary: {{colors.surface_container_high.default.hex}} !important;
+  --zen-colors-tertiary: {{colors.surface_bright.default.hex}} !important;
+  --zen-colors-border: {{colors.primary.default.hex}} !important;
+  --toolbarbutton-icon-fill: {{colors.primary.default.hex}} !important;
+  --lwt-text-color: {{colors.on_surface.default.hex}} !important;
+  --toolbar-field-color: {{colors.on_surface.default.hex}} !important;
+  --tab-selected-textcolor: {{colors.primary.default.hex}} !important;
+  --toolbar-field-focus-color: {{colors.on_surface.default.hex}} !important;
+  --toolbar-color: {{colors.on_surface.default.hex}} !important;
+  --newtab-text-primary-color: {{colors.on_surface.default.hex}} !important;
+  --arrowpanel-color: {{colors.on_surface.default.hex}} !important;
+  --arrowpanel-background: var(--dynamic-background) !important;
+  --sidebar-text-color: {{colors.on_surface.default.hex}} !important;
+  --lwt-sidebar-text-color: {{colors.on_surface.default.hex}} !important;
+  --lwt-sidebar-background-color: {{colors.surface_dim.default.hex}} !important;
+  --toolbar-bgcolor: {{colors.surface_container_high.default.hex}} !important;
+  --newtab-background-color: var(--dynamic-background) !important;
+  --zen-themed-toolbar-bg: var(--dynamic-background) !important;
+  --zen-main-browser-background: var(--dynamic-background) !important;
+  --toolbox-bgcolor-inactive: var(--dynamic-background) !important;
+  --menu-color: {{colors.primary.default.hex}} !important;
+  --menu-hover-color: {{colors.on_primary.default.hex}} !important;
+  --menu-disabled-color: {{colors.primary_container.default.hex}} !important;
+	--better-findbar-background-color: var(--zen-colors-secondary);
+}
+
+tooltip{
+  appearance: none !important;
+  background-color: var(--dynamic-background) !important;
+  color: {{colors.primary.default.hex}} !important;
+  border: 0px !important;
+}
+
+#permissions-granted-icon{
+  color: var(--dynamic-background) !important;
+}
+
+.sidebar-placesTree {
+  background-color: var(--dynamic-background) !important;
+}
+
+#zen-workspaces-button {
+  background-color: var(--dynamic-background) !important;
+}
+
+#TabsToolbar {
+  background-color: var(--dynamic-background) !important;
+}
+
+.urlbar-background {
+  background-color: {{colors.surface_container_high.default.hex}} !important;
+}
+
+.content-shortcuts {
+  background-color: {{colors.surface_container_high.default.hex}} !important;
+  border-color: {{colors.primary.default.hex}} !important;
+}
+
+.urlbarView-url {
+  color: {{colors.primary.default.hex}} !important;
+}
+
+#zenEditBookmarkPanelFaviconContainer {
+  background: {{colors.surface_dim.default.hex}} !important;
+}
+
+toolbar .toolbarbutton-1 {
+  &:not([disabled]) {
+    &:is([open], [checked]) > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack){
+      fill: {{colors.surface_dim.default.hex}};
+    }
+  }
+}
+
+/* Menu item text */
+menuitem,
+menu {
+  color: var(--menu-color) !important;
+}
+/* Hover state */
+menuitem:hover,
+menu:hover {
+  color: var(--menu-hover-color) !important;
+  background-color: var(--menu-color) !important;
+}
+/* Disabled item */
+menuitem[disabled="true"],
+menuitem[disabled="true"] *,
+menu[disabled="true"],
+menu[disabled="true"] * {
+  color: var(--menu-disabled-color) !important;
+  opacity: 1 !important;
+}
+
+
+hbox#titlebar {
+    background-color: var(--dynamic-background) !important;
+    border-radius: 11px !important;
+}
+
+/* Hide Back and Forward button when you don't need them */
+:root:not([customizing]) #back-button[disabled] {
+  display: none !important;
+}
+
+:root:not([customizing]) #forward-button[disabled] {
+  display: none !important;
+}
+
+/* Center url bar text when not focused */
+#urlbar:not([focused]) .urlbar-input {
+    text-align: center !important;
+}
+
+/* Center url bar text when focused */
+#urlbar:is([focused]) .urlbar-input {
+    text-align: center !important;
+}
+
+/* Floating url bar appear animation + shift down */
+@keyframes floating-urlbar-show {
+    0% {
+        opacity: 0;
+        scale: 0.8;
+        /* translate: -10% 0; */
+    }
+
+    70% {
+        scale: 1.02;
+        /* translate: 1% 0; */
+    }
+
+    100% {
+        opacity: 1;
+        scale: 1;
+        /* translate: 0 0; */
+    }
+}
+
+#urlbar[breakout-extend] {
+    animation: 200ms floating-urlbar-show ease-out;
+}
+
+/* Zen Minimal Exit Menu */
+#navigator-toolbox[zen-right-side="true"] > #zen-sidebar-top-buttons > .titlebar-buttonbox-container > .titlebar-buttonbox {
+    margin-top: 11px !important;
+}
+
+.titlebar-buttonbox {
+    margin-right: 20px;
+}
+
+.titlebar-button {
+    padding: 0px !important;
+    min-height: 13px !important;
+    min-width: 13px !important;
+    height: 13px !important;
+    align-self: center;
+    margin-left: 5px !important;
+    border-radius: 50px;
+    transition: all 100ms;
+}
+
+.titlebar-min {
+    background-color: hsl(130, 50%, 40%) !important;
+}
+
+.titlebar-max, .titlebar-restore {
+    background-color: hsl(60, 50%, 50%) !important;
+}
+
+.titlebar-close {
+    background-color: hsl(0, 50%, 50%) !important;
+}
+
+.titlebar-button > image {
+    visibility: collapse !important;
+}
+
+.titlebar-button {
+	background-color: var(--zen-primary-color) !important;
+}
+
+.titlebar-min:hover {
+	background-color: hsl(60, 50%, 50%) !important;
+}
+
+.titlebar-max:hover,
+.titlebar-restore:hover {
+	background-color: hsl(130, 50%, 40%) !important;
+}
+
+.titlebar-close:hover {
+	background-color: hsl(0, 50%, 50%) !important;
+}
+
+.titlebar-button:hover {
+	min-height: 20px !important;
+}
+
+.titlebar-button:-moz-window-inactive {
+    background-color: #4C4C50 !important;
+}
+
+/* Hide the workspace indicator between essentials and pins */
+.zen-current-workspace-indicator {
+  display: none !important;
+}
+
+/* Makes unloaded tabs easier to notice by making them greyscale and transparent. */
+.tabbrowser-tab[pending="true"] {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+/* Hide bottom buttons area unless tab sidebar is hovered */
+#zen-sidebar-foot-buttons, #zen-workspaces-button, #zen-sidebar-foot-buttons toolbarbutton {
+  transition: ease 0.2s !important;
+}
+#titlebar:not(:hover) {
+  zen-workspace {
+    & > arrowscrollbox {
+      &[overflowing] {
+        &::after {
+          height: 0px !important;
+        }
+      }
+    }
+  }
+  #zen-sidebar-foot-buttons {
+    min-height: 3px !important;
+    gap: 1px !important;
+    padding-top: 1px !important;
+    toolbarbutton, #zen-workspaces-button {
+      opacity: 0 !important;
+      height: 0px !important;
+    }
+  }
+}
+
+#tabbrowser-tabs, 
+#TabsToolbar, 
+.tabbrowser-tab {
+    --tab-selected-bgcolor: {{colors.surface_container_high.default.hex}} !important;
+}
+
+/* Y por seguridad, aplicamos al fondo de la pestaña directamente */
+.tab-background[selected="true"],
+.tab-background[multiselected="true"] {
+    background-color: {{colors.surface_container_high.default.hex}} !important;
+    background-image: none !important;
+}
+
+/* Hover en pestañas NO seleccionadas */
+.tabbrowser-tab:not([selected="true"]):hover .tab-background {
+    background-color: {{colors.surface_container_high.default.hex}} !important;
+    background-image: none !important;
+}
+
+/* Color de selección para toda la interfaz del navegador */
+::selection {
+  background-color: var(--zen-primary-color) !important;
+  color: var(--background) !important;
+}
+
+/* Específicamente para la barra de direcciones y campos de texto */
+input::selection, 
+textarea::selection,
+.urlbar-input::selection {
+  background-color: var(--zen-primary-color) !important;
+  color: var(--background) !important;
+}
+
+.urlbarView-row {
+  &[selected] {
+    /* Usamos directamente una mezcla de tu primario con el fondo para que no sea tan chillón */
+    --zen-selected-bg: color-mix(in srgb, var(--zen-primary-color) 25%, var(--background)) !important;
+    
+    /* El texto debería ser tu color primario o el lwt-text-color para máxima legibilidad */
+    --zen-selected-color: var(--zen-primary-color) !important;
+    
+    background-color: var(--zen-selected-bg) !important;
+    color: var(--zen-selected-color) !important;
+  }
+}
+
+/* Forzar que el texto de la URL y el título hereden el color correcto */
+.urlbarView-row[selected] :is(.urlbarView-title, .urlbarView-url) {
+  color: var(--zen-selected-color) !important;
+}
+
+#zen-browser-background {
+    --zen-main-browser-background: var(--dynamic-background) !important;
+    --zen-main-browser-background-old: var(--dynamic-background) !important;
+    background-color: var(--dynamic-background) !important;
+}
+
+.zen-browser-generic-background {
+    --zen-main-browser-background: var(--dynamic-background) !important;
+}

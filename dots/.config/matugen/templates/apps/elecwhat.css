@@ -1,0 +1,619 @@
+:root {
+    --primary-color: {{colors.primary.default.hex}};
+    --primary-container: {{colors.primary_container.default.hex}};
+    --background: {{colors.background.default.hex}};
+    --text-main: {{colors.on_surface.default.hex}};
+
+    --dynamic-background: color-mix(in oklab, var(--background), white 0.3%);
+    --dynamic-primary-container: color-mix(in oklab, var(--primary-container), white 0.21%);
+    --dynamic-soft-bg: color-mix(in oklab, var(--dynamic-background), color-mix(in oklab, var(--primary-color), white 81%) 10%) !important;
+    --dynamic-softer-bg: color-mix(in oklab, var(--dynamic-background), color-mix(in oklab, var(--primary-color), white 70%) 18%) !important;
+    --dynamic-danger: color-mix(in oklab, var(--primary-color), red 60%);
+    --dynamic-danger-bg: color-mix(in oklab, var(--dynamic-background), red 10%);
+    --dynamic-blue-check: color-mix(in oklab, var(--primary-color), blue 80%);
+    --dynamic-blue-check-bright: color-mix(in oklab, var(--dynamic-blue-check), var(--text-main-strong) 50%);
+    --text-main-strong: color-mix(in oklab, var(--text-main), white 1.5%);
+    --text-main-deemphasized: color-mix(in oklab, var(--text-main), transparent 30%);
+}
+
+.message-out ._amk7 {
+    color: var(--dynamic-primary-container) !important;
+}
+
+.message-out ._amk6 {
+    background-color: var(--dynamic-primary-container) !important;
+}
+
+.message-in ._amk6 {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.message-in ._amk7 {
+    color: var(--dynamic-soft-bg) !important;
+}
+
+.message-in ._am2r ._am2m {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+._amlk {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+._amk4 {
+    color: var(--text-main) !important;
+}
+
+/* New message in chat list */
+._ak72._ak7n ._ak8j {
+    color: var(--primary-color) !important;
+    font-weight: 500 !important;
+}
+
+._ak7n ._ak8q {
+    color: var(--primary-color) !important;
+}
+
+#main,
+section,
+header,
+#side,
+#pane-side,
+._ak72,
+._ak9t,
+.x1280gxy,
+.xsm26vf {
+    background-color: var(--dynamic-background) !important;
+}
+
+a {
+    color: var(--primary-color) !important;
+}
+
+._ak73:hover, ._ak73:focus {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Gradient in hover */
+.x1595w2n {
+    background: radial-gradient(
+        circle at top right,
+        var(--dynamic-primary-container) 40%,
+        rgba(0, 0, 0, 0) 80%
+    ) !important;
+}
+
+.x1n92vqa {
+    background: radial-gradient(
+        at top right,
+        var(--dynamic-soft-bg) 60%,
+        rgba(0, 0, 0, 0) 80%
+    ) !important;
+}
+
+.x1np7nyk {
+    background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--dynamic-background), transparent 100%), 
+        var(--dynamic-background) 50%
+    ) !important;
+}
+
+/* Message input */
+.xk7ee7b {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.xhslqc4 {
+    color: var(--text-main-deemphasized) !important;
+}
+
+._ak8q {
+  color: var(--text-main-strong) !important;
+}
+
+._ak8j {
+    color: var(--text-main-deemphasized) !important;
+}
+
+.x1k43qru {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Timestamp mensajes nuevos en chat list */
+.x1v5yvga {
+    color: var(--primary-color) !important;
+}
+
+.xyp3urf {
+    background-color: var(--primary-color) !important;
+}
+
+/* Text inside unread count */
+.x1pse0pq {
+    color: var(--background) !important;
+}
+
+/* Burbuja con timestamp debajo de sticker */
+.x1g5lz36 {
+    background-color: var(--dynamic-primary-container) !important;
+}
+
+/* Color for external link text */
+.x1ph7ams {
+    color: color-mix(in srgb, var(--primary-color), white 20%) !important;
+}
+
+/* Send document Add contact buttons and search bar */
+.x4wrhlh {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Add contact hover */
+.xzn9hfk.xzn9hfk:where(.x-default-marker:hover *) {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Send doc hover */
+.xzn9hfk.xzn9hfk:where(.x-default-marker:hover *) {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Selected filter buttons */
+.x1abdmlv {
+    background-color: var(--dynamic-primary-container) !important;
+}
+
+/* Selected filter button text */
+.xk4n5i7 {
+    color: var(--text-main) !important;
+}
+
+.x1hlseku {
+    background-color: color-mix(in srgb, var(--dynamic-primary-container), white 6%) !important;
+}
+
+/* Filter buttons hover */
+.x1sftees:after {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.xymmlu0:after {
+    opacity: 0 !important;
+}
+
+/* Svgs in the top */
+.x14ug900 {
+    color: var(--text-main-strong) !important;
+}
+
+.xxk0z11 {
+    color: var(--text-main-strong) !important;
+}
+
+/* Cambiamos el logo a tu blanco lavanda para que sea más elegante */
+span[data-icon="wa-wordmark-refreshed"] path,
+.xd25hor {
+    fill: var(--text-main-strong) !important;
+}
+
+/* Borde search bar */
+.xg8w3ci:focus-within {
+    box-shadow: inset 0 0 0 2px var(--primary-color) !important;
+}
+
+.xjdcl3y {
+    caret-color: var(--primary-color) !important;
+}
+
+/* Esto cambia el color de fondo cuando resaltás texto con el mouse */
+::selection {
+    background-color: var(--primary-color) !important;
+    color: var(--background) !important; /* Color del texto resaltado */
+}
+
+/* Border selected chat */
+.xzu5o23 {
+    outline-color: var(--primary-color) !important;
+}
+
+/* Blue check color */
+.x1rv0e52 {
+    /* color: hsl(from var(--dynamic-primary-container) calc(h + 180) s l) !important; */
+    color: var(--background) !important;
+}
+
+#pane-side .x1rv0e52 {
+    /* color: hsl(from var(--dynamic-primary-container) calc(h + 180) s l) !important; */
+    color: var(--primary-color) !important;
+}
+
+.xfn3atn {
+    background-color: var(--primary-color) !important;
+}
+
+/* Send button */
+span[data-icon="wds-ic-send-filled"] {
+    color: var(--background) !important;
+}
+
+span[data-icon="mic-filled"] {
+    color: var(--background) !important;
+}
+
+/* Text under sticker */
+.xo1mcw5 {
+    color: var(--primary-color) !important;
+}
+
+/* Gallery roulette border color */
+.x1ydeqjr {
+    border-bottom-color: var(--primary-color) !important;
+}
+
+.x1whkhu0 {
+    border-top-color: var(--primary-color) !important;
+}
+
+.xyg86qh {
+    border-inline-start-color: var(--primary-color) !important;
+}
+
+.x3emv5x {
+    border-inline-end-color: var(--primary-color) !important;
+}
+
+/* Gallery roulette inactive border color */
+.x1od0jb8 {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.x1tvyudi:hover {
+    outline: 3px solid var(--text-main-deemphasized) !important;
+}
+
+/* Color for hover in buttons */
+button[aria-label="Search"]:hover, 
+button[aria-label="Menu"]:hover,
+button[aria-label="New chat"]:hover {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.x1wb366y:hover:after {
+    content: none !important;
+    display: none !important;
+}
+
+.xzs022t {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.x13i9f1t:hover {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+
+/* Menu background items */
+.xs2atcs:hover {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Menu background for log out */
+.x3039w2:hover {
+    background-color: var(--dynamic-danger-bg) !important;
+    color: var(--dynamic-danger) !important;
+}
+
+.xqnyt8g {
+    color: var(--dynamic-danger) !important;
+}
+
+/* Search input background */
+.xa3a66u {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Search input border bottom color */
+.x16w0wmm {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Dividers color */
+.x1vb5itz {
+    border-inline-start-color: var(--dynamic-softer-bg) !important;
+}
+
+/* Right click */
+._ak4w {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+span[data-icon="mentions-refreshed"] {
+  color: var(--primary-color) !important;
+}
+
+/* Reactions */
+._ak4w._ak52, ._ak4w._aos4 {
+    background-color: transparent !important;
+}
+
+.x1xkdbmx:before {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Reactions panel */
+.x1kapp2c {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+._ahyu {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+label.x1od0jb8 {
+    background-color: var(--dynamic-softer-bg) !important;
+}
+
+/* Label of "added someone" */
+._amkb {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+ /* Reaction in message */
+.xidn4s3 {
+    border-bottom-color: var(--dynamic-background) !important;
+}
+
+.xbkwr4y {
+    border-top-color: var(--dynamic-background) !important;
+}
+
+.xbhob4t {
+    border-inline-start-color: var(--dynamic-background) !important;
+}
+
+.x1auh1ge {
+    border-inline-end-color: var(--dynamic-background) !important;
+}
+
+.x1ew7x2d {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Send button when recording audio */
+button[aria-label="Send"] .xxk0z11 {
+    color: var(--background) !important;
+}
+
+/* Audio bottom left banner */
+.xnj6ddq {
+  background-color: var(--primary-color) !important;
+
+  .xxk0z11 {
+    color: var(--background) !important;
+  }
+}
+
+._ak99 .ptt-status-background {
+    fill: var(--primary-color) !important;
+}
+
+._ak99 .ptt-status-icon {
+    color: var(--background) !important;
+}
+
+.xmzmlnv {
+    color: var(--background) !important;
+}
+
+.matched-text {
+    color: var(--primary-color) !important;
+}
+
+span[data-lexical-text="true"] {
+    --WDS-content-external-link: var(--primary-color) !important;
+}
+
+.x1n67ipk:hover {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.x1rrvw3c {
+    border-bottom-color: var(--primary-color) !important;
+}
+
+.x1c7u0tx {
+    background-color: var(--dynamic-background) !important;
+}
+
+.xlze6vy {
+    border-top-color: var(--primary-color) !important;
+}
+
+.x47fsot {
+    border-inline-end-color: var(--primary-color) !important;
+}
+
+.x18djku1 {
+    border-inline-start-color: var(--primary-color) !important;
+}
+
+.x1wjp2x:hover:after {
+    background-color: color-mix(in srgb, var(--primary-color), transparent 90%) !important;
+}
+
+.x148b211 {
+    border-bottom-color: var(--primary-container) !important;
+}
+
+.xso6r1 {
+    border-inline-start-color: var(--primary-container) !important;
+}
+
+.xlt81dz {
+    border-inline-end-color: var(--primary-container) !important;
+}
+
+.xlbpjqr {
+    border-top-color: var(--primary-container) !important;
+}
+
+.x1h3rtpe {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+header.x1h3rtpe {
+    background-color: var(--dynamic-background) !important;
+}
+
+.x17gydlx:hover {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+._alzb {
+    background-color: var(--dynamic-background) !important;
+}
+
+._alzb:hover, ._alzb:focus, ._alzb._alzc {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+.xe5due1 {
+    background: var(--primary-color) !important;
+}
+
+.x191g5wg {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Status, Channels and Communities pages */
+.x6egj2d {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Status circle */
+.xc92gef {
+    stroke: var(--primary-color) !important;
+}
+
+/* Verified check */
+#Star-2 {
+    fill: var(--primary-color) !important;
+}
+
+/* Verified check */
+#Check-Icon {
+    fill: var(--background) !important;
+}
+
+span[data-icon="community-filled-refreshed"] svg,
+span[data-icon="newsletter"] svg,
+span[data-icon="status-filled-refreshed"] svg {
+    color: var(--primary-color) !important;
+    fill: var(--primary-color) !important;
+}
+
+._ak4z, ._ak56 {
+    background-color: var(--dynamic-background) !important;
+}
+
+._ak4z ._ak5a, ._ak56 ._ak5a {
+    background-color: var(--dynamic-background) !important;
+}
+.x1311tq3 {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* status ring */
+.xg8543d {
+    stroke: var(--primary-color) !important;
+}
+
+.xxyb0qf:has(input:focus) {
+    outline-color: var(--primary-color) !important;
+}
+
+/* Reactions */
+.xgcd1z6 {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+._ak82._ak72 {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* @ when quoted */
+.x1r8hjv8 {
+    color: var(--primary-color) !important;
+}
+
+/* "Click here to get older messages from your phone" bubble */
+.x1bvqhpb {
+    color: var(--text-main-deemphasized) !important;
+}
+.x6f6fmj {
+    background: var(--dynamic-soft-bg) !important;
+}
+
+/* Bubbles of Yesterday, Today, etc */
+.x1iyt1tq {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Reactions */
+.x133tm0i {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Reactions hover */
+._ak73._ak82:hover {
+	background-color: var(--dynamic-softer-bg) !important;
+}
+
+/* Emoji selector */
+.x1x0w6k2 {
+    background-color: var(--dynamic-soft-bg) !important;
+}
+
+/* Search container background */
+.xk0lpn4 {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Search container - Clear all button background */
+.x1p8t8ri {
+    background-color: var(--primary-color) !important;
+}
+
+/* Search container - Clear all button foreground */
+.x1lljey2 {
+    color: var(--background) !important;
+}
+
+.x1ubxc9n:hover {
+	background-color: var(--dynamic-soft-bg) !important;
+}
+
+div[data-testid="reactions-details-cell-not-me"] {
+  background-color: var(--dynamic-soft-bg) !important;
+
+  &:hover {
+    background-color: var(--dynamic-softer-bg) !important;
+  }
+}
+
+/* More reactions buttons */
+.x1sftees {
+  background-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+/* Message out bubble tail */
+.x1fa4crm {
+    color: var(--dynamic-primary-container) !important;
+}
+
+/* Message in bubble tail */
+.x1l1cedg {
+    color: var(--dynamic-soft-bg) !important;
+}

@@ -1,8 +1,5 @@
 local home_dir = os.getenv("HOME")
 
--- Enforce local binary directory precedence for session
-hl.env("PATH", home_dir .. "/.local/bin:" .. os.getenv("PATH"))
-
 -- Wayland
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 

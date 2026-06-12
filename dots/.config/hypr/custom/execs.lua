@@ -1,13 +1,8 @@
 hl.on("hyprland.start", function ()
-    -- Icon and Cursor styling
-    hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme Deepin2022")
-    hl.exec_cmd("hyprctl setcursor Vimix-cursors 24")
-    hl.exec_cmd("kwriteconfig6 --file kdeglobals --group Icons --key Theme Deepin2022")
-    
-    -- Vicinae application launcher daemon
-    hl.exec_cmd("bash -c 'sleep 5 && env QT_QPA_PLATFORM=xcb /home/pedro/AppImages/vicinae.appimage server --replace > /tmp/vicinae.log 2>&1'")
-    
-    -- KDE Connect integration
-    hl.exec_cmd("/usr/libexec/kdeconnectd")
+    hl.exec_cmd("steam -nochatui -nofriendsui -silent")
+    hl.exec_cmd("solaar -w hide")
     hl.exec_cmd("kdeconnect-indicator")
+    hl.exec_cmd("fcitx5")
+    hl.exec_cmd("sleep 1 && setxkbmap latam")
+    hl.exec_cmd("linux-wallpaperengine --disable-mouse --scaling fill --silent --screen-root DP-2 --assets-dir /mnt/ssd/SteamLibrary/steamapps/common/wallpaper_engine/assets /mnt/ssd/SteamLibrary/steamapps/workshop/content/431960/2998514321")
 end)

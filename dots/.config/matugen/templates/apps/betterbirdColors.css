@@ -1,0 +1,269 @@
+/* Betterbird Theme - Basado en tu Zen Browser Matugen */
+
+:root {
+    /* Base principal */
+    --bg-dark: {{colors.background.default.hex}};
+    --primary-color: {{colors.primary.default.hex}};
+    --text-main: {{colors.on_surface.default.hex}};
+
+    /* Lógica de WhatsApp aplicada: El fondo real es el dinámico */
+    --dynamic-background: color-mix(in srgb, var(--bg-dark), white 3%);
+
+    /* El soft nace del dinámico */
+    --bg-soft: color-mix(in srgb, var(--dynamic-background), white 3%);
+
+    /* Variables de pastillas */
+    --primary-color-container: {{colors.primary_container.default.hex}};
+    --dynamic-primary-container: color-mix(in oklab, var(--primary-color-container), white 2.1%);
+
+    /* Mapeo Betterbird */
+    --pane-header-background: var(--bg-soft) !important;
+    --toolbar-bgcolor: var(--dynamic-background) !important;
+    --sidebar-background: var(--dynamic-background) !important;
+    --treeheader-background: var(--bg-soft) !important;
+
+    /* Override */
+    --folder-unselected-unfocused-notification-background: var(--primary-color) !important;
+    --folder-selection-notification-background: var(--primary-color) !important;
+}
+
+/* Fondo principal de la aplicación */
+window, #messengerWindow {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Panel de Carpetas (Izquierda) */
+#folderPane, #folderTree {
+background-color: var(--dynamic-background) !important;
+color: var(--text-main) !important;
+}
+
+/* --- ESTILO PASTILLA CORREGIDO PARA CARPETAS --- */
+#folderTree li > .container {
+padding-inline: 12px !important;
+border-radius: 30px !important;
+transition: background-color 0.2s ease, border-radius 0.2s ease !important;
+margin-inline: 6px !important;
+background-color: transparent !important;
+appearance: none !important;
+border: none !important;
+}
+
+/* Hover en carpetas (estilo pastilla) */
+#folderTree li > .container:hover {
+background-color: color-mix(in srgb, var(--dynamic-primary-container), transparent 40%) !important;
+cursor: pointer !important;
+}
+
+/* Selección en carpetas (violeta persistente tipo pastilla) */
+#folderTree li.selected > .container,
+#folderTree li[selected="true"] > .container {
+background-color: var(--dynamic-primary-container) !important;
+color: var(--primary-color) !important;
+border-radius: 30px !important;
+outline: none !important;
+}
+
+/* Lista de Mensajes (Panel Central) */
+#threadTree {
+background-color: var(--dynamic-background) !important;
+color: var(--text-main) !important;
+}
+
+/* Estilo para el mensaje seleccionado */
+#threadTree tr.selected,
+#threadTree li.selected,
+#threadTree tr[selected="true"] {
+background-color: var(--dynamic-primary-container) !important;
+color: var(--text-main) !important;
+border-radius: 20px !important;
+}
+
+/* --- HOVER EN LA LISTA DE MENSAJES (Thread Tree) --- */
+
+/* Aplicamos el hover a la fila completa para que no se vea gris */
+#threadTree tr:hover {
+background-color: color-mix(in srgb, var(--dynamic-primary-container), transparent 60%) !important;
+color: var(--text-main) !important;
+border-radius: 20px !important; /* Mantenemos el estilo de pastilla */
+cursor: pointer !important;
+}
+
+/* Si Betterbird usa celdas individuales para el hover en tu versión */
+#threadTree td:hover {
+background-color: transparent !important; /* Evitamos que la celda individual pinte otro color */
+}
+
+/* Por si acaso el gris viene de una selección inactiva */
+#threadTree tr.selected:not(:focus) {
+background-color: var(--dynamic-primary-container) !important;
+}
+
+#threadPaneHeaderBar,
+#folderPaneHeaderBar,
+#spacesToolbar {
+background-color: var(--dynamic-background) !important;
+}
+
+#threadCol,
+#flaggedCol,
+#attachmentCol,
+#unreadButtonColHeaderButton,
+#subjectCol,
+#correspondentCol,
+#junkStatusCol,
+#dateCol,
+.tree-table-cell-container {
+    background-color: var(--dynamic-background) !important;
+}
+
+/* Barra de herramientas y botones */
+toolbar {
+    background-color: var(--dynamic-background) !important;
+    border-bottom: 1px solid var(--bg-soft) !important;
+}
+
+/* Botón "Redactar" - Estilo Pastilla Zen con Efectos de Interacción */
+.button-primary, #button-newmsg {
+    appearance: none !important;
+    background-color: var(--primary-color) !important;
+    color: var(--dynamic-background) !important;
+    border-radius: 30px !important;
+    font-weight: bold !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 120px !important; /* Ajustalo según prefieras el ancho */
+    min-height: 32px !important;
+    transition: filter 0.2s ease, transform 0.1s ease !important;
+    cursor: pointer !important;
+}
+
+/* Estado Hover (Al pasar el mouse se ilumina) */
+.button-primary:hover, #button-newmsg:hover {
+    filter: brightness(1.1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Estado Active (El efecto de clic: se oscurece y se hunde un poquito) */
+.button-primary:active, #button-newmsg:active {
+    filter: brightness(0.9) !important;
+    transform: scale(0.96) !important; /* Efecto de presión */
+}
+
+/* Tooltips */
+tooltip {
+    appearance: none !important;
+    background-color: var(--dynamic-background) !important;
+    color: var(--primary-color) !important;
+    border: 1px solid var(--primary-color) !important;
+}
+
+
+/* --- AJUSTES PARA ELIMINAR EL GRIS RESTANTE (Usando Variables) --- */
+
+#navigation-toolbox,
+#tabs-toolbar,
+#header-view-toolbox {
+background-color: var(--dynamic-background) !important;
+}
+
+#msgHeaderView,
+#collapsedHeaderView,
+.message-header-container {
+    background-color: var(--dynamic-background) !important;
+    border-bottom: 1px solid var(--bg-soft) !important;
+}
+
+/* Visor de mensajes */
+#messagepane, #messagepanebox, browser[type="content"], .browserContainer {
+background-color: var(--dynamic-background) !important;
+}
+
+treecols,
+treecol {
+    appearance: none !important;
+    background-color: var(--bg-soft) !important;
+    color: var(--primary-color) !important;
+    border-bottom: 1px solid var(--dynamic-background) !important;
+}
+
+#tabmail-tabs {
+border-bottom: none !important;
+}
+
+#status-bar {
+background-color: var(--dynamic-background) !important;
+border-top: 1px solid var(--bg-soft) !important;
+}
+
+/* --- TUNEADO DE LA BARRA DE ADVERTENCIA (Shadow DOM) --- */
+notification-message[type="warning"] {
+    --message-bar-background-color: var(--primary-color) !important;
+    /* --message-bar-text-color: var(--text-main) !important; */
+    /* --message-bar-icon-color: var(--primary-color) !important; */
+}
+
+/* --- NOTIFICACIONES Y CONTADORES (VIOLETA) --- */
+
+/* El circulito con el número de mensajes no leídos */
+.unread-count {
+    background-color: var(--primary-color) !important;
+    color: var(--dynamic-background) !important;
+    font-weight: bold !important;
+}
+
+/* El texto de la carpeta cuando hay mails nuevos */
+.container.unread > .name,
+.unread > .container > .name {
+    color: var(--primary-color) !important;
+}
+
+/* El icono de la carpeta cuando hay mails nuevos */
+.container.unread > .icon,
+.unread > .container > .icon {
+    fill: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Ajuste para el color de la cuenta principal (el mail de arriba de Inbox) */
+.folder-count-badge {
+    background-color: var(--primary-color) !important;
+    color: var(--dynamic-background) !important;
+}
+
+/* El texto de la cuenta/carpeta cuando hay mails nuevos */
+.name, .folder-name-container {
+    color: var(--text-main) !important;
+}
+
+/* Cuando tiene notificación (unread) */
+.unread > .container > .name,
+.new-messages > .container > .name,
+#folderTree li[data-unread="true"] .name {
+    color: var(--primary-color) !important;
+}
+
+/* El circulito con número y el candado/iconos */
+.unread-count,
+.folder-count-badge {
+    background-color: var(--primary-color) !important;
+    color: var(--dynamic-background) !important;
+}
+
+.icon, .folder-icon, [data-type="account"] > .container > .icon {
+    fill: currentColor !important;
+    color: inherit !important;
+}
+
+/* Forzar violeta en el icono cuando hay mails nuevos */
+.unread > .container > .icon,
+.new-messages > .container > .icon {
+    fill: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+input {
+    background-color: var(--bg-dark) !important;
+}

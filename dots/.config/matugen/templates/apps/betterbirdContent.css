@@ -1,0 +1,23 @@
+/* userContent.css - Betterbird Content Style */
+
+/* Forzamos el fondo del documento del mail */
+@-moz-document url-prefix("about:messagebody"),
+url-prefix("chrome://messenger/content/messengercompose/messengercompose.xhtml") {
+
+    html, body {
+        background-color: {{colors.background.default.hex}} !important;
+        color: {{colors.on_surface.default.hex}} !important;
+    }
+}
+
+/* También para el fondo general de mails que no especifican color */
+body {
+    background-color: {{colors.background.default.hex}} !important;
+}
+
+@media (prefers-color-scheme: dark) and -moz-pref("mail.dark-reader.enabled") {
+  html {
+    background-color: {{colors.background.default.hex}} !important;
+    color: {{colors.on_surface.default.hex}} !important;
+  }
+}
