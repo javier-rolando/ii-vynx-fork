@@ -211,8 +211,8 @@ Singleton {
         if (str.includes("android-studio"))
             return "android-studio";
 
-        // Desktop entry lookup before theme icon check — respects XDG order (user entries first)
-        const entry = DesktopEntries.byId(str);
+        // Heuristic lookup (same as dock) before theme icon check
+        const entry = DesktopEntries.heuristicLookup(str);
         if (entry) return entry.icon;
 
         // Try to see if there's a themed icon matching the name
