@@ -211,25 +211,16 @@ Singleton {
         if (str.includes("android-studio"))
             return "android-studio";
 
-        // Try to see if there's a themed icon matching the name (for absolute path icons)
-        // This is important for apps like Zen Browser where the .desktop has an absolute path
-        // but the theme script generates a themed icon with the desktop entry's ID
+        // Desktop entry lookup before theme icon check — respects XDG order (user entries first)
+        const entry = DesktopEntries.byId(str);
+        if (entry) return entry.icon;
+
+        // Try to see if there's a themed icon matching the name
         let nameWithoutExt = str;
         if (str.endsWith(".desktop"))
             nameWithoutExt = str.slice(0, -8);
         if (iconExists(nameWithoutExt))
             return nameWithoutExt;
-
-        // Quickshell's desktop entry lookup
-        const entry = DesktopEntries.byId(str);
-        if (entry) {
-            // Even if we have an entry, check if its ID (basename) has a themed version
-            // because the entry.icon might be an absolute path
-            const entryId = entry.id.endsWith(".desktop") ? entry.id.slice(0, -8) : entry.id;
-            if (iconExists(entryId))
-                return entryId;
-            return entry.icon;
-        }
 
         // Regex substitutions
         for (let i = 0; i < regexSubstitutions.length; i++) {
