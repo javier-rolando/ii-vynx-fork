@@ -23,7 +23,6 @@ Singleton {
             "wpsoffice": "wps-office2019-kprometheus",
             "footclient": "foot",
             "jetbrains-studio": "android-studio",
-            "zen": "zen-browser",
             "brave-browser": "brave-desktop",
             "net.lutris.lutris": "net.lutris.Lutris",
             "org.gnome.texteditor": "org.gnome.TextEditor",
