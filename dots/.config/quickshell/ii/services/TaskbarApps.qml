@@ -15,7 +15,11 @@ Singleton {
         if (!appId) return null
         if (_desktopEntryCache.hasOwnProperty(appId))
             return _desktopEntryCache[appId]
-        const entry = DesktopEntries.heuristicLookup(appId)
+        let entry = DesktopEntries.heuristicLookup(appId)
+        if (!entry && appId.includes('.')) {
+            const parts = appId.split('.')
+            entry = DesktopEntries.heuristicLookup(parts[parts.length - 1])
+        }
         _desktopEntryCache[appId] = entry ?? null
         return _desktopEntryCache[appId]
     }
