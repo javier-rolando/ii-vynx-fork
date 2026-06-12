@@ -210,8 +210,6 @@ Singleton {
         // Handle common variations for user's requested apps
         if (str.includes("android-studio"))
             return "android-studio";
-        if (str.includes("zen-browser") || str.includes("zen"))
-            return "zen";
 
         // Try to see if there's a themed icon matching the name (for absolute path icons)
         // This is important for apps like Zen Browser where the .desktop has an absolute path
