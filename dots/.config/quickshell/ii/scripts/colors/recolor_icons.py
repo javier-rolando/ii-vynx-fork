@@ -28,24 +28,18 @@ CONFIG_JSON = os.path.expanduser("~/.config/illogical-impulse/config.json")
 COLORS_JSON = os.path.expanduser("~/.local/state/quickshell/user/generated/colors.json")
 TARGET_THEME_PATH = os.path.expanduser("~/.local/share/icons/DynamicTheme")
 
-ICON_SEARCH_DIRS = [
-    os.path.expanduser("~/.icons"),
-    os.path.expanduser("~/.local/share/icons"),
-    "/usr/share/icons",
-    "/usr/local/share/icons",
-    # Flatpak exports — hicolor icons for flatpak apps
-    "/var/lib/flatpak/exports/share/icons",
-    os.path.expanduser("~/.local/share/flatpak/exports/share/icons"),
+def _xdg_data_dirs():
+    dirs = [os.path.expanduser("~/.local/share")]
+    for d in os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":"):
+        if d and d not in dirs:
+            dirs.append(d)
+    return dirs
+
+ICON_SEARCH_DIRS = [os.path.expanduser("~/.icons")] + [
+    os.path.join(d, "icons") for d in _xdg_data_dirs()
 ]
 
-DESKTOP_SEARCH_DIRS = [
-    "/usr/share/applications",
-    os.path.expanduser("~/.local/share/applications"),
-    "/usr/local/share/applications",
-    # Flatpak exports — apps installed via flatpak
-    "/var/lib/flatpak/exports/share/applications",
-    os.path.expanduser("~/.local/share/flatpak/exports/share/applications"),
-]
+DESKTOP_SEARCH_DIRS = [os.path.join(d, "applications") for d in _xdg_data_dirs()]
 
 # Icon sizes to search in icon themes (largest first for best quality)
 ICON_SIZE_DIRS = [
