@@ -118,7 +118,7 @@ Item {
         }
         const daysNeeded = Math.ceil(Config.options.bar.sports.showBeforeHours / 24) + 1;
         let datesToFetch = [];
-        for (let d = 0; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
+        for (let d = -1; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
 
         let requests = [];
         for (let i = 0; i < leaguesToFetch.length; i++) {
