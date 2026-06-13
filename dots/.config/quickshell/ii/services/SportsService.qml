@@ -111,12 +111,30 @@ Item {
             return;
         }
 
-        let pendingRequests = leaguesToFetch.length;
-        let collectedEvents = [];
+        function utcDateString(daysOffset) {
+            const d = new Date();
+            d.setUTCDate(d.getUTCDate() + daysOffset);
+            return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
+        }
+        const daysNeeded = Math.ceil(Config.options.bar.sports.showBeforeHours / 24) + 1;
+        let datesToFetch = [];
+        for (let d = 0; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
 
+        let requests = [];
         for (let i = 0; i < leaguesToFetch.length; i++) {
             const entry = leaguesToFetch[i];
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard`;
+            for (let j = 0; j < datesToFetch.length; j++) {
+                requests.push({ entry: entry, date: datesToFetch[j] });
+            }
+        }
+
+        let pendingRequests = requests.length;
+        let collectedEvents = [];
+        let seenEventIds = {};
+
+        for (let i = 0; i < requests.length; i++) {
+            const entry = requests[i].entry;
+            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard?dates=${requests[i].date}`;
             const xhr = new XMLHttpRequest();
             xhr.open("GET", url);
             xhr.onreadystatechange = function () {
@@ -129,13 +147,15 @@ Item {
                             if (response.leagues && response.leagues[0] && response.leagues[0].logos && response.leagues[0].logos[0]) {
                                 leagueLogo = response.leagues[0].logos[0].href;
                             }
-                            const events = (response.events || []).map(e => {
-                                e.leagueName = entry.name;
-                                e.sportCategory = entry.sport;
-                                e.leagueLogo = leagueLogo;
-                                return e;
+                            (response.events || []).forEach(e => {
+                                if (!seenEventIds[e.id]) {
+                                    seenEventIds[e.id] = true;
+                                    e.leagueName = entry.name;
+                                    e.sportCategory = entry.sport;
+                                    e.leagueLogo = leagueLogo;
+                                    collectedEvents.push(e);
+                                }
                             });
-                            collectedEvents = collectedEvents.concat(events);
                         } catch (e) {
                             error = "Parse error";
                         }
