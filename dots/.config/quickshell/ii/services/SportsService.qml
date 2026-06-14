@@ -327,6 +327,7 @@ Item {
                     id: event.id,
                     name: event.name,
                     league: event.leagueName,
+                    date: event.date,
                     status: (comp.status && comp.status.type && comp.status.type.state === "pre") ? formatMatchTime(event.date) : (comp.status ? comp.status.type.detail : (event.status ? event.status.type.detail : "")),
                     state: comp.status ? comp.status.type.state : state,
                     lastPlay: lastPlayText,
@@ -334,6 +335,16 @@ Item {
                     away: away
                 });
             }
+        }
+
+        function sortByStateAndDate(a, b) {
+            const order = { "in": 0, "pre": 1, "post": 2 };
+            const stateA = order[a.state] ?? 3;
+            const stateB = order[b.state] ?? 3;
+            if (stateA !== stateB) return stateA - stateB;
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return a.state === "post" ? dateB - dateA : dateA - dateB;
         }
 
         if (customOrder && customOrder.length > 0) {
@@ -345,14 +356,10 @@ Item {
                 }
                 if (idxA !== -1) return -1;
                 if (idxB !== -1) return 1;
-                const order = { "in": 0, "pre": 1, "post": 2 };
-                return (order[a.state] || 3) - (order[b.state] || 3);
+                return sortByStateAndDate(a, b);
             });
         } else {
-            validGames.sort((a, b) => {
-                const order = { "in": 0, "pre": 1, "post": 2 };
-                return (order[a.state] || 3) - (order[b.state] || 3);
-            });
+            validGames.sort(sortByStateAndDate);
         }
 
         let nextIndex = 0;
