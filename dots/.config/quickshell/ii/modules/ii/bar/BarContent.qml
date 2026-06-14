@@ -230,7 +230,7 @@ Item { // Bar content region
         onPressed: event => {
             if (event.button === Qt.LeftButton)
                 GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-            if (event.button === Qt.LeftButton)
+            if (event.button === Qt.RightButton)
                 Audio.sink.audio.muted = !Audio.sink.audio.muted;
         }
 
