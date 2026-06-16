@@ -223,32 +223,6 @@ Item {
                 root.focusFirstItem();
             }
         }
-
-        // Ctrl+n (next item)
-        if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_N) {
-          if (appResults.currentIndex < appResults.count - 1) {
-            appResults.currentIndex++;
-            const item = appResults.itemAtIndex(appResults.currentIndex);
-            if (item && item.forceActiveFocus) {
-              item.forceActiveFocus();
-            }
-          }
-          event.accepted = true;
-          return;
-        }
-
-        // Ctrl+p (previous item)
-        if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_P) {
-          if (appResults.currentIndex > 0) {
-            appResults.currentIndex--;
-            const item = appResults.itemAtIndex(appResults.currentIndex);
-            if (item && item.forceActiveFocus) {
-              item.forceActiveFocus();
-            }
-          }
-          event.accepted = true;
-          return;
-        }
     }
 
     StyledRectangularShadow {

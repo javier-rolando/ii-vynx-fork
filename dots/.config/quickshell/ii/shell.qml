@@ -73,13 +73,4 @@ ShellRoot {
 
         onPressed: root.cyclePanelFamily()
     }
-
-    GlobalShortcut {
-        name: "barDockToggle"
-
-        onPressed: {
-            Config.options.dock.enable = !Config.options.dock.enable;
-            GlobalStates.barOpen = !GlobalStates.barOpen;
-        }
-    }
 }

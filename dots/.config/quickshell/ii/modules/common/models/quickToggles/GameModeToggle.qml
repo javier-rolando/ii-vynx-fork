@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import qs.modules.common.models.hyprland
 import qs.services
@@ -13,9 +12,27 @@ QuickToggleModel {
     mainAction: () => {
         root.toggled = !root.toggled;
         if (root.toggled) {
-            Quickshell.execDetached(["bash", "-c", `hyprctl eval "hl.config({ animations = { enabled = false }, decoration = { shadow = { enabled = false }, blur = { enabled = false }, rounding = 0 }, general = { gaps_in = 0, gaps_out = 0, border_size = 1, allow_tearing = true }, input = { kb_options = '' } })"; warp-cli disconnect`])
+            HyprlandConfig.setMany({
+                "animations:enabled": 0,
+                "decoration:shadow:enabled": 0,
+                "decoration:blur:enabled": 0,
+                "general:gaps_in": 0,
+                "general:gaps_out": 0,
+                "general:border_size": 1,
+                "decoration:rounding": 0,
+                "general:allow_tearing": 1
+            });
         } else {
-            Quickshell.execDetached(["bash", "-c", "hyprctl reload; warp-cli connect"])
+            HyprlandConfig.resetMany([ //
+                "animations:enabled", //
+                "decoration:shadow:enabled", //
+                "decoration:blur:enabled", //
+                "general:gaps_in", //
+                "general:gaps_out", //
+                "general:border_size", //
+                "decoration:rounding", //
+                "general:allow_tearing", //
+            ]);
         }
     }
 

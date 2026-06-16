@@ -41,7 +41,7 @@ Scope {
     Loader {
         id: overlayLoader
         // Show only when the special workspace is active AND has no windows inside it
-        active: root.isSpecialActive && root.isSpecialEmpty && (root.specialWorkspaceName === "special:special" || root.specialWorkspaceName === "special")
+        active: root.isSpecialActive && root.isSpecialEmpty
         
         sourceComponent: PanelWindow {
             id: overlayWindow

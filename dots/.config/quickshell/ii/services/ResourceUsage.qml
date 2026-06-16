@@ -139,7 +139,7 @@ Singleton {
 
     Process {
         id: gpuModelProc
-        command: ["bash", "-c", "nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || lspci -v 2>/dev/null | grep -A 4 -i 'vga compatible\\|3d controller\\|display controller' | grep -i 'subsystem:' | grep -o 'Radeon[^]]*' | head -1 || (lspci | grep -i 'vga\\|3d\\|display' | head -1 | sed 's/.*: //')"]
+        command: ["bash", "-c", "nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || (lspci | grep -i 'vga\\|3d\\|display' | head -1 | sed 's/.*: //')"]
         running: true
         stdout: StdioCollector {
             id: gpuModelCollector

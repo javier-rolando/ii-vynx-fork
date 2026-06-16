@@ -234,14 +234,9 @@ Item { // Bar content region
         onScrollDown: if (Config.options.bar.enableBrightnessScroll) Brightness.decreaseBrightness()
         onScrollUp: if (Config.options.bar.enableBrightnessScroll) Brightness.increaseBrightness()
         onMovedAway: GlobalStates.osdBrightnessOpen = false
-
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-
         onPressed: event => {
             if (event.button === Qt.LeftButton)
                 GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-            if (event.button === Qt.RightButton)
-                Audio.sink.audio.muted = !Audio.sink.audio.muted;
         }
 
         ScrollHint {
@@ -454,16 +449,9 @@ Item { // Bar content region
         onScrollDown: if (Config.options.bar.enableVolumeScroll) Audio.decrementVolume()
         onScrollUp: if (Config.options.bar.enableVolumeScroll) Audio.incrementVolume()
         onMovedAway: GlobalStates.osdVolumeOpen = false
-
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-
         onPressed: event => {
             if (event.button === Qt.LeftButton) {
                 GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-            }
-
-            if (event.button === Qt.RightButton) {
-                Audio.sink.audio.muted = !Audio.sink.audio.muted;
             }
         }
 

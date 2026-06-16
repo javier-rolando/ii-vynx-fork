@@ -457,11 +457,8 @@ Scope {
                                 width: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperW : parent.width
                                 height: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperH : parent.height
 
-                            // visible: opacity > 0 && !bgRoot.wallpaperIsVideo
-                            visible: false
-                            layer.enabled: Config.options.lock.blur.enable
-
-                            opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
+                                visible: opacity > 0 && !bgRoot.wallpaperIsVideo
+                                opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
 
                                 property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
                                 property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize

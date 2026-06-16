@@ -111,30 +111,12 @@ Item {
             return;
         }
 
-        function utcDateString(daysOffset) {
-            const d = new Date();
-            d.setUTCDate(d.getUTCDate() + daysOffset);
-            return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
-        }
-        const daysNeeded = Math.ceil(Config.options.bar.sports.showBeforeHours / 24) + 1;
-        let datesToFetch = [];
-        for (let d = -1; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
+        let pendingRequests = leaguesToFetch.length;
+        let collectedEvents = [];
 
-        let requests = [];
         for (let i = 0; i < leaguesToFetch.length; i++) {
             const entry = leaguesToFetch[i];
-            for (let j = 0; j < datesToFetch.length; j++) {
-                requests.push({ entry: entry, date: datesToFetch[j] });
-            }
-        }
-
-        let pendingRequests = requests.length;
-        let collectedEvents = [];
-        let seenEventIds = {};
-
-        for (let i = 0; i < requests.length; i++) {
-            const entry = requests[i].entry;
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard?dates=${requests[i].date}`;
+            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard`;
             const xhr = new XMLHttpRequest();
             xhr.open("GET", url);
             xhr.onreadystatechange = function () {
@@ -147,15 +129,13 @@ Item {
                             if (response.leagues && response.leagues[0] && response.leagues[0].logos && response.leagues[0].logos[0]) {
                                 leagueLogo = response.leagues[0].logos[0].href;
                             }
-                            (response.events || []).forEach(e => {
-                                if (!seenEventIds[e.id]) {
-                                    seenEventIds[e.id] = true;
-                                    e.leagueName = entry.name;
-                                    e.sportCategory = entry.sport;
-                                    e.leagueLogo = leagueLogo;
-                                    collectedEvents.push(e);
-                                }
+                            const events = (response.events || []).map(e => {
+                                e.leagueName = entry.name;
+                                e.sportCategory = entry.sport;
+                                e.leagueLogo = leagueLogo;
+                                return e;
                             });
+                            collectedEvents = collectedEvents.concat(events);
                         } catch (e) {
                             error = "Parse error";
                         }
@@ -327,7 +307,6 @@ Item {
                     id: event.id,
                     name: event.name,
                     league: event.leagueName,
-                    date: event.date,
                     status: (comp.status && comp.status.type && comp.status.type.state === "pre") ? formatMatchTime(event.date) : (comp.status ? comp.status.type.detail : (event.status ? event.status.type.detail : "")),
                     state: comp.status ? comp.status.type.state : state,
                     lastPlay: lastPlayText,
@@ -335,16 +314,6 @@ Item {
                     away: away
                 });
             }
-        }
-
-        function sortByStateAndDate(a, b) {
-            const order = { "in": 0, "pre": 1, "post": 2 };
-            const stateA = order[a.state] ?? 3;
-            const stateB = order[b.state] ?? 3;
-            if (stateA !== stateB) return stateA - stateB;
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return a.state === "post" ? dateB - dateA : dateA - dateB;
         }
 
         if (customOrder && customOrder.length > 0) {
@@ -356,10 +325,14 @@ Item {
                 }
                 if (idxA !== -1) return -1;
                 if (idxB !== -1) return 1;
-                return sortByStateAndDate(a, b);
+                const order = { "in": 0, "pre": 1, "post": 2 };
+                return (order[a.state] || 3) - (order[b.state] || 3);
             });
         } else {
-            validGames.sort(sortByStateAndDate);
+            validGames.sort((a, b) => {
+                const order = { "in": 0, "pre": 1, "post": 2 };
+                return (order[a.state] || 3) - (order[b.state] || 3);
+            });
         }
 
         let nextIndex = 0;

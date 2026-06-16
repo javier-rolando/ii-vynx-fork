@@ -154,8 +154,8 @@ os.rename(tmp_path, output_path)
 }
 
 apply_term() {
-  # apply_anyterm &
-  # apply_kitty &
+  apply_anyterm &
+  apply_kitty &
 }
 
 # Check if terminal theming is enabled in config

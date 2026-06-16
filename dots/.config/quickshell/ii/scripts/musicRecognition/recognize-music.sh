@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 INTERVAL=2
 TOTAL_DURATION=30

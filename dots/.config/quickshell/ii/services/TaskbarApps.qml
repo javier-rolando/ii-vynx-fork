@@ -15,11 +15,7 @@ Singleton {
         if (!appId) return null
         if (_desktopEntryCache.hasOwnProperty(appId))
             return _desktopEntryCache[appId]
-        let entry = DesktopEntries.heuristicLookup(appId)
-        if (!entry && appId.includes('.')) {
-            const parts = appId.split('.')
-            entry = DesktopEntries.heuristicLookup(parts[parts.length - 1])
-        }
+        const entry = DesktopEntries.heuristicLookup(appId)
         _desktopEntryCache[appId] = entry ?? null
         return _desktopEntryCache[appId]
     }
@@ -213,13 +209,10 @@ Singleton {
         }
 
         for (const toplevel of ToplevelManager.toplevels.values) {
-            let appId = toplevel?.appId
-            if (!appId && toplevel?.title)
-                appId = AppSearch.getAppIdFromTitle(toplevel.title)
-            if (!appId) continue
-            if (ignoredRegexes.some(re => re.test(appId))) continue
+            if (!toplevel?.appId) continue
+            if (ignoredRegexes.some(re => re.test(toplevel.appId))) continue
 
-            const normToplevel = normalizeAppId(appId)
+            const normToplevel = normalizeAppId(toplevel.appId)
             let matchedKey = null
             for (const key of pinnedMap.keys()) {
                 if (normalizeAppId(key) === normToplevel) { matchedKey = key; break }
@@ -228,7 +221,7 @@ Singleton {
             if (matchedKey !== null) {
                 pinnedMap.get(matchedKey).toplevels.push(toplevel)
             } else {
-                const id = appId
+                const id = toplevel.appId
                 if (!unpinnedMap.has(id))
                     unpinnedMap.set(id, { pinned: false, toplevels: [] })
                 unpinnedMap.get(id).toplevels.push(toplevel)
