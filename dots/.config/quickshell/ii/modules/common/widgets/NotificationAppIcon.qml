@@ -10,9 +10,11 @@ MaterialShape { // App icon
     id: root
     property var appIcon: ""
     property var summary: ""
+    property var body: ""
     property var urgency: NotificationUrgency.Normal
     property bool isUrgent: urgency === NotificationUrgency.Critical
     property var image: ""
+    property var notificationBodies: []
     property real materialIconScale: 0.57
     property real appIconScale: 0.8
     property real smallAppIconScale: 0.49
@@ -20,8 +22,20 @@ MaterialShape { // App icon
     property real appIconSize: implicitSize * appIconScale
     property real smallAppIconSize: implicitSize * smallAppIconScale
 
+    function lowerBodies() {
+      return notificationBodies.length > 0
+      ? notificationBodies.map(b => (b || "").toLowerCase())
+      : [body?.toLowerCase() || ""]
+    }
+
+    property bool isTwitchNotification: lowerBodies().length > 0 && lowerBodies().every(b => b.includes("from twitch"))
+    property bool isKickNotification: lowerBodies().length > 0 && lowerBodies().every(b => b.includes("from kick"))
+
     implicitSize: 38 * scale
-    property list<var> urgentShapes: [MaterialShape.Shape.VerySunny, MaterialShape.Shape.SoftBurst,]
+    property list<var> urgentShapes: [
+        MaterialShape.Shape.VerySunny,
+        MaterialShape.Shape.SoftBurst,
+    ]
     shape: isUrgent ? urgentShapes[Math.floor(Math.random() * urgentShapes.length)] : MaterialShape.Shape.Circle
 
     color: isUrgent ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
@@ -31,9 +45,10 @@ MaterialShape { // App icon
         anchors.fill: parent
         sourceComponent: MaterialSymbol {
             text: {
-                const defaultIcon = NotificationUtils.findSuitableMaterialSymbol("");
-                const guessedIcon = NotificationUtils.findSuitableMaterialSymbol(root.summary);
-                return (root.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ? "priority_high" : guessedIcon;
+                const defaultIcon = NotificationUtils.findSuitableMaterialSymbol("")
+                const guessedIcon = NotificationUtils.findSuitableMaterialSymbol(root.summary)
+                return (root.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ?
+                    "priority_high" : guessedIcon
             }
             anchors.fill: parent
             color: isUrgent ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
@@ -55,7 +70,7 @@ MaterialShape { // App icon
     }
     Loader {
         id: notifImageLoader
-        active: root.image != ""
+        active: root.image != "" || root.isTwitchNotification || root.isKickNotification
         anchors.fill: parent
         sourceComponent: Item {
             anchors.fill: parent
@@ -64,7 +79,11 @@ MaterialShape { // App icon
                 anchors.fill: parent
                 readonly property int size: parent.width
 
-                source: root.image
+                source: root.isTwitchNotification
+                ? Quickshell.shellPath("assets/images/twitch.jpg")
+                : root.isKickNotification
+                ? Quickshell.shellPath("assets/images/kick.webp")
+                : root.image
                 fillMode: Image.PreserveAspectCrop
                 cache: false
                 antialiasing: true
@@ -81,7 +100,7 @@ MaterialShape { // App icon
             }
             Loader {
                 id: notifImageAppIconLoader
-                active: root.appIcon != ""
+                active: root.appIcon != "" && !root.isTwitchNotification && !root.isKickNotification
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 sourceComponent: IconImage {
