@@ -126,7 +126,7 @@ Item { // Bar content region
 
         // Background
         Rectangle {
-            id: barBgRect
+            id: barBackground
             anchors {
                 top: parent.top
                 bottom: parent.bottom
@@ -158,11 +158,11 @@ Item { // Bar content region
 
         // Concave Corners (HUD Mode)
         RoundCorner {
-            anchors.top: barBgRect.top
-            anchors.right: barBgRect.left
-            implicitSize: barBgRect.baseRadius
+            anchors.top: barBackground.top
+            anchors.right: barBackground.left
+            implicitSize: barBackground.baseRadius
             extendHorizontal: true
-            color: barBgRect.color
+            color: barBackground.color
             corner: RoundCorner.CornerEnum.TopRight
             visible: root.isDynamicIsland && root.showBarBackground && !Config.options.bar.bottom
             opacity: visible ? 1 : 0
@@ -173,11 +173,11 @@ Item { // Bar content region
             }
         }
         RoundCorner {
-            anchors.top: barBgRect.top
-            anchors.left: barBgRect.right
-            implicitSize: barBgRect.baseRadius
+            anchors.top: barBackground.top
+            anchors.left: barBackground.right
+            implicitSize: barBackground.baseRadius
             extendHorizontal: true
-            color: barBgRect.color
+            color: barBackground.color
             corner: RoundCorner.CornerEnum.TopLeft
             visible: root.isDynamicIsland && root.showBarBackground && !Config.options.bar.bottom
             opacity: visible ? 1 : 0
@@ -189,11 +189,11 @@ Item { // Bar content region
         }
 
         RoundCorner {
-            anchors.bottom: barBgRect.bottom
-            anchors.right: barBgRect.left
-            implicitSize: barBgRect.baseRadius
+            anchors.bottom: barBackground.bottom
+            anchors.right: barBackground.left
+            implicitSize: barBackground.baseRadius
             extendHorizontal: true
-            color: barBgRect.color
+            color: barBackground.color
             corner: RoundCorner.CornerEnum.BottomRight
             visible: root.isDynamicIsland && root.showBarBackground && Config.options.bar.bottom
             opacity: visible ? 1 : 0
@@ -204,11 +204,11 @@ Item { // Bar content region
             }
         }
         RoundCorner {
-            anchors.bottom: barBgRect.bottom
-            anchors.left: barBgRect.right
-            implicitSize: barBgRect.baseRadius
+            anchors.bottom: barBackground.bottom
+            anchors.left: barBackground.right
+            implicitSize: barBackground.baseRadius
             extendHorizontal: true
-            color: barBgRect.color
+            color: barBackground.color
             corner: RoundCorner.CornerEnum.BottomLeft
             visible: root.isDynamicIsland && root.showBarBackground && Config.options.bar.bottom
             opacity: visible ? 1 : 0
@@ -218,25 +218,6 @@ Item { // Bar content region
                 }
             }
         }
-    }
-
-    // QML anchors only work between siblings/parents, not across container boundaries.
-    // barBgRect moved into backgroundGroup for layer.enabled, so this invisible proxy
-    // at root level exposes the same geometry for content items to anchor to.
-    Item {
-        id: barBackground
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            left: root.isDynamicIsland ? undefined : parent.left
-            right: root.isDynamicIsland ? undefined : parent.right
-            horizontalCenter: root.isDynamicIsland ? parent.horizontalCenter : undefined
-            margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0
-        }
-        readonly property int islandSectionSpacing: 48
-        width: root.isDynamicIsland ? (Math.max(islandSections.implicitWidth + 12, 200)) : parent.width
-        property real baseRadius: root.isDynamicIsland ? height / 2 : (Config.options.bar.cornerStyle === 1 || Config.options.appearance.fakeScreenRounding === 4 ? Appearance.rounding.windowRounding : 0)
-        visible: false
     }
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness
