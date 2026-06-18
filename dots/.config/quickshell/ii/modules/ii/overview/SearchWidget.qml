@@ -74,12 +74,13 @@ Item {
     function getFilteredResultsCount() {
         const results = LauncherSearch.results;
         const q = LauncherSearch.query.trim().toLowerCase();
-        let list = Array.from(results);
-
-        if (Config.options.search.alwaysListApps || q !== "") {
-            list = list.filter(item => item && item.key !== "mpris:now-playing");
+        let count = 0;
+        for (let i = 0; i < results.length; i++) {
+            const item = results[i];
+            if (item && (!(Config.options.search.alwaysListApps || q !== "") || item.key !== "mpris:now-playing"))
+                count++;
         }
-        return list.length;
+        return count;
     }
 
     function loadMoreResults() {
@@ -107,12 +108,17 @@ Item {
                 root.loadedResultsCount = 50;
                 if (root.alwaysListAppsMode) {
                     Qt.callLater(() => {
-                        resultModel.values = root.processResults(LauncherSearch.results);
+                        // Show first 15 immediately for instant response,
+                        // then load the rest after a short delay
+                        const allResults = LauncherSearch.results;
+                        resultModel.values = allResults.slice(0, 15);
                         root.focusFirstItem();
+                        resultsDebounce.restart();
                     });
                 }
             } else {
                 root.isNowPlayingFocused = false;
+                resultsDebounce.stop();
             }
         }
     }
@@ -173,33 +179,17 @@ Item {
         LauncherSearch.query = text;
     }
 
-    function areResultsDifferent(newResults, currentValues) {
-        if (!newResults || !currentValues)
-            return true;
-        const newLen = newResults.length;
-        const curLen = currentValues.length;
-        if (newLen !== curLen)
-            return true;
-        for (let i = 0; i < newLen; i++) {
-            if (!newResults[i] || !currentValues[i])
-                return true;
-            if (newResults[i].key !== currentValues[i].key)
-                return true;
-            if (newResults[i].name !== currentValues[i].name)
-                return true;
-        }
-        return false;
-    }
-
     function processResults(results) {
         const q = LauncherSearch.query.trim().toLowerCase();
-        let list = Array.from(results);
-
-        if (Config.options.search.alwaysListApps || q !== "") {
-            list = list.filter(item => item && item.key !== "mpris:now-playing");
+        const excludeMpris = Config.options.search.alwaysListApps || q !== "";
+        const out = [];
+        const limit = root.loadedResultsCount;
+        for (let i = 0; i < results.length && out.length < limit; i++) {
+            const item = results[i];
+            if (item && (!excludeMpris || item.key !== "mpris:now-playing"))
+                out.push(item);
         }
-
-        return list.slice(0, root.loadedResultsCount);
+        return out;
     }
 
     Keys.onPressed: event => {
@@ -463,6 +453,9 @@ Item {
                 Layout.row: root.overviewPosition == "bottom" ? 0 : 2
 
                 Behavior on implicitHeight {
+                    // Disabled during active debounce to avoid layout thrashing
+                    // while the user is still typing rapidly
+                    enabled: !resultsDebounce.running
                     NumberAnimation {
                         duration: 300
                         easing.type: Easing.BezierSpline
@@ -549,19 +542,29 @@ Item {
                         }
                     }
 
+                    // Debounce timer: delivers full results 150ms after the last
+                    // results change, avoiding per-keystroke full list recomputation
+                    Timer {
+                        id: resultsDebounce
+                        interval: 150
+                        repeat: false
+                        onTriggered: {
+                            resultModel.values = root.processResults(LauncherSearch.results);
+                        }
+                    }
+
                     Connections {
                         target: LauncherSearch
                         function onResultsChanged() {
-                            const newResults = LauncherSearch.results;
-                            const currentValues = resultModel.values;
-
-                            if (!root.areResultsDifferent(newResults, currentValues)) {
-                                return;
-                            }
-
                             root.loadedResultsCount = 50;
-                            resultModel.values = root.processResults(newResults);
+                            // Immediately show first 15 results for snappy visual feedback
+                            const immediate = root.processResults(LauncherSearch.results);
+                            const quickSlice = immediate.length > 15 ? immediate.slice(0, 15) : immediate;
+                            resultModel.values = quickSlice;
                             root.focusFirstItem();
+                            // Schedule full result delivery after debounce
+                            if (immediate.length > 15)
+                                resultsDebounce.restart();
                         }
                     }
 

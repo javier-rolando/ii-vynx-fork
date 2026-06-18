@@ -43,39 +43,16 @@ RippleButton {
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl)
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
-    property bool artDownloaded: false
 
+    // Art is downloaded by SearchWidget. We just reference the cached file path.
     readonly property string artSource: {
         if (!artUrl) return "";
         if (isLocalArt) return artUrl;
-        return artDownloaded ? Qt.resolvedUrl(artFilePath) : "";
+        return Qt.resolvedUrl(artFilePath); // SearchWidget ensures this exists
     }
 
     onArtFilePathChanged: {
-        if (!artUrl || artUrl.length === 0) {
-            artDownloaded = false;
-            return;
-        }
-        if (isLocalArt) {
-            artDownloaded = true;
-            return;
-        }
-        artDownloader.targetFile = artUrl;
-        artDownloader.artFilePath = artFilePath;
-        artDownloader.artTempPath = artFilePath + ".tmp";
-        artDownloaded = false;
-        artDownloader.running = true;
-    }
-
-    Process {
-        id: artDownloader
-        property string targetFile: root.artUrl
-        property string artFilePath: root.artFilePath
-        property string artTempPath: root.artFilePath + ".tmp"
-        command: ["bash", "-c", `[ -f ${artFilePath} ] || (curl -4 -sSL '${targetFile}' -o '${artTempPath}' && mv '${artTempPath}' '${artFilePath}')`]
-        onExited: {
-            artDownloaded = true;
-        }
+        // Art downloading is managed by SearchWidget
     }
 
     function formatMathResult(raw) {
@@ -138,6 +115,11 @@ RippleButton {
     readonly property real actionBtnPadY: 4
 
     property var allActionItems: {
+        // Lazy: only compute when this item is selected or action panel is open.
+        // Avoids creating closures for every off-screen / unselected item.
+        if (!root.isSelected && !root.actionPanelOpen)
+            return [];
+
         let items = [];
         items.push({
             name: root.itemClickActionName || Translation.tr("Open"),
@@ -280,7 +262,11 @@ RippleButton {
             result += StringUtils.escapeHtml(content.slice(lastIndex));
         return result;
     }
-    property string displayContent: highlightContent(root.itemName, root.query)
+    property string displayContent: {
+        // Skip highlight computation when selected — text shows itemName directly
+        if (root.isSelected) return "";
+        return highlightContent(root.itemName, root.query);
+    }
 
     property list<string> urls: {
         if (!root.itemName)
@@ -379,25 +365,9 @@ RippleButton {
                     }
                 }
 
+                // Only animate topLeft - the other radii mirror it and
+                // animating all 4 independently costs 4x animation overhead per item
                 Behavior on topLeftRadius {
-                    NumberAnimation {
-                        duration: 100
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on topRightRadius {
-                    NumberAnimation {
-                        duration: 100
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on bottomLeftRadius {
-                    NumberAnimation {
-                        duration: 100
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on bottomRightRadius {
                     NumberAnimation {
                         duration: 100
                         easing.type: Easing.OutQuad
@@ -424,31 +394,12 @@ RippleButton {
                     anchors.rightMargin: root.buttonHorizontalPadding
                     visible: !root.isNowPlaying
 
-                    Behavior on spacing {
-                        NumberAnimation {
-                            duration: 120
-                        }
-                    }
-
                     Item {
                         id: iconContainer
                         Layout.preferredWidth: iconVisible ? 36 : 0
                         Layout.preferredHeight: 36
                         visible: iconVisible
                         readonly property bool iconVisible: root.iconType !== LauncherSearchResult.IconType.None
-
-                        Behavior on Layout.preferredWidth {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuint
-                            }
-                        }
-                        Behavior on Layout.preferredHeight {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuint
-                            }
-                        }
 
                         Item {
                             anchors.fill: parent
