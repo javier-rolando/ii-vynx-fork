@@ -9,6 +9,12 @@ Item {
     id: visualsRoot
     anchors.fill: parent
 
+    // GPU compositing during sidebar animation: the 8 frame Rectangles/RoundCorners
+    // all have anchor margins bound to animatedLeftSidebarWidth, which changes every
+    // frame. layer.enabled lets the compositor cache the texture and skip per-frame
+    // CPU layout invalidation of all children.
+    layer.enabled: GlobalStates.animatedLeftSidebarWidth > 0 || GlobalStates.animatedRightSidebarWidth > 0
+
     property var screen: null
     property int frameThickness: Config.options.appearance.wrappedFrameThickness
     property bool barVertical: Config.options.bar.vertical

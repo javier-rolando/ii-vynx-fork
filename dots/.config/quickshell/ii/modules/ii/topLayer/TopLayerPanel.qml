@@ -43,11 +43,11 @@ PanelWindow {
     readonly property bool rightSidebarActiveOnMonitor: GlobalStates.animatedRightSidebarWidth > 0 && screen.name === GlobalStates.activeRightSidebarMonitor
 
     onLeftSidebarActiveOnMonitorChanged: {
-        console.log("[TopLayerPanel] leftSidebarActiveOnMonitor changed:", leftSidebarActiveOnMonitor, "screen:", screen.name, "activeLeftSidebarMonitor:", GlobalStates.activeLeftSidebarMonitor, "width:", GlobalStates.animatedLeftSidebarWidth);
+        // Debug removed for production performance
     }
 
     onRightSidebarActiveOnMonitorChanged: {
-        console.log("[TopLayerPanel] rightSidebarActiveOnMonitor changed:", rightSidebarActiveOnMonitor, "screen:", screen.name, "activeRightSidebarMonitor:", GlobalStates.activeRightSidebarMonitor, "width:", GlobalStates.animatedRightSidebarWidth);
+        // Debug removed for production performance
     }
 
     readonly property bool barMustShow: {
@@ -480,6 +480,11 @@ PanelWindow {
         radius: GlobalStates.connectModeActive ? 0 : Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
         visible: topPanel.leftSidebarActiveOnMonitor && !GlobalStates.policiesDetached
 
+        // GPU compositing during animation: prevents per-frame mask/Region recalc
+        // which was causing Wayland surface sync stalls on every animation frame.
+        // Active whenever sidebar is visible (open or closing) so both directions benefit.
+        layer.enabled: GlobalStates.animatedLeftSidebarWidth > 0
+
         Loader {
             active: !GlobalStates.policiesDetached
             asynchronous: true
@@ -536,8 +541,12 @@ PanelWindow {
         border.width: 0
         visible: topPanel.rightSidebarActiveOnMonitor
 
+        // GPU compositing during animation: prevents per-frame mask/Region recalc
+        // Active whenever sidebar is visible (open or closing) so both directions benefit.
+        layer.enabled: GlobalStates.animatedRightSidebarWidth > 0
+
         Loader {
-            active: true
+            active: topPanel.rightSidebarActiveOnMonitor || Config?.options.sidebar.keepRightSidebarLoaded
             asynchronous: true
             anchors.fill: parent
             sourceComponent: Dashboard.SidebarDashboardContent {}

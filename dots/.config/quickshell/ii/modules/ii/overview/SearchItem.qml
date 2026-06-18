@@ -373,6 +373,24 @@ RippleButton {
                         easing.type: Easing.OutQuad
                     }
                 }
+                Behavior on topRightRadius {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                }
+                Behavior on bottomLeftRadius {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                }
+                Behavior on bottomRightRadius {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                }
                 Behavior on color {
                     ColorAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
