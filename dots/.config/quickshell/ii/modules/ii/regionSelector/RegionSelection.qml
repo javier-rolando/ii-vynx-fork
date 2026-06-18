@@ -451,8 +451,8 @@ PanelWindow {
                 root.regionWidth = maxX - minX + padding * 2;
                 root.regionHeight = maxY - minY + padding * 2;
             }
-            // Inline editor intercept
-            if (root.action === RegionSelection.SnipAction.Copy && root.mouseButton === Qt.LeftButton && root.selectionMode !== RegionSelection.SelectionMode.Circle && root.regionWidth > 0 && root.regionHeight > 0) {
+            // Inline editor intercept (right-click only, when editor enabled)
+            if (root.mouseButton === Qt.RightButton && Config.options.regionSelector.annotation.enableInlineEditor && root.selectionMode !== RegionSelection.SelectionMode.Circle && root.regionWidth > 0 && root.regionHeight > 0) {
                 root.editorRegionX = root.regionX;
                 root.editorRegionY = root.regionY;
                 root.editorRegionW = root.regionWidth;
@@ -654,6 +654,9 @@ PanelWindow {
                 root.dismiss();
             } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_Z) {
                 root.undo();
+                event.accepted = true;
+            } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_C) {
+                root.finalizeScreenshot(false);
                 event.accepted = true;
             }
         }

@@ -99,13 +99,13 @@ ContentPage {
 
             ConfigSwitch {
                 buttonIcon: "edit"
-                text: Translation.tr("Enable screenshot editor")
+                text: Translation.tr("Enable built-in right click screenshot editor")
                 checked: Config.options.regionSelector.annotation.enableInlineEditor
                 onCheckedChanged: {
                     Config.options.regionSelector.annotation.enableInlineEditor = checked;
                 }
                 StyledToolTip {
-                    text: Translation.tr("Enable this to have a print editor before copying it, also allows to save file directly.")
+                    text: Translation.tr("Enable this if you want to use the built-in screenshot editor when using right click to select are, replacing swappy.")
                 }
             }
         }
