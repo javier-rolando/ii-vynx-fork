@@ -385,7 +385,7 @@ PanelWindow {
         id: snipProc
     }
 
-    Image {
+    ScreencopyView { // For freezing
         anchors.fill: parent
         live: false
         captureSource: root.screen
