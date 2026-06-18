@@ -65,14 +65,13 @@ Singleton {
         return "";
     }
 
-    // Deduped list to fix double icons
-    readonly property list<DesktopEntry> list: Array.from(DesktopEntries.applications.values)
-        .filter((app, index, self) => 
-            index === self.findIndex((t) => (
-                t.id === app.id
-            ))
-    )
-    
+    // Deduped list to fix double icons, pre-sorted alphabetically to avoid sorting on every query
+    readonly property list<DesktopEntry> list: {
+        var arr = Array.from(DesktopEntries.applications.values).filter((app, index, self) => index === self.findIndex(t => (t.id === app.id)));
+        arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        return arr;
+    }
+
     readonly property var preppedNames: list.map(a => ({
         name: Fuzzy.prepare(`${a.name} `),
         entry: a
@@ -86,11 +85,12 @@ Singleton {
     function frecencyQuery(search: string): var {
         if (search === "") {
             const scored = list.map(obj => ({
-                entry: obj,
-                score: AppUsage.getScore(obj.id)
-            }));
+                        entry: obj,
+                        score: AppUsage.getScore(obj.id)
+                    }));
+            // Split: apps with score > 0 sorted by score desc, then rest alphabetically (since list is already sorted, filter preserves order)
             const used = scored.filter(item => item.score > 0).sort((a, b) => b.score - a.score);
-            const unused = scored.filter(item => item.score === 0).sort((a, b) => a.entry.name.localeCompare(b.entry.name));
+            const unused = scored.filter(item => item.score === 0);
             return used.concat(unused).map(item => item.entry);
         }
 
@@ -116,8 +116,10 @@ Singleton {
 
     function fuzzyQuery(search: string): var { // Idk why list<DesktopEntry> doesn't work
         if (search === "") {
-            if (root.frecencySearch) return frecencyQuery(search);
-            return Array.from(list).sort((a, b) => a.name.localeCompare(b.name));
+            if (root.frecencySearch) {
+                return frecencyQuery(search);
+            }
+            return list;
         }
 
         if (root.frecencySearch) return frecencyQuery(search);
