@@ -499,6 +499,7 @@ RippleButton {
                                 anchors.centerIn: parent
                                 text: root.bigText
                                 font.pixelSize: root.actionPanelOpen ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.normal
+                                font.family: "Twitter Color Emoji"
                                 color: root.isSelected ? Appearance.colors.colOnTertiaryContainer : root.colForeground
                             }
                         }
