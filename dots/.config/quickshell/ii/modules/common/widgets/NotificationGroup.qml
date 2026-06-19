@@ -32,9 +32,16 @@ MouseArea { // Notification group area
         dragIndexDiff == 1 ? (parentDragDistance * 0.3) :
         dragIndexDiff == 2 ? (parentDragDistance * 0.1) : 0
 
-    function destroyWithAnimation(left = false) {
-        root.qmlParent.resetDrag()
+    function destroyWithAnimation(left = undefined) {
+        if (left === undefined) {
+            const pos = Config?.options.notifications.position ?? "top_right";
+            if (pos.endsWith("left")) left = true;
+            else if (pos.endsWith("right")) left = false;
+            else left = false; // default left = false -> animate right
+        }
+        root.qmlParent.resetDrag();
         background.anchors.leftMargin = background.anchors.leftMargin; // Break binding
+        background.opacity = background.opacity; // Break binding
         destroyAnimation.left = left;
         destroyAnimation.running = true;
     }
@@ -55,13 +62,23 @@ MouseArea { // Notification group area
         property bool left: true
         running: false
 
-        NumberAnimation {
-            target: background.anchors
-            property: "leftMargin"
-            to: (root.width + root.dismissOvershoot) * (destroyAnimation.left ? -1 : 1)
-            duration: Appearance.animation.elementMove.duration
-            easing.type: Appearance.animation.elementMove.type
-            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+        ParallelAnimation {
+            NumberAnimation {
+                target: background.anchors
+                property: "leftMargin"
+                to: (root.width + root.dismissOvershoot) * (destroyAnimation.left ? -1 : 1)
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                target: background
+                property: "opacity"
+                to: 0.0
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
         }
         onFinished: () => {
             root.notifications.forEach((notif) => {
@@ -82,6 +99,14 @@ MouseArea { // Notification group area
         id: dragManager
         anchors.fill: parent
         interactive: !expanded
+        minimumX: {
+            const pos = Config?.options.notifications.position ?? "top_right";
+            return pos.endsWith("left") ? 0 : -Infinity;
+        }
+        maximumX: {
+            const pos = Config?.options.notifications.position ?? "top_right";
+            return pos.endsWith("right") ? 0 : Infinity;
+        }
         automaticallyReset: false
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
@@ -124,6 +149,20 @@ MouseArea { // Notification group area
         color: popup ? Appearance.colors.colBackgroundSurfaceContainer : Appearance.colors.colLayer2
         radius: Appearance.rounding.normal
         anchors.leftMargin: root.xOffset
+
+        opacity: {
+            if (!dragManager.dragging) return 1.0;
+            var u = root.width > 0 ? Math.min(1.0, Math.abs(root.xOffset) / root.width) : 0.0;
+            return (1.0 - u * u * u) * (1.0 - u * u * u);
+        }
+        Behavior on opacity {
+            enabled: !dragManager.dragging
+            NumberAnimation {
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+            }
+        }
 
         Behavior on anchors.leftMargin {
             enabled: !dragManager.dragging
