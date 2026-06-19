@@ -497,7 +497,7 @@ RippleButton {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: root.bigText
+                                text: "😀"
                                 font.pixelSize: root.actionPanelOpen ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.normal
                                 font.family: "Twitter Color Emoji"
                                 verticalAlignment: Text.AlignVCenter
