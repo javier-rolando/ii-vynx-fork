@@ -495,12 +495,10 @@ RippleButton {
                                 }
                             }
 
-                            Text {
+                            StyledText {
                                 anchors.centerIn: parent
-                                text: "😀"
+                                text: root.bigText
                                 font.pixelSize: root.actionPanelOpen ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.normal
-                                font.family: "Twitter Color Emoji"
-                                verticalAlignment: Text.AlignVCenter
                                 color: root.isSelected ? Appearance.colors.colOnTertiaryContainer : root.colForeground
                             }
                         }
