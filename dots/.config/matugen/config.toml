@@ -93,10 +93,6 @@ output_path = "~/.thunderbird/yjakaiu9.default-default/chrome/userChrome.css"
 input_path = "~/.config/matugen/templates/apps/betterbirdContent.css"
 output_path = "~/.thunderbird/yjakaiu9.default-default/chrome/userContent.css"
 
-[templates.nvim]
-input_path = "~/.config/matugen/templates/apps/nvim.lua"
-output_path = "~/.config/nvim/lua/config/matugen_colors.lua"
-
 [templates.kitty]
 input_path = "~/.config/matugen/templates/apps/kitty-colors.conf"
 output_path = "~/.local/state/quickshell/user/generated/kitty/kitty-colors.conf"
