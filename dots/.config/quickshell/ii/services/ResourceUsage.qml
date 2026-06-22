@@ -218,13 +218,9 @@ Singleton {
             "if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then " +
             "  echo 'NVIDIA|'$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null); " +
             "elif [ -d /sys/class/drm ] && ls /sys/class/drm/card*/device/gpu_busy_percent >/dev/null 2>&1; then " +
-            "  for card in /sys/class/drm/card*/device; do " +
-            "    if [ -f \"$card/gpu_busy_percent\" ]; then " +
-            "      model=$(cat \"$card/device\" 2>/dev/null || basename $(dirname \"$card\")); " +
-            "      echo \"AMD|$model\"; exit 0; " +
-            "    fi; " +
-            "  done; " +
-            "  echo 'AMD|AMD GPU'; " +
+            "  model=$(lspci -v 2>/dev/null | grep -A 4 -i 'vga compatible\\|3d controller\\|display controller' | grep -i 'subsystem:' | grep -o 'Radeon[^]]*' | head -1); " +
+            "  if [ -z \"$model\" ]; then model=$(lspci 2>/dev/null | grep -i -m1 'vga\\|3d\\|display' | sed 's/.*: //'); fi; " +
+            "  echo \"AMD|$model\"; " +
             "else " +
             "  model=$(lspci 2>/dev/null | grep -i -m1 'vga\\|3d\\|display' | sed 's/.*: //'); " +
             "  if echo \"$model\" | grep -qi 'intel'; then " +
