@@ -24,15 +24,42 @@ Singleton {
     property string _lastSerializedContainers: ""
     property var _memStats: ({})             // id → MB map
 
+    // ── Enable gate ────────────────────────────────────────────────────────
+    // When `Config.options.resources.enableDocker` is false, none of the
+    // docker procs spawn and the 60s poll Timer is stopped. This means
+    // DockerService can stay imported everywhere (singleton auto-loads on
+    // first reference) without imposing any background CPU/IO on users
+    // who have disabled the Docker popup in settings.
+    readonly property bool _enabled: Config?.options?.resources?.enableDocker ?? true
+
     // ── Boot ───────────────────────────────────────────────────────────────
     Component.onCompleted: {
-        _silentRefresh();
-        eventsProc.running = true;
+        if (!root._enabled) return
+        _silentRefresh()
+        eventsProc.running = true
+    }
+
+    on_EnabledChanged: {
+        if (root._enabled) {
+            _silentRefresh()
+            eventsProc.running = true
+        } else {
+            eventsProc.running = false
+            serviceStatusProc.running = false
+            fetchProc.running = false
+            memStatsProc.running = false
+            availabilityProc.running = false
+            root.isLoading = false
+            _applyEmptyContainers()
+            root.dockerAvailable = false
+            root.dockerRunning = false
+        }
     }
 
     // ── Public API ─────────────────────────────────────────────────────────
     // Called by the user-facing refresh button — shows loading indicator
     function refresh() {
+        if (!root._enabled) return
         root.isLoading = true;
         _startAvailabilityCheck();
         _startServiceCheck();
@@ -40,12 +67,14 @@ Singleton {
 
     // Called when the popup opens — refreshes uptime display without spinner
     function refreshForPopup() {
+        if (!root._enabled) return
         _silentRefresh();
         _startMemStats();
     }
 
     // Called by timers / events — silent, no loading spinner
     function _silentRefresh() {
+        if (!root._enabled) return
         _startAvailabilityCheck();
         _startServiceCheck();
     }
@@ -122,15 +151,17 @@ Singleton {
         interval: 5000
         repeat: false
         onTriggered: {
-            if (root.dockerAvailable)
+            if (root._enabled && root.dockerAvailable)
                 eventsProc.running = true;
         }
     }
 
     // ── Background poll (60s fallback) — silent ────────────────────────────
+    // Only runs when the Docker toggle is on AND the daemon is reachable.
+    // If the user disables the toggle at runtime, the Timer stops itself.
     Timer {
         interval: 60000
-        running: true
+        running: root._enabled && root.dockerAvailable
         repeat: true
         onTriggered: root._silentRefresh()
     }

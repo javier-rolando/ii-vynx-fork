@@ -91,4 +91,18 @@ ContentPage {
             onCheckedChanged: Config.options.bar.resources.showDocker = checked
         }
     }
+
+    ContentSection {
+        icon: "inventory_2"
+        title: Translation.tr("Docker Backend")
+
+        ConfigSwitch {
+            buttonIcon: "power_settings_new"
+            text: Translation.tr("Enable Docker monitoring")
+            checked: Config.options.resources.enableDocker
+            onCheckedChanged: {
+                Config.options.resources.enableDocker = checked
+            }
+        }
+    }
 }

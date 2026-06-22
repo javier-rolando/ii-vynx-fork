@@ -101,6 +101,9 @@ Singleton {
     property string composeDraftBody: ""
     property var composeDraftAttachments: []
     property bool credentialsConfigured: false
+    property string tempGmailClientId: ""
+    property string tempGmailClientSecret: ""
+    property bool gmailCredentialsTempLoaded: false
 
     function checkCredentials() {
         credentialsChecker.running = true;

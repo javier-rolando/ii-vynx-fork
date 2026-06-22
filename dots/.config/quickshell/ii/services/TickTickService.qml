@@ -80,6 +80,36 @@ Singleton {
     // ── Init ──────────────────────────────────────────────────────
 
     Component.onCompleted: {
+        loadCredentials();
+    }
+
+    Connections {
+        target: KeyringStorage
+        function onLoadedChanged() {
+            if (KeyringStorage.loaded) {
+                root.loadCredentials();
+            }
+        }
+        function onDataChanged() {
+            root.loadCredentials();
+        }
+    }
+
+    function loadCredentials() {
+        if (KeyringStorage.loaded) {
+            let kr = KeyringStorage.keyringData?.apiKeys;
+            if (kr && kr.ticktick_access_token) {
+                root.clientId = kr.ticktick_client_id || "";
+                root.clientSecret = kr.ticktick_client_secret || "";
+                root.accessToken = kr.ticktick_access_token || "";
+                console.log("[TickTick] Credentials loaded from Gnome Keyring.");
+                if (root.available) {
+                    root.refresh();
+                }
+                return;
+            }
+        }
+        // Fallback to .env
         loadEnv();
     }
 
@@ -90,6 +120,9 @@ Singleton {
 
     function parseEnv(text) {
         let lines = text.split("\n");
+        let envClientId = "";
+        let envClientSecret = "";
+        let envAccessToken = "";
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             if (line.startsWith("#") || line.length === 0)
@@ -100,17 +133,25 @@ Singleton {
             let key = line.substring(0, eqIdx).trim();
             let val = line.substring(eqIdx + 1).trim();
             if (key === "TICKTICK_CLIENT_ID")
-                root.clientId = val;
+                envClientId = val;
             else if (key === "TICKTICK_CLIENT_SECRET")
-                root.clientSecret = val;
+                envClientSecret = val;
             else if (key === "TICKTICK_ACCESS_TOKEN")
-                root.accessToken = val;
+                envAccessToken = val;
         }
-        if (root.available) {
-            console.log("[TickTick] Credentials loaded, fetching tasks...");
-            root.refresh();
-        } else {
-            console.log("[TickTick] No access token found in .env. Service disabled.");
+
+        // Only assign if we didn't load from Keyring or Keyring is not loaded/empty
+        let kr = KeyringStorage.loaded ? KeyringStorage.keyringData?.apiKeys : null;
+        if (!kr || !kr.ticktick_access_token) {
+            root.clientId = envClientId;
+            root.clientSecret = envClientSecret;
+            root.accessToken = envAccessToken;
+            if (root.available) {
+                console.log("[TickTick] Credentials loaded from .env (fallback), fetching tasks...");
+                root.refresh();
+            } else {
+                console.log("[TickTick] No access token found in Gnome Keyring or .env. Service disabled.");
+            }
         }
     }
 

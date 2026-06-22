@@ -5,11 +5,50 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.services
 import Quickshell
+import Quickshell.Io
 
 Item {
     id: root
 
     readonly property bool configured: EmailService.credentialsConfigured
+
+    Component.onCompleted: {
+        if (!EmailService.gmailCredentialsTempLoaded) {
+            loadGmailCredentialsProc.running = true;
+        }
+    }
+
+    Process {
+        id: loadGmailCredentialsProc
+        command: ["python3", Quickshell.shellPath("scripts/email/get_gmail_credentials.py")]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(text);
+                    EmailService.tempGmailClientId = data.client_id || "";
+                    EmailService.tempGmailClientSecret = data.client_secret || "";
+                    EmailService.gmailCredentialsTempLoaded = true;
+                } catch(e) {
+                    console.error("[EmailAuth] Failed to parse existing Gmail credentials");
+                }
+            }
+        }
+    }
+
+    Process {
+        id: saveGmailCredentialsProc
+        command: ["python3", Quickshell.shellPath("scripts/email/backup_gmail_env.py"), EmailService.tempGmailClientId, EmailService.tempGmailClientSecret]
+        onExited: (code) => {
+            console.log("[EmailAuth] Gmail credentials backup finished with code:", code);
+            EmailService.gmailCredentialsTempLoaded = false;
+            EmailService.checkCredentials();
+        }
+    }
+
+    function saveGmailCredentials() {
+        saveGmailCredentialsProc.running = false;
+        saveGmailCredentialsProc.running = true;
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -143,15 +182,18 @@ Item {
 
     // --- Needs Setup State (Tutorial) ---
     Flickable {
+        id: setupFlickable
         anchors.fill: parent
-        anchors.margins: 40
         visible: !root.configured && !EmailService.loading && !EmailService.checkingCredentials
-        contentHeight: setupCol.implicitHeight
+        contentHeight: setupCol.implicitHeight + 80
+        contentWidth: width
         clip: true
 
         ColumnLayout {
             id: setupCol
-            width: parent.width
+            x: 40
+            y: 40
+            width: setupFlickable.width - 80
             spacing: 24
 
             ColumnLayout {
@@ -234,6 +276,37 @@ Item {
                 }
             }
 
+            // Credentials Inputs
+            ColumnLayout {
+                spacing: 12
+                Layout.fillWidth: true
+                Layout.topMargin: 16
+
+                StyledText {
+                    text: Translation.tr("Gmail Credentials")
+                    font.pixelSize: Appearance.font.pixelSize.large
+                    font.weight: Font.Bold
+                    color: Appearance.colors.colOnSurface
+                }
+
+                ConfigTextField {
+                    text: Translation.tr("Client ID")
+                    icon: "key"
+                    placeholderText: Translation.tr("Enter your Gmail Client ID")
+                    inputText: EmailService.tempGmailClientId
+                    textField.onTextChanged: EmailService.tempGmailClientId = textField.text.trim()
+                }
+
+                ConfigTextField {
+                    text: Translation.tr("Client Secret")
+                    icon: "vpn_key"
+                    placeholderText: Translation.tr("Enter your Gmail Client Secret")
+                    inputText: EmailService.tempGmailClientSecret
+                    textField.echoMode: TextInput.Password
+                    textField.onTextChanged: EmailService.tempGmailClientSecret = textField.text.trim()
+                }
+            }
+
             // Action Buttons
             RowLayout {
                 spacing: 16
@@ -247,14 +320,14 @@ Item {
                     buttonRadius: Appearance.rounding.full
                     colBackground: EmailService.credentialsCheckFailed ? Appearance.colors.colError : Appearance.colors.colPrimary
                     colBackgroundHover: EmailService.credentialsCheckFailed ? Appearance.colors.colErrorHover : Appearance.colors.colPrimaryHover
-                    enabled: !EmailService.checkingCredentials
-                    onClicked: EmailService.checkCredentials()
+                    enabled: !EmailService.checkingCredentials && EmailService.tempGmailClientId.length > 0 && EmailService.tempGmailClientSecret.length > 0
+                    onClicked: root.saveGmailCredentials()
                     
                     RowLayout {
                         anchors.centerIn: parent
                         spacing: 12
                         MaterialSymbol { 
-                            text: EmailService.checkingCredentials ? "progress_activity" : (EmailService.credentialsCheckFailed ? "error" : "refresh")
+                            text: EmailService.checkingCredentials ? "progress_activity" : (EmailService.credentialsCheckFailed ? "error" : "save")
                             iconSize: 22
                             color: EmailService.credentialsCheckFailed ? Appearance.colors.colOnError : Appearance.colors.colOnPrimary 
                             
@@ -264,7 +337,7 @@ Item {
                             }
                         }
                         StyledText {
-                            text: EmailService.checkingCredentials ? Translation.tr("Checking...") : (EmailService.credentialsCheckFailed ? Translation.tr("Credential Missing") : Translation.tr("Check Credentials"))
+                            text: EmailService.checkingCredentials ? Translation.tr("Saving...") : Translation.tr("Save & Apply")
                             color: EmailService.credentialsCheckFailed ? Appearance.colors.colOnError : Appearance.colors.colOnPrimary
                             font.weight: Font.Bold
                             font.pixelSize: Appearance.font.pixelSize.normal

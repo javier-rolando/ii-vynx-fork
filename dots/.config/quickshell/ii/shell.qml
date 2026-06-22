@@ -34,6 +34,14 @@ ShellRoot {
         Updates.load();
         DarkModeService.automatic;
         ChangelogService.load();
+        // Only spin up KdeConnectService if the Phone tab is enabled in
+        // config. Touching the singleton forces QML to instantiate it and
+        // runs its Component.onCompleted, which starts the DBus monitor,
+        // pgrep polling, and ADB probing. For users who don't use phone
+        // integration this is pure overhead.
+        if (Config.options?.policies?.phone !== 0) {
+            KdeConnectService.available;
+        }
         root.applyOpenRgbIfEnabled();
     }
 
@@ -88,6 +96,48 @@ ShellRoot {
         component: WaffleFamily {}
     }
 
+    // Settings app loaded in-process once requested, then kept alive
+    // for fast re-opens. After `unloadAfterSeconds` of inactivity we
+    // drop the component to recover ~70 MB of QML memory. Set to 0 in
+    // Config.options.settingsApp.unloadAfterSeconds to keep it warm.
+    Loader {
+        id: settingsLoader
+        property bool loadedOnce: false
+        active: loadedOnce || GlobalStates.settingsOpen
+        source: "SettingsWindow.qml"
+
+        // When settings closes, schedule an unload pass. If the user
+        // reopens before the timer fires, the timer is reset and we
+        // keep the warm component.
+        Timer {
+            id: settingsUnloadTimer
+            interval: Math.max(0, (Config.options?.settingsApp?.unloadAfterSeconds ?? 300)) * 1000
+            repeat: false
+            onTriggered: {
+                if (GlobalStates.settingsOpen)
+                    return
+                settingsLoader.loadedOnce = false
+            }
+        }
+
+        Connections {
+            target: GlobalStates
+            function onSettingsOpenChanged() {
+                if (GlobalStates.settingsOpen) {
+                    settingsUnloadTimer.stop()
+                    if (!settingsLoader.loadedOnce)
+                        settingsLoader.loadedOnce = true
+                } else {
+                    const s = Config.options?.settingsApp?.unloadAfterSeconds ?? 300
+                    if (s > 0) {
+                        settingsUnloadTimer.interval = s * 1000
+                        settingsUnloadTimer.restart()
+                    }
+                }
+            }
+        }
+    }
+
     // Shortcuts
     IpcHandler {
         target: "panelFamily"
@@ -113,3 +163,10 @@ ShellRoot {
         }
     }
 }
+
+
+
+
+
+
+

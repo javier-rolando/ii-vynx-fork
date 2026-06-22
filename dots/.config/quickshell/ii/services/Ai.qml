@@ -442,19 +442,45 @@ Singleton {
         });
     }
 
+    // Boot-time index: Ollama models + default prompts + user prompts +
+    // saved chats — all in ONE Process spawn. Replaces four parallel
+    // `Process { running: true }` invocations that fired on every boot
+    // even if the user had never opened the AI panel.
+    // Gated by Config.options.ai.enable: when false, no fork happens
+    // until the user opens the AI panel (which sets the flag). This is
+    // particularly useful for users without ollama installed (the
+    // previous incarnation spawned a script that blocked ~50ms probing
+    // the daemon on every boot).
     Process {
-        id: getOllamaModels
-        running: true
-        command: ["bash", "-c", `${Directories.scriptPath}/ai/show-installed-ollama-models.sh`.replace(/file:\/\//, "")]
-        stdout: SplitParser {
-            onRead: data => {
+        id: aiIndexProc
+        running: Config?.options?.ai?.enable ?? true
+        command: [
+            "python3",
+            Directories.scriptPath + "/ai/ai_index.py".replace(/file:\/\//, ""),
+            Directories.defaultAiPrompts.toString().replace(/file:\/\//, ""),
+            Directories.userAiPrompts.toString().replace(/file:\/\//, ""),
+            Directories.aiChats.toString().replace(/file:\/\//, "")
+        ]
+        stdout: StdioCollector {
+            id: aiIndexCollector
+            onStreamFinished: {
+                const raw = aiIndexCollector.text.trim()
+                if (raw.length === 0)
+                    return
+                let parsed
                 try {
-                    if (data.length === 0)
-                        return;
-                    const dataJson = JSON.parse(data);
-                    root.modelList = [...root.modelList, ...dataJson];
-                    dataJson.forEach(model => {
-                        const safeModelName = root.safeModelName(model);
+                    parsed = JSON.parse(raw)
+                } catch (e) {
+                    console.log("Ai index parse error:", e)
+                    return
+                }
+
+                // Ollama models
+                const models = Array.isArray(parsed.ollama_models) ? parsed.ollama_models : []
+                if (models.length > 0) {
+                    root.modelList = [...root.modelList, ...models]
+                    models.forEach(model => {
+                        const safeModelName = root.safeModelName(model)
                         root.addModel(safeModelName, {
                             "name": guessModelName(model),
                             "icon": guessModelLogo(model),
@@ -463,52 +489,18 @@ Singleton {
                             "endpoint": "http://localhost:11434/v1/chat/completions",
                             "model": model,
                             "requires_key": false
-                        });
-                    });
-
-                    root.modelList = Object.keys(root.models);
-                } catch (e) {
-                    console.log("Could not fetch Ollama models:", e);
+                        })
+                    })
+                    root.modelList = Object.keys(root.models)
                 }
-            }
-        }
-    }
 
-    Process {
-        id: getDefaultPrompts
-        running: true
-        command: ["ls", "-1", Directories.defaultAiPrompts]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.length === 0)
-                    return;
-                root.defaultPrompts = text.split("\n").filter(fileName => fileName.endsWith(".md") || fileName.endsWith(".txt")).map(fileName => `${Directories.defaultAiPrompts}/${fileName}`);
-            }
-        }
-    }
-
-    Process {
-        id: getUserPrompts
-        running: true
-        command: ["ls", "-1", Directories.userAiPrompts]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.length === 0)
-                    return;
-                root.userPrompts = text.split("\n").filter(fileName => fileName.endsWith(".md") || fileName.endsWith(".txt")).map(fileName => `${Directories.userAiPrompts}/${fileName}`);
-            }
-        }
-    }
-
-    Process {
-        id: getSavedChats
-        running: true
-        command: ["ls", "-1", Directories.aiChats]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.length === 0)
-                    return;
-                root.savedChats = text.split("\n").filter(fileName => fileName.endsWith(".json")).map(fileName => `${Directories.aiChats}/${fileName}`);
+                // Prompts + chats (already absolute, filtered by extension)
+                if (Array.isArray(parsed.default_prompts))
+                    root.defaultPrompts = parsed.default_prompts
+                if (Array.isArray(parsed.user_prompts))
+                    root.userPrompts = parsed.user_prompts
+                if (Array.isArray(parsed.saved_chats))
+                    root.savedChats = parsed.saved_chats
             }
         }
     }

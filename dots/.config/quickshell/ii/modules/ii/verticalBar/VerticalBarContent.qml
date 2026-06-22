@@ -23,7 +23,8 @@ Item { // Bar content region
         enabled: Config.options.bar.barBackgroundStyle === 2
         target: HyprlandData
         function onWindowListChanged() {
-            const monitor = HyprlandData.monitors.find(m => m.id === monitorIndex);
+            const monitorName = root.screen ? root.screen.name : "";
+            const monitor = monitorName ? HyprlandData.monitors.find(m => m.name === monitorName) : null;
             const wsId = monitor?.activeWorkspace?.id;
 
             const hasWindow = wsId ? HyprlandData.windowList.some(w => w.workspace.id === wsId && !w.floating) : false;
@@ -41,13 +42,17 @@ Item { // Bar content region
     }
 
     ////// Definning places of center modules //////
-    property var fullModel: Config.options?.bar?.layouts?.center
-
-    property int centerIdx: (fullModel || []).findIndex(item => item.centered)
-
-    property var leftList: centerIdx === -1 ? [] : fullModel.slice(0, centerIdx)
-    property var centerList: centerIdx === -1 ? fullModel : [fullModel[centerIdx]]
-    property var rightList: centerIdx === -1 ? [] : fullModel.slice(centerIdx + 1)
+    // Use a single stable empty array reference so the binding tracker
+    // doesn't see a "new" array on every re-evaluation when Config.options
+    // transiently reloads. A fresh `[]` literal each frame creates a
+    // chain reaction through leftList/centerList/rightList, which the
+    // QML binding tracker reports as a binding loop.
+    readonly property var _emptyLayout: ([])
+    readonly property var fullModel: Config.options.bar.layouts.center || root._emptyLayout
+    readonly property int centerIdx: fullModel.findIndex(item => item.centered)
+    readonly property var leftList: centerIdx === -1 ? root._emptyLayout : fullModel.slice(0, centerIdx)
+    readonly property var centerList: centerIdx === -1 ? fullModel.slice() : [fullModel[centerIdx]]
+    readonly property var rightList: centerIdx === -1 ? root._emptyLayout : fullModel.slice(centerIdx + 1)
 
     // Background shadow
     Loader {
@@ -66,24 +71,19 @@ Item { // Bar content region
     readonly property bool isDynamicIsland: Config.options.bar.cornerStyle === 3
     readonly property real frameThickness: Config.options.appearance.fakeScreenRounding === 3 ? Config.options.appearance.wrappedFrameThickness : 0
 
+    // === Transparent bar background: simple color gradient (no blur) ===
+    // Uses a semi-transparent solid color that fades from a subtle tint at the
+    // screen edge to fully transparent at the content edge.
     Rectangle {
+        id: transparentGradientLayer
         z: -11
         anchors.fill: parent
         visible: Config.options.bar.barBackgroundStyle === 0
+        readonly property bool barAtLeft: !Config.options.bar.bottom
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop {
-                position: Config.options.bar.bottom ? 1.0 : 0.0
-                color: Qt.rgba(0, 0, 0, 0.6)
-            }
-            GradientStop {
-                position: Config.options.bar.bottom ? 0.6 : 0.4
-                color: Qt.rgba(0, 0, 0, 0.2)
-            }
-            GradientStop {
-                position: Config.options.bar.bottom ? 0.0 : 1.0
-                color: "transparent"
-            }
+            GradientStop { position: transparentGradientLayer.barAtLeft ? 0.0 : 1.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.30) }
+            GradientStop { position: transparentGradientLayer.barAtLeft ? 1.0 : 0.0; color: "transparent" }
         }
     }
 

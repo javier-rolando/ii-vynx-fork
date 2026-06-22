@@ -9,6 +9,7 @@ import QtQuick.Layouts
 MouseArea {
     id: root
     property bool borderless: Config.options.bar.borderless
+    property bool disablePopup: false
 
     readonly property var chargeState: Battery.chargeState
     readonly property bool isCharging: Battery.isCharging
@@ -24,6 +25,21 @@ MouseArea {
 
     property color textColor: Appearance.colors.colOnSurface
     visible: Battery.available
+
+    Component.onCompleted: {
+        if (typeof rootItem !== "undefined") {
+            rootItem.toggleVisible(Battery.available);
+        }
+    }
+
+    Connections {
+        target: Battery
+        function onAvailableChanged() {
+            if (typeof rootItem !== "undefined") {
+                rootItem.toggleVisible(Battery.available);
+            }
+        }
+    }
 
     implicitWidth: {
         if (Config.options.battery.style === "android16")
@@ -279,8 +295,15 @@ MouseArea {
         }
     }
 
-    BatteryPopup {
-        id: batteryPopup
-        hoverTarget: root
+    Component {
+        id: popupComponent
+        BatteryPopup {
+            hoverTarget: root
+        }
+    }
+
+    Loader {
+        active: !root.disablePopup
+        sourceComponent: popupComponent
     }
 }
