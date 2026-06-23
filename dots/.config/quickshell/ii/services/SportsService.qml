@@ -390,12 +390,18 @@ Item {
             const newAway = parseInt(game.away.score) || 0;
             const prev = previousScores[game.id];
             if (prev !== undefined && Config.options.bar.sports.goalNotifications) {
+                const score = `${game.home.name} ${newHome} – ${newAway} ${game.away.name}`;
+                const scorer = game.lastPlay ? `${game.lastPlay}\n` : "";
                 if (newHome > prev.home) {
-                    Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.home.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
+                    Quickshell.execDetached(["bash", "-c",
+                        `curl -fsSL "$1" -o /tmp/qs_goal.png 2>/dev/null; notify-send -i /tmp/qs_goal.png "$2" "$3" -a Shell`,
+                        "--", game.home.logo, "⚽ Goal!", `${scorer}${score}`]);
                     Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
                 }
                 if (newAway > prev.away) {
-                    Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.away.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
+                    Quickshell.execDetached(["bash", "-c",
+                        `curl -fsSL "$1" -o /tmp/qs_goal.png 2>/dev/null; notify-send -i /tmp/qs_goal.png "$2" "$3" -a Shell`,
+                        "--", game.away.logo, "⚽ Goal!", `${scorer}${score}`]);
                     Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
                 }
             }
