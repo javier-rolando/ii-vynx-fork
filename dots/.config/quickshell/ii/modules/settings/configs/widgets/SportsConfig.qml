@@ -150,9 +150,20 @@ ContentPage {
             text: Translation.tr("Enable sports tracker")
             checked: Config.options.bar.sports.enable
             isFirst: true
-            isLast: true
+            isLast: false
             onCheckedChanged: {
                 Config.options.bar.sports.enable = checked;
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "sports_soccer"
+            text: Translation.tr("Goal notifications")
+            checked: Config.options.bar.sports.goalNotifications
+            isFirst: false
+            isLast: true
+            onCheckedChanged: {
+                Config.options.bar.sports.goalNotifications = checked;
             }
         }
 

@@ -29,6 +29,7 @@ Item {
 
     property bool loading: false
     property string error: ""
+    property var previousScores: ({})
 
     function nextGame() {
         if (allGames.length > 1) {
@@ -380,6 +381,21 @@ Item {
             }
         } else if (currentGameIndex < validGames.length) {
             nextIndex = currentGameIndex;
+        }
+
+        for (let gi = 0; gi < validGames.length; gi++) {
+            const game = validGames[gi];
+            if (game.state !== "in") continue;
+            const newHome = parseInt(game.home.score) || 0;
+            const newAway = parseInt(game.away.score) || 0;
+            const prev = previousScores[game.id];
+            if (prev !== undefined && Config.options.bar.sports.goalNotifications) {
+                if (newHome > prev.home)
+                    Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.home.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
+                if (newAway > prev.away)
+                    Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.away.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
+            }
+            previousScores[game.id] = { home: newHome, away: newAway };
         }
 
         allGames = validGames;
