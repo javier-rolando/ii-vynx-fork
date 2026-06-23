@@ -11,6 +11,7 @@ StyledListView { // Scrollable window
     property bool popup: false
     dismissToLeft: popup && (Config.options.notifications.position ?? "top_right").endsWith("left")
     useSlideInAnimation: popup
+    animatePopulate: popup
 
     spacing: 3
 

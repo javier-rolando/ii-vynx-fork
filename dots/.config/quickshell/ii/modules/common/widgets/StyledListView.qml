@@ -14,6 +14,7 @@ ListView {
     property real dragDistance: 0
     property bool popin: true
     property bool animateAppearance: true
+    property bool animatePopulate: true
     property bool animateMovement: false
     property bool dismissToLeft: false
     property bool useSlideInAnimation: false
@@ -88,7 +89,7 @@ ListView {
     }
 
     populate: Transition {
-        animations: animateAppearance ? (root.useSlideInAnimation ? [
+        animations: (animateAppearance && animatePopulate) ? (root.useSlideInAnimation ? [
             Appearance?.animation.elementMove.numberAnimation.createObject(this, {
                 property: "x",
                 from: root.dismissToLeft ? -(root.width + root.removeOvershoot) : (root.width + root.removeOvershoot),
@@ -96,7 +97,7 @@ ListView {
             }),
         ] : [
             Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity", // scale excluded: scale=0 during populate causes visual cramping on initial load
+                properties: "opacity,scale",
                 from: 0,
                 to: 1,
             }),
