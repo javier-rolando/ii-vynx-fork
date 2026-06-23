@@ -180,7 +180,6 @@ MouseArea { // Notification group area
 
         Behavior on implicitHeight {
             id: implicitHeightAnim
-            enabled: false // toggleExpanded() manages this; disabled on init to avoid animating the initial layout pass
             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
         }
 
