@@ -275,6 +275,7 @@ MouseArea { // Notification group area
                     spacing: expanded ? 5 : 3
                     // clip: true
                     interactive: false
+                    animateAppearance: false // prevent populate transition from making contentHeight=0 on first frame, which breaks outer list positioning
                     Behavior on spacing {
                         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                     }
