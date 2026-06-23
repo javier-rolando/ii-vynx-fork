@@ -96,7 +96,7 @@ ListView {
             }),
         ] : [
             Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: popin ? "opacity,scale" : "opacity",
+                properties: "opacity", // scale excluded: scale=0 during populate causes visual cramping on initial load
                 from: 0,
                 to: 1,
             }),
