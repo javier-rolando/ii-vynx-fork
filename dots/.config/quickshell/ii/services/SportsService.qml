@@ -390,10 +390,14 @@ Item {
             const newAway = parseInt(game.away.score) || 0;
             const prev = previousScores[game.id];
             if (prev !== undefined && Config.options.bar.sports.goalNotifications) {
-                if (newHome > prev.home)
+                if (newHome > prev.home) {
                     Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.home.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
-                if (newAway > prev.away)
+                    Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
+                }
+                if (newAway > prev.away) {
                     Quickshell.execDetached(["notify-send", "⚽ Goal!", `${game.away.name} scores!\n${game.home.name} ${newHome} – ${newAway} ${game.away.name}`, "-a", "Shell"]);
+                    Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
+                }
             }
             previousScores[game.id] = { home: newHome, away: newAway };
         }
