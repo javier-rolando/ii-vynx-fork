@@ -1480,7 +1480,7 @@ Singleton {
         // runs in a subshell (though `kill $pid` works in a subshell,
         // we keep the pattern consistent).
         Quickshell.execDetached(["bash", "-c",
-            "pkill -f 'scrcpy.*--window-title' 2>/dev/null; true"])
+            "pkill -f 'scrc[p]y.*--window-title' 2>/dev/null; true"])
         root.scrcpyRunning = false
         root.scrcpyLaunching = false
         scrcpyLaunchFallbackTimer.stop()
@@ -1554,7 +1554,7 @@ Singleton {
         // became true and the card stayed stuck in "connecting" until the
         // 10s fallback timer cleared `scrcpyLaunching`.
         command: ["bash", "-c",
-            "pgrep -f 'scrcpy.*--window-title' >/dev/null 2>&1"]
+            "pgrep -f 'scrc[p]y.*--window-title' >/dev/null 2>&1"]
         onExited: (code, status) => {
             const now = (code === 0)
             if (now) {
