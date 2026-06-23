@@ -1387,7 +1387,7 @@ Singleton {
             // of a generic "Failed to start" message. The previous generic
             // message made it impossible to diagnose why scrcpy was failing
             // (e.g., "device not found", "unknown option", ADB auth issues).
-            const shellCmd = "ERRFILE=$(mktemp); (" + fullScrcpyCmd + ") 2>\"$ERRFILE\" || { ERR=$(head -5 \"$ERRFILE\"); notify-send 'scrcpy' 'scrcpy failed:\n${ERR:-unknown error}' -i smartphone; }; rm -f \"$ERRFILE\""
+            const shellCmd = "ERRFILE=$(mktemp); (" + fullScrcpyCmd + ") 2>\"$ERRFILE\" || { ERR=$(head -5 \"$ERRFILE\"); notify-send 'scrcpy' \"scrcpy failed:\\n${ERR:-unknown error}\" -i smartphone; }; rm -f \"$ERRFILE\""
             Quickshell.execDetached([
                 "bash", "-c",
                 shellCmd + " &"
@@ -1480,11 +1480,7 @@ Singleton {
         // runs in a subshell (though `kill $pid` works in a subshell,
         // we keep the pattern consistent).
         Quickshell.execDetached(["bash", "-c",
-            "for pid in $(pgrep -x scrcpy 2>/dev/null); do " +
-            "  if tr '\\0' ' ' < /proc/$pid/cmdline 2>/dev/null | grep -q -- '--window-title'; then " +
-            "    kill $pid 2>/dev/null; " +
-            "  fi; " +
-            "done"])
+            "pkill -f 'scrcpy.*--window-title' 2>/dev/null; true"])
         root.scrcpyRunning = false
         root.scrcpyLaunching = false
         scrcpyLaunchFallbackTimer.stop()
@@ -1558,12 +1554,7 @@ Singleton {
         // became true and the card stayed stuck in "connecting" until the
         // 10s fallback timer cleared `scrcpyLaunching`.
         command: ["bash", "-c",
-            "for pid in $(pgrep -x scrcpy 2>/dev/null); do " +
-            "  if tr '\\0' ' ' < /proc/$pid/cmdline 2>/dev/null | grep -q -- '--window-title'; then " +
-            "    exit 0; " +
-            "  fi; " +
-            "done; " +
-            "exit 1"]
+            "pgrep -f 'scrcpy.*--window-title' >/dev/null 2>&1"]
         onExited: (code, status) => {
             const now = (code === 0)
             if (now) {
