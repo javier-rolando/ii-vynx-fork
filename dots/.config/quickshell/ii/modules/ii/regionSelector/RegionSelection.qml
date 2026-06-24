@@ -385,14 +385,14 @@ PanelWindow {
         id: snipProc
     }
 
-    ScreencopyView { // For freezing
+    Image {
         anchors.fill: parent
-        live: false
-        captureSource: root.screen
+        source: root.preparationDone ? ("file://" + root.screenshotPath) : ""
+        fillMode: Image.Stretch
         visible: root.visible
 
         focus: root.visible && !root.inlineEditorActive
-        Keys.onPressed: event => { // Esc to close
+        Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
                 root.dismiss();
             }
