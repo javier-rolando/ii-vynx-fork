@@ -135,7 +135,7 @@ Singleton {
         }
 
         return Fuzzy.go(search, preppedNames, {
-            all: true,
+            limit: 100,
             key: "name"
         }).map(r => {
             return r.obj.entry
@@ -209,7 +209,7 @@ Singleton {
 
         // Search in desktop entries
         const iconSearchResults = Fuzzy.go(str, preppedIcons, {
-            all: true,
+            limit: 10,
             key: "name"
         }).map(r => {
             return r.obj.entry
