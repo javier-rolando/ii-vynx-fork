@@ -89,6 +89,18 @@ ContentPage {
             }
 
             ConfigSwitch {
+                buttonIcon: "apps"
+                text: Translation.tr("Always list apps on empty query")
+                checked: Config.options.search.alwaysListApps
+                onCheckedChanged: {
+                    Config.options.search.alwaysListApps = checked;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Opens the app list immediately when search is opened with no query, bypassing the workspace overview")
+                }
+            }
+
+            ConfigSwitch {
                 buttonIcon: "music_note"
                 text: Translation.tr("Show now playing media bubble")
                 checked: Config.options.search.showNowPlayingBubble
@@ -100,16 +112,15 @@ ContentPage {
                 }
             }
 
-            ConfigSwitch {
-                buttonIcon: "apps"
-                text: Translation.tr("Always list apps on empty query")
-                checked: Config.options.search.alwaysListApps
-                onCheckedChanged: {
-                    Config.options.search.alwaysListApps = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Opens the app list immediately when search is opened with no query, bypassing the workspace overview")
-                }
+            ConfigSlider {
+                buttonIcon: "search"
+                text: Translation.tr("Search base width (px)")
+                value: Config.options.search.baseWidth
+                from: 360
+                to: 1000
+                stepSize: 10
+                usePercentTooltip: false
+                onValueChanged: Config.options.search.baseWidth = value
             }
         }
     }
@@ -715,6 +726,8 @@ ContentPage {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
+
+            Item { Layout.preferredHeight: 8 }
 
             ConfigSlider {
                 buttonIcon: "width"
