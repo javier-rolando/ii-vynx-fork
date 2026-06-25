@@ -393,15 +393,17 @@ Item {
                 const score = `${game.home.name} ${newHome} – ${newAway} ${game.away.name}`;
                 const scorer = game.lastPlay ? `${game.lastPlay}\n` : "";
                 if (newHome > prev.home) {
+                    const homeIcon = `/tmp/qs_goal_${game.id}_home.png`;
                     Quickshell.execDetached(["bash", "-c",
-                        `curl -fsSL "$1" -o /tmp/qs_goal.png 2>/dev/null; notify-send -i /tmp/qs_goal.png "$2" "$3" -a Shell`,
-                        "--", game.home.logo, "⚽ Goal!", `${scorer}${score}`]);
+                        `curl -fsSL "$1" -o "$4" 2>/dev/null; notify-send -i "$4" "$2" "$3" -a Shell`,
+                        "--", game.home.logo, "⚽ Goal!", `${scorer}${score}`, homeIcon]);
                     Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
                 }
                 if (newAway > prev.away) {
+                    const awayIcon = `/tmp/qs_goal_${game.id}_away.png`;
                     Quickshell.execDetached(["bash", "-c",
-                        `curl -fsSL "$1" -o /tmp/qs_goal.png 2>/dev/null; notify-send -i /tmp/qs_goal.png "$2" "$3" -a Shell`,
-                        "--", game.away.logo, "⚽ Goal!", `${scorer}${score}`]);
+                        `curl -fsSL "$1" -o "$4" 2>/dev/null; notify-send -i "$4" "$2" "$3" -a Shell`,
+                        "--", game.away.logo, "⚽ Goal!", `${scorer}${score}`, awayIcon]);
                     Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
                 }
             }
