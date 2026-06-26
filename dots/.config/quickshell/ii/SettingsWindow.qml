@@ -108,7 +108,7 @@ FloatingWindow {
             icon: "help",
             component: "modules/settings/configs/CheatSheetConfig.qml"
         },
-        // Group 4 – System & Services (indices 14..18)
+        // Group 4 – System & Services (indices 15..19)
         {
             name: Translation.tr("Hyprland Rules"),
             icon: "rule",
@@ -166,7 +166,7 @@ FloatingWindow {
         },
         {
             name: Translation.tr("Tools & Overlays"),
-            pages: [10, 11, 12, 13].map(i => ({
+            pages: [10, 11, 12, 13, 14].map(i => ({
                         name: pages[i].name,
                         icon: pages[i].icon,
                         pageIndex: i
@@ -174,7 +174,7 @@ FloatingWindow {
         },
         {
             name: Translation.tr("System & Services"),
-            pages: [14, 15, 16, 17, 18].map(i => ({
+            pages: [15, 16, 17, 18].map(i => ({
                         name: pages[i].name,
                         icon: pages[i].icon,
                         pageIndex: i
@@ -194,7 +194,15 @@ FloatingWindow {
             root.visible = GlobalStates.settingsOpen;
             if (GlobalStates.settingsOpen) {
                 settingsSearchBar.forceFocus();
-                if (GlobalStates.settingsPendingPage >= 0) {
+                if (GlobalStates.settingsPendingPageName !== "") {
+                    for (let i = 0; i < root.pages.length; i++) {
+                        if (root.pages[i].component.indexOf(GlobalStates.settingsPendingPageName) !== -1) {
+                            root.currentPage = i;
+                            break;
+                        }
+                    }
+                    GlobalStates.settingsPendingPageName = "";
+                } else if (GlobalStates.settingsPendingPage >= 0) {
                     root.currentPage = GlobalStates.settingsPendingPage;
                     GlobalStates.settingsPendingPage = -1;
                 }
@@ -211,6 +219,12 @@ FloatingWindow {
         root.visible = GlobalStates.settingsOpen;
         MaterialThemeLoader.reapplyTheme();
         Config.readWriteDelay = 0; // Settings app always only sets one var at a time so delay isn't needed
+        // Re-apply ignore alpha rule: Settings is lazy-loaded, so the rule fired
+        // in Appearance.onIgnoreAlphaChanged before this window existed. Re-send
+        // now that the xdg-toplevel is mapped and Hyprland can match it.
+        var a = Appearance.ignoreAlpha;
+        Quickshell.execDetached(["hyprctl", "eval",
+            "hl.window_rule({ match = { title = '^(illogical-impulse Settings)$' }, no_blur = false, ignorealpha = " + a + " })"]);
     }
 
     Rectangle {

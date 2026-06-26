@@ -199,12 +199,16 @@ Scope {
                         bgRoot.wallpaperWidth = width;
                         bgRoot.wallpaperHeight = height;
 
-                        if (width <= screenWidth || height <= screenHeight) {
-                            // Undersized/perfectly sized wallpapers
-                            bgRoot.effectiveWallpaperScale = Math.max(screenWidth / width, screenHeight / height);
+                        if (Config.options.background.scaleLargeWallpapers) {
+                            if (width <= screenWidth || height <= screenHeight) {
+                                // Undersized/perfectly sized wallpapers
+                                bgRoot.effectiveWallpaperScale = Math.max(screenWidth / width, screenHeight / height);
+                            } else {
+                                // Oversized = can be zoomed for parallax, yay
+                                bgRoot.effectiveWallpaperScale = Math.min(bgRoot.preferredWallpaperScale, width / screenWidth, height / screenHeight);
+                            }
                         } else {
-                            // Oversized = can be zoomed for parallax, yay
-                            bgRoot.effectiveWallpaperScale = Math.min(bgRoot.preferredWallpaperScale, width / screenWidth, height / screenHeight);
+                            bgRoot.effectiveWallpaperScale = 1.0;
                         }
                     }
                 }
@@ -470,18 +474,10 @@ Scope {
                             }
 
                             Behavior on x {
-                                NumberAnimation {
-                                    duration: 400
-                                    easing.type: Easing.BezierSpline
-                                    easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                                }
+                                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                             }
                             Behavior on y {
-                                NumberAnimation {
-                                    duration: 400
-                                    easing.type: Easing.BezierSpline
-                                    easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                                }
+                                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                             }
                             Behavior on width {
                                 NumberAnimation {
@@ -523,7 +519,7 @@ Scope {
                                 visible: false
                                 layer.enabled: Config.options.lock.blur.enable
                                 opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
-                                sourceSize: Qt.size(bgRoot.screen.width > 0 ? Math.round(bgRoot.screen.width * bgRoot.preferredWallpaperScale) : 1920, bgRoot.screen.height > 0 ? Math.round(bgRoot.screen.height * bgRoot.preferredWallpaperScale) : 1080)
+                                sourceSize: Config.options.background.scaleLargeWallpapers ? Qt.size(bgRoot.screen.width > 0 ? Math.round(bgRoot.screen.width * bgRoot.preferredWallpaperScale) : 1920, bgRoot.screen.height > 0 ? Math.round(bgRoot.screen.height * bgRoot.preferredWallpaperScale) : 1080) : Qt.size(-1, -1)
 
                                 property int chunkSize: bgRoot.chunkSize
                                 property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
@@ -561,18 +557,10 @@ Scope {
                                 antialiasing: false
 
                                 Behavior on x {
-                                    NumberAnimation {
-                                        duration: 400
-                                        easing.type: Easing.BezierSpline
-                                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                                    }
+                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                                 }
                                 Behavior on y {
-                                    NumberAnimation {
-                                        duration: 400
-                                        easing.type: Easing.BezierSpline
-                                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                                    }
+                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                                 }
                                 Behavior on width {
                                     NumberAnimation {
@@ -889,45 +877,8 @@ Scope {
             readonly property int wbTop: Math.max(baseMargin, (barEffective && !barVertical && !barBottom) ? barSize : 0)
             readonly property int wbBottom: Math.max(baseMargin, (barEffective && !barVertical && barBottom) ? barSize : 0)
 
-            // Search drop exclusion: merge exclusion region into the mask
-            // to prevent compositor blur from covering the SearchDrop.
-            readonly property real _sx: GlobalStates.searchDropActive ? GlobalStates.searchDropExclusionX : overlayDimRect.x + overlayDimRect.width + 1
-            readonly property real _sy: GlobalStates.searchDropActive ? GlobalStates.searchDropExclusionY : overlayDimRect.y + overlayDimRect.height + 1
-            readonly property real _sw: GlobalStates.searchDropActive ? GlobalStates.searchDropExclusionWidth : 0
-            readonly property real _sh: GlobalStates.searchDropActive ? GlobalStates.searchDropExclusionHeight : 0
-
-            // Mask region items — invisible, purely geometric for the mask
-            Item {
-                id: dimMaskLeft
-                x: overlayDimRect.x
-                y: overlayDimRect.y
-                width: Math.max(0, _sx - overlayDimRect.x)
-                height: overlayDimRect.height
-                visible: false
-            }
-            Item {
-                id: dimMaskRight
-                x: Math.max(overlayDimRect.x, _sx + _sw)
-                y: overlayDimRect.y
-                width: Math.max(0, overlayDimRect.x + overlayDimRect.width - Math.max(overlayDimRect.x, _sx + _sw))
-                height: overlayDimRect.height
-                visible: false
-            }
-            Item {
-                id: dimMaskBottom
-                x: overlayDimRect.x
-                y: Math.max(overlayDimRect.y, _sy + _sh)
-                width: overlayDimRect.width
-                height: Math.max(0, overlayDimRect.y + overlayDimRect.height - Math.max(overlayDimRect.y, _sy + _sh))
-                visible: false
-            }
-
             mask: Region {
-                regions: [
-                    Region { item: dimMaskLeft },
-                    Region { item: dimMaskRight },
-                    Region { item: dimMaskBottom }
-                ]
+                item: overlayDimRect
             }
 
             readonly property bool animEnabled: Config.options.background.zoomOutEnabled

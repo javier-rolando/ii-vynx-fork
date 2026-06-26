@@ -278,20 +278,19 @@ Singleton {
     }
 
     property real ignoreAlpha: Config.options.appearance.ignoreAlpha ?? 0.2
+
     onIgnoreAlphaChanged: {
         if (Config.ready) {
-            let evalScript = "hl.layer_rule({ match = { namespace = 'quickshell.*' }, ignore_alpha = " + ignoreAlpha + " }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, ignore_alpha = 0.0, order = -1 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:bar' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:verticalBar' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:sidebarRight' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:sidebarLeft' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:screenCorners' }, order = 10 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, ignore_alpha = 0.0 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:session' }, ignore_alpha = 0.0 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, ignore_alpha = 0.0 })";
-            Quickshell.execDetached(["hyprctl", "eval", evalScript]);
+            var a = root.ignoreAlpha;
+            var script = "";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell.*' }, blur = true, ignore_alpha = " + a + " }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:screenCorners' }, order = 10 }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:session' }, blur = true, ignore_alpha = 0.0 }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, blur = true, ignore_alpha = 0.0 }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true, ignore_alpha = 0.0 }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, blur = true, ignore_alpha = 0.0, order = -1 }) ";
+            script += "hl.window_rule({ match = { title = '^(illogical-impulse Settings)$' }, no_blur = false, ignorealpha = " + a + " }) ";
+            Quickshell.execDetached(["hyprctl", "eval", script]);
         }
     }
 
@@ -305,22 +304,19 @@ Singleton {
                 Quickshell.execDetached(["hyprctl", "eval", "hl.config({ decoration = { rounding = " + root.rounding.windowRounding + " } })"]);
             }
             Quickshell.execDetached(["hyprctl", "eval", "hl.config({ decoration = { blur = { size = " + root.blurSize + " } } })"]);
-            
-            let evalScript = "hl.layer_rule({ match = { namespace = 'quickshell.*' }, ignore_alpha = " + root.ignoreAlpha + " }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, ignore_alpha = 0.0, order = -1 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:bar' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:verticalBar' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:sidebarRight' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:sidebarLeft' }, order = 5 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:screenCorners' }, order = 10 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, ignore_alpha = 0.0 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:session' }, ignore_alpha = 0.0 }) " +
-                             "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, ignore_alpha = 0.0 })";
-            Quickshell.execDetached(["hyprctl", "eval", evalScript]);
-            
+            var a = root.ignoreAlpha;
+            var bs = "";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell.*' }, blur = true, ignore_alpha = " + a + " }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:screenCorners' }, order = 10 }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:session' }, blur = true, ignore_alpha = 0.0 }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, blur = true, ignore_alpha = 0.0 }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true, ignore_alpha = 0.0 }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, blur = true, ignore_alpha = 0.0, order = -1 }) ";
+            bs += "hl.window_rule({ match = { title = '^(illogical-impulse Settings)$' }, no_blur = false, ignorealpha = " + a + " }) ";
+            Quickshell.execDetached(["hyprctl", "eval", bs]);
+
             Quickshell.execDetached(["hyprctl", "eval", "hl.config({ general = { border_size = " + (root.borderless ? "0" : root.borderWidth) + " } })"]);
-            
+
             let colorStr = activeBorderColor.toString();
             let rgb = "";
             if (colorStr.startsWith("#")) {
@@ -331,12 +327,12 @@ Singleton {
                     rgb = hex;
                 }
             }
-            
+
             if (rgb !== "") {
                 let hyprColor = "rgba(" + rgb + "AA)";
                 Quickshell.execDetached(["hyprctl", "eval", "hl.config({ general = { ['col.active_border'] = '" + hyprColor + "' }, group = { ['col.border_active'] = '" + hyprColor + "', groupbar = { ['col.active'] = '" + hyprColor + "' } } })"]);
             }
-            
+
             if (Config.options.appearance.gapsIn !== undefined) {
                 Quickshell.execDetached(["hyprctl", "eval", "hl.config({ general = { gaps_in = '" + Config.options.appearance.gapsIn + "' } })"]);
             }
@@ -409,6 +405,9 @@ Singleton {
         }
     }
 
+    // Global animation speed multiplier — driven by Config.options.appearance.animationMultiplier
+    readonly property real animMultiplier: Config.options?.appearance?.animationMultiplier ?? 1.0
+
     animationCurves: QtObject {
         readonly property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.90, 1, 1] // Default, 350ms
         readonly property list<real> expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1.00, 1, 1] // Default, 500ms
@@ -430,7 +429,7 @@ Singleton {
 
     animation: QtObject {
         property QtObject elementMove: QtObject {
-            property int duration: animationCurves.expressiveDefaultSpatialDuration
+            property int duration: Math.round(animationCurves.expressiveDefaultSpatialDuration * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 650
@@ -444,7 +443,7 @@ Singleton {
         }
 
         property QtObject elementMoveSmall: QtObject {
-            property int duration: animationCurves.expressiveFastSpatialDuration
+            property int duration: Math.round(animationCurves.expressiveFastSpatialDuration * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveFastSpatial
             property int velocity: 650
@@ -458,7 +457,7 @@ Singleton {
         }
 
         property QtObject elementMoveEnter: QtObject {
-            property int duration: 400
+            property int duration: Math.round(400 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedDecel
             property int velocity: 650
@@ -473,7 +472,7 @@ Singleton {
         }
 
         property QtObject elementMoveExit: QtObject {
-            property int duration: 200
+            property int duration: Math.round(200 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedAccel
             property int velocity: 650
@@ -488,7 +487,7 @@ Singleton {
         }
 
         property QtObject elementMoveSlow: QtObject {
-            property int duration: animationCurves.expressiveEffectsDuration * 2.5
+            property int duration: Math.round(animationCurves.expressiveEffectsDuration * 2.5 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveEffects
             property int velocity: 850
@@ -510,7 +509,7 @@ Singleton {
         }
 
         property QtObject elementMoveFast: QtObject {
-            property int duration: animationCurves.expressiveEffectsDuration
+            property int duration: Math.round(animationCurves.expressiveEffectsDuration * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveEffects
             property int velocity: 850
@@ -532,7 +531,7 @@ Singleton {
         }
 
         property QtObject elementResize: QtObject {
-            property int duration: 300
+            property int duration: Math.round(300 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasized
             property int velocity: 650
@@ -547,7 +546,7 @@ Singleton {
         }
 
         property QtObject clickBounce: QtObject {
-            property int duration: 400
+            property int duration: Math.round(400 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 850
@@ -562,13 +561,13 @@ Singleton {
         }
 
         property QtObject scroll: QtObject {
-            property int duration: 200
+            property int duration: Math.round(200 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: root.animationCurves.standardDecel
         }
 
         property QtObject menuDecel: QtObject {
-            property int duration: 350
+            property int duration: Math.round(350 * root.animMultiplier)
             property int type: Easing.OutExpo
         }
     }

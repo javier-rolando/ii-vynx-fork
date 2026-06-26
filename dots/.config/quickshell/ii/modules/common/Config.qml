@@ -304,6 +304,7 @@ Singleton {
                     property string accentColor: ""
                 }
                 property list<string> customColorSchemes: []
+                property real animationMultiplier: 1.0 // 0.25 = fast, 1.0 = default, 2.0 = slow
                 property bool colorfulScrollbar: false
                 property bool scrollAnimations: true
                 property bool scrollFadeMask: false
@@ -429,6 +430,7 @@ Singleton {
                         property real y: 100
                     }
                 }
+                property bool scaleLargeWallpapers: true
                 property bool animateWallpaperChanges: true
                 property bool zoomOutEnabled: true  // master toggle for zoom-out animations
                 property bool windowZoomOnOverview: false // fake window scale-out during overview (GNOME-like)
@@ -1078,6 +1080,7 @@ Singleton {
                     property string windowSearch: "#"
                     property string fileBrowser: "~"
                     property string translator: "@"
+                    property string mediaDownloader: "!"
                 }
                 property JsonObject imageSearch: JsonObject {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
@@ -1105,6 +1108,23 @@ Singleton {
                 property bool showNowPlayingBubble: true
                 property string connectStyle: "connect"  // Search rendered as embedded drop in Connect Mode
                 property int baseWidth: 500
+            }
+
+            property JsonObject mediaDownloader: JsonObject {
+                property bool enabled: true
+                property string downloadPath: FileUtils.trimFileProtocol(`${Directories.home}/Downloads`)
+                property int maxConcurrent: 2
+                property string defaultFormat: "best"
+                property bool embedMetadata: true
+                property bool writeThumbnail: false
+                property bool addChapters: true
+                property string proxy: ""
+                property int rateLimit: 0
+                property bool throttleBypass: false
+                property bool useAria2c: false
+                property string extraArgs: ""
+                property bool keepHistory: false
+                property string lastUsedFormat: "best"
             }
 
             property JsonObject sidebar: JsonObject {

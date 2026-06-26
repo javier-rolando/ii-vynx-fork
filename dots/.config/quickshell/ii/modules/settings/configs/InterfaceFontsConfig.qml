@@ -11,6 +11,25 @@ ContentPage {
     forceWidth: false
 
     ContentSection {
+        title: Translation.tr("Animations")
+        icon: "animation"
+
+        ConfigSlider {
+            buttonIcon: "speed"
+            text: Translation.tr("Animation Duration")
+            usePercentTooltip: false
+            from: 0.1
+            to: 3.0
+            stepSize: 0.05
+            value: Config.options.appearance.animationMultiplier ?? 1.0
+            onValueChanged: Config.options.appearance.animationMultiplier = value
+            StyledToolTip {
+                text: Translation.tr("Controls the duration of all UI animations.\n0.1 = ultra fast  |  1.0 = default  |  3.0 = very slow")
+            }
+        }
+    }
+
+    ContentSection {
         title: Translation.tr("System Rounding")
         icon: "rounded_corner"
 
@@ -132,32 +151,6 @@ ContentPage {
             }
         }
 
-        ContentSubsection {
-            title: Translation.tr("Search style")
-            icon: "style"
-            Layout.fillWidth: true
-            tooltip: Translation.tr("Render the search launcher as a concave-corner drop emerging from the bar inside the unified Connect Mode surface. \n Only effective while Connect Mode is active. Not compatible with some Bar styles.")
-
-            ConfigSelectionArray {
-                currentValue: Config.options.search.connectStyle
-                onSelected: newValue => {
-                    Config.options.search.connectStyle = newValue;
-                }
-                options: [
-                    {
-                        displayName: Translation.tr("Default"),
-                        icon: "view_sidebar",
-                        value: "default"
-                    },
-                    {
-                        displayName: Translation.tr("Connect"),
-                        icon: "phone_android",
-                        value: "connect"
-                    }
-                ]
-            }
-        }
-
         NoticeBox {
             Layout.fillWidth: true
             visible: Config.options.bar.autoHide.enable
@@ -243,7 +236,7 @@ ContentPage {
                 text: Translation.tr("Applies monochrome tint to workspaces icons. Turn on show workspace icons to see this")
             }
         }
-        
+
         ConfigSlider {
             buttonIcon: "humidity_percentage"
             text: Translation.tr("Tint percentage")
