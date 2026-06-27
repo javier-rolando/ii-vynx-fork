@@ -82,6 +82,9 @@ quickshell, home_attrs, ... }:
       xdg-user-dirs #xdg-user-dirs
       rsync #rsync
       yq-go #go-yq
+      yt-dlp #yt-dlp
+      ffmpeg #ffmpeg
+      aria2 #aria2
 
 
       ### illogical-impulse-bibata-modern-classic-bin

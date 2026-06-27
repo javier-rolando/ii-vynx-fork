@@ -20,6 +20,7 @@ import qs.modules.ii.background.widgets
 import qs.modules.ii.background.widgets.clock
 import qs.modules.ii.background.widgets.weather
 import qs.modules.ii.background.widgets.media
+import qs.modules.ii.background.widgets.DateWidget
 
 Scope {
     id: backgroundScope
@@ -557,23 +558,27 @@ Scope {
                                 antialiasing: false
 
                                 Behavior on x {
-                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                    NumberAnimation {
+                                        duration: 400
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                                 Behavior on y {
-                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                    NumberAnimation {
+                                        duration: 400
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 500
-                                        easing.type: Easing.BezierSpline
-                                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                                        easing.type: Easing.OutCubic
                                     }
                                 }
                                 Behavior on height {
                                     NumberAnimation {
                                         duration: 500
-                                        easing.type: Easing.BezierSpline
-                                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                                        easing.type: Easing.OutCubic
                                     }
                                 }
                             }
@@ -687,12 +692,28 @@ Scope {
 
                                 FadeLoader {
                                     shown: Config.options.background.widgets.weather.enable
-                                    sourceComponent: WeatherWidget {
-                                        screenWidth: bgRoot.screen.width
-                                        screenHeight: bgRoot.screen.height
-                                        scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
-                                        scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
-                                        wallpaperScale: bgRoot.effectiveWallpaperScale
+                                    sourceComponent: Config.options.background.widgets.weather.style === "expressive" ? expressiveWeatherWidget : defaultWeatherWidget
+
+                                    Component {
+                                        id: defaultWeatherWidget
+                                        WeatherWidget {
+                                            screenWidth: bgRoot.screen.width
+                                            screenHeight: bgRoot.screen.height
+                                            scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
+                                            scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
+                                            wallpaperScale: bgRoot.effectiveWallpaperScale
+                                        }
+                                    }
+
+                                    Component {
+                                        id: expressiveWeatherWidget
+                                        ExpressiveWeatherWidget {
+                                            screenWidth: bgRoot.screen.width
+                                            screenHeight: bgRoot.screen.height
+                                            scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
+                                            scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
+                                            wallpaperScale: bgRoot.effectiveWallpaperScale
+                                        }
                                     }
                                 }
 
@@ -705,6 +726,17 @@ Scope {
                                         scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
                                         wallpaperScale: bgRoot.effectiveWallpaperScale
                                         wallpaperSafetyTriggered: bgRoot.wallpaperSafetyTriggered
+                                    }
+                                }
+
+                                FadeLoader {
+                                    shown: Config.options.background.widgets.date.enable
+                                    sourceComponent: DateWidget {
+                                        screenWidth: bgRoot.screen.width
+                                        screenHeight: bgRoot.screen.height
+                                        scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
+                                        scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
+                                        wallpaperScale: bgRoot.effectiveWallpaperScale
                                     }
                                 }
 

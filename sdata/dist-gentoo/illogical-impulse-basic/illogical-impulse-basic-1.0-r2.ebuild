@@ -24,4 +24,8 @@ RDEPEND="
 	x11-misc/xdg-user-dirs
 	net-misc/rsync
 	app-misc/yq-go
+	# Media Downloader (yt-dlp, ffmpeg, aria2)
+	net-misc/yt-dlp
+	media-video/ffmpeg
+	net-misc/aria2
 "

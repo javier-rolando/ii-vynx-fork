@@ -124,10 +124,10 @@ ContentPage {
 
     ContentSection {
         icon: "phone_android"
-        title: Translation.tr("Connect Mode")
+        title: Translation.tr("ii Mode")
 
         ContentSubsection {
-            title: Translation.tr("Sidebar style")
+            title: Translation.tr("Style")
             icon: "style"
             Layout.fillWidth: true
 

@@ -425,8 +425,16 @@ Singleton {
                     }
                     property JsonObject weather: JsonObject {
                         property bool enable: false
+                        property string style: "default" // default, expressive
+                        property string backgroundShape: "Cookie9Sided"
                         property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
                         property real x: 400
+                        property real y: 100
+                    }
+                    property JsonObject date: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 100
                         property real y: 100
                     }
                 }
@@ -1125,6 +1133,12 @@ Singleton {
                 property string extraArgs: ""
                 property bool keepHistory: false
                 property string lastUsedFormat: "best"
+                property string videoResolution: "best"
+                property string videoCodec: "any"
+                property int audioBitrate: 0
+                property string audioCodec: "any"
+                property string lastUsedResolution: "best"
+                property bool showAdvancedArgs: false
             }
 
             property JsonObject sidebar: JsonObject {
