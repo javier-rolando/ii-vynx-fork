@@ -23,7 +23,7 @@ MouseArea {
         let base = [
             { icon: "home", name: Translation.tr("Home"), path: Directories.home }, 
             { icon: "docs", name: Translation.tr("Documents"), path: Directories.documents }, 
-            { icon: "download", name: Translation.tr("Downloads"), path: Directories.downloads }, 
+            { icon: "wallpaper", name: Translation.tr("Wallpapers"), path: Config.options.wallpaperSelector.useCustomDefaultPath && Config.options.wallpaperSelector.customDefaultPath ? ("file://" + Config.options.wallpaperSelector.customDefaultPath) : (Directories.pictures + "/Wallpapers") }, 
             { icon: "image", name: Translation.tr("Pictures"), path: Directories.pictures }, 
             { icon: "movie", name: Translation.tr("Videos"), path: Directories.videos }, 
             { icon: "public", name: Translation.tr("Browser"), path: "BROWSER_MODE" }, 

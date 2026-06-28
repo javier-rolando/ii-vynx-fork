@@ -11,7 +11,7 @@ import qs.modules.common.widgets
 ContentPage {
     id: root
     forceWidth: false
-    signal goBack()
+    signal goBack
 
     RowLayout {
         spacing: 12
@@ -48,7 +48,9 @@ ContentPage {
         icon: "save"
         title: Translation.tr("File Paths & Transfers")
 
-        ContentSubsectionLabel { text: Translation.tr("Save paths") }
+        ContentSubsectionLabel {
+            text: Translation.tr("Save paths")
+        }
 
         MaterialTextArea {
             Layout.fillWidth: true
@@ -110,15 +112,42 @@ ContentPage {
             textRole: "displayName"
             visible: Config.options.screenRecord.service === "wf-recorder"
             model: [
-                { displayName: Translation.tr("Auto (Recommended)"), value: "auto" },
-                { displayName: "H264 (NVIDIA GPU - NVENC)", value: "h264_nvenc" },
-                { displayName: "H264 (Intel/AMD GPU - VAAPI)", value: "h264_vaapi" },
-                { displayName: "H264 (AMD GPU - AMF)", value: "h264_amf" },
-                { displayName: "H264 (CPU - Compatibility)", value: "libx264" },
-                { displayName: "HEVC (NVIDIA GPU - NVENC)", value: "hevc_nvenc" },
-                { displayName: "HEVC (Intel/AMD GPU - VAAPI)", value: "hevc_vaapi" },
-                { displayName: "HEVC (AMD GPU - AMF)", value: "hevc_amf" },
-                { displayName: "HEVC (CPU - Compatibility)", value: "libx265" }
+                {
+                    displayName: Translation.tr("Auto (Recommended)"),
+                    value: "auto"
+                },
+                {
+                    displayName: "H264 (NVIDIA GPU - NVENC)",
+                    value: "h264_nvenc"
+                },
+                {
+                    displayName: "H264 (Intel/AMD GPU - VAAPI)",
+                    value: "h264_vaapi"
+                },
+                {
+                    displayName: "H264 (AMD GPU - AMF)",
+                    value: "h264_amf"
+                },
+                {
+                    displayName: "H264 (CPU - Compatibility)",
+                    value: "libx264"
+                },
+                {
+                    displayName: "HEVC (NVIDIA GPU - NVENC)",
+                    value: "hevc_nvenc"
+                },
+                {
+                    displayName: "HEVC (Intel/AMD GPU - VAAPI)",
+                    value: "hevc_vaapi"
+                },
+                {
+                    displayName: "HEVC (AMD GPU - AMF)",
+                    value: "hevc_amf"
+                },
+                {
+                    displayName: "HEVC (CPU - Compatibility)",
+                    value: "libx265"
+                }
             ]
             currentIndex: {
                 const index = model.findIndex(item => item.value === Config.options.screenRecord.codec);
@@ -177,7 +206,9 @@ ContentPage {
             }
         }
 
-        ContentSubsectionLabel { text: Translation.tr("LocalSend CLI") }
+        ContentSubsectionLabel {
+            text: Translation.tr("LocalSend CLI")
+        }
 
         ConfigSwitch {
             buttonIcon: "power_settings_new"
@@ -220,7 +251,9 @@ ContentPage {
             }
         }
 
-        ContentSubsectionLabel { text: Translation.tr("Wallpaper Browser") }
+        ContentSubsectionLabel {
+            text: Translation.tr("Wallpaper Browser")
+        }
 
         MaterialTextArea {
             Layout.fillWidth: true

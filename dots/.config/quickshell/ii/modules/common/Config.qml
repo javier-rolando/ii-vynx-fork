@@ -804,6 +804,7 @@ Singleton {
                 property bool enablePeriodicTable: false
                 property bool enableCommands: true
                 property bool commandsTagsSidebar: false
+                property bool enableWorkspaceProfiles: false
                 property JsonObject fontSize: JsonObject {
                     property int key: Appearance.font.pixelSize.smaller
                     property int comment: Appearance.font.pixelSize.smaller
@@ -1286,6 +1287,8 @@ Singleton {
             property JsonObject wallpaperSelector: JsonObject {
                 property bool useSystemFileDialog: false
                 property list<var> directories: []
+                property bool useCustomDefaultPath: false
+                property string customDefaultPath: FileUtils.trimFileProtocol(`${Directories.pictures}/Wallpapers`)
             }
 
             property JsonObject windows: JsonObject {

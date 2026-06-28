@@ -20,7 +20,12 @@ Singleton {
     property string extractColorsScriptPath: FileUtils.trimFileProtocol(Directories.extractColorsScriptPath)
     property alias directory: folderModel.folder
     readonly property string effectiveDirectory: FileUtils.trimFileProtocol(folderModel.folder.toString())
-    property url defaultFolder: Qt.resolvedUrl(Directories.downloads)
+    property url defaultFolder: {
+        if (Config.ready && Config.options.wallpaperSelector.useCustomDefaultPath && Config.options.wallpaperSelector.customDefaultPath) {
+            return Qt.resolvedUrl("file://" + Config.options.wallpaperSelector.customDefaultPath);
+        }
+        return Qt.resolvedUrl(Directories.pictures + "/Wallpapers");
+    }
     property alias folderModel: folderModel // Expose for direct binding when needed
     property string searchQuery: ""
     readonly property list<string> extensions: [ // TODO: add videos
