@@ -62,13 +62,20 @@ MouseArea { // Notification group area
     function destroyWithAnimation(left = undefined) {
         if (left === undefined) {
             const pos = Config?.options.notifications.position ?? "top_right";
-            if (pos.endsWith("left")) left = true;
-            else if (pos.endsWith("right")) left = false;
-            else left = false; // default left = false -> animate right
+            if (pos.endsWith("left"))
+                left = true;
+            else if (pos.endsWith("right"))
+                left = false;
+            else
+                left = false; // default left = false -> animate right
         }
-        root.qmlParent.resetDrag();
-        background.anchors.leftMargin = background.anchors.leftMargin; // Break binding
+        // Save current xOffset before breaking binding and resetting drag
+        const currentX = root.xOffset;
+        background.anchors.leftMargin = currentX; // Break binding
         background.opacity = background.opacity; // Break binding
+        if (root.qmlParent && typeof root.qmlParent.resetDrag === "function") {
+            root.qmlParent.resetDrag();
+        }
         destroyAnimation.left = left;
         destroyAnimation.running = true;
     }
@@ -126,14 +133,8 @@ MouseArea { // Notification group area
         id: dragManager
         anchors.fill: parent
         interactive: !expanded
-        minimumX: {
-            const pos = Config?.options.notifications.position ?? "top_right";
-            return pos.endsWith("left") ? 0 : -Infinity;
-        }
-        maximumX: {
-            const pos = Config?.options.notifications.position ?? "top_right";
-            return pos.endsWith("right") ? 0 : Infinity;
-        }
+        minimumX: -Infinity
+        maximumX: Infinity
         automaticallyReset: false
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
@@ -175,7 +176,8 @@ MouseArea { // Notification group area
         anchors.leftMargin: root.xOffset
 
         opacity: {
-            if (!dragManager.dragging) return 1.0;
+            if (!dragManager.dragging)
+                return 1.0;
             var u = root.width > 0 ? Math.min(1.0, Math.abs(root.xOffset) / root.width) : 0.0;
             return (1.0 - u * u * u) * (1.0 - u * u * u);
         }

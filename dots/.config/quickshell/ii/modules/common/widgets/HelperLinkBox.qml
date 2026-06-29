@@ -13,20 +13,67 @@ Rectangle {
     readonly property int itemIndex: {
         var p = parent;
         if (!p) return 0;
-        var idx = 0;
-        for (var i = 0; i < p.children.length; ++i) {
-            if (p.children[i] === rootBox) return idx;
-            if (p.children[i].visible && typeof p.children[i].topLeftRadius !== "undefined") idx++;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === rootBox) {
+                selfIdx = i;
+                break;
+            }
         }
-        return 0;
+        if (selfIdx === -1) return 0;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var idx = 0;
+        for (var i = startIdx; i < selfIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                idx++;
+            }
+        }
+        return idx;
     }
 
     readonly property int totalItems: {
         var p = parent;
         if (!p) return 1;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === rootBox) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1) return 1;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
         var count = 0;
-        for (var i = 0; i < p.children.length; ++i) {
-            if (p.children[i].visible && typeof p.children[i].topLeftRadius !== "undefined") count++;
+        for (var i = startIdx; i <= endIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                count++;
+            }
         }
         return count;
     }
@@ -39,22 +86,28 @@ Rectangle {
     readonly property bool prevIsPressed: {
         var p = parent;
         if (!p) return false;
-        for (var i = 0; i < p.children.length; ++i) {
-            var child = p.children[i];
-            if (child === rootBox) return false;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === rootBox) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx <= 0) return false;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx - 1; i >= startIdx; --i) {
+            var child = children[i];
             if (child.visible && typeof child.topLeftRadius !== "undefined") {
-                var isImmediatePrev = true;
-                for (var j = i + 1; j < p.children.length; ++j) {
-                    var midChild = p.children[j];
-                    if (midChild === rootBox) break;
-                    if (midChild.visible && typeof midChild.topLeftRadius !== "undefined") {
-                        isImmediatePrev = false;
-                        break;
-                    }
-                }
-                if (isImmediatePrev) {
-                    return child.isPressed === true || (child.down !== undefined && child.down === true);
-                }
+                return child.isPressed === true || (child.down !== undefined && child.down === true);
             }
         }
         return false;
@@ -63,14 +116,27 @@ Rectangle {
     readonly property bool nextIsPressed: {
         var p = parent;
         if (!p) return false;
-        var foundSelf = false;
-        for (var i = 0; i < p.children.length; ++i) {
-            var child = p.children[i];
-            if (child === rootBox) {
-                foundSelf = true;
-                continue;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === rootBox) {
+                selfIdx = i;
+                break;
             }
-            if (foundSelf && child.visible && typeof child.topLeftRadius !== "undefined") {
+        }
+        if (selfIdx === -1 || selfIdx >= children.length - 1) return false;
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx + 1; i <= endIdx; ++i) {
+            var child = children[i];
+            if (child.visible && typeof child.topLeftRadius !== "undefined") {
                 return child.isPressed === true || (child.down !== undefined && child.down === true);
             }
         }

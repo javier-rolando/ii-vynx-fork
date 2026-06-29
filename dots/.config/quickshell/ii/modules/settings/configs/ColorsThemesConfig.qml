@@ -423,6 +423,7 @@ ContentPage {
 
         RippleButtonWithIcon {
             id: openRgbRefreshButton
+            useDynamicRadius: true
             Layout.fillWidth: true
             materialIcon: "refresh"
             mainText: openRgbSection.openRgbRefreshing ? Translation.tr("Refreshing...") : Translation.tr("Refresh devices")

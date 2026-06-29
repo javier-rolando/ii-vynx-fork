@@ -22,10 +22,158 @@ TextArea {
     selectionColor: Appearance.colors.colSecondaryContainer
     placeholderTextColor: Appearance.m3colors.m3outline
 
+    readonly property int itemIndex: {
+        var p = parent;
+        if (!p) return 0;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1) return 0;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var idx = 0;
+        for (var i = startIdx; i < selfIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                idx++;
+            }
+        }
+        return idx;
+    }
+
+    readonly property int totalItems: {
+        var p = parent;
+        if (!p) return 1;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1) return 1;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
+        var count = 0;
+        for (var i = startIdx; i <= endIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    property bool isFirst: itemIndex === 0
+    property bool isLast: itemIndex === totalItems - 1
+
+    readonly property bool isPressed: root.activeFocus
+
+    readonly property bool prevIsPressed: {
+        var p = parent;
+        if (!p) return false;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx <= 0) return false;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx - 1; i >= startIdx; --i) {
+            var child = children[i];
+            if (child.visible && typeof child.topLeftRadius !== "undefined") {
+                return child.isPressed === true || (child.down !== undefined && child.down === true);
+            }
+        }
+        return false;
+    }
+
+    readonly property bool nextIsPressed: {
+        var p = parent;
+        if (!p) return false;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1 || selfIdx >= children.length - 1) return false;
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx + 1; i <= endIdx; ++i) {
+            var child = children[i];
+            if (child.visible && typeof child.topLeftRadius !== "undefined") {
+                return child.isPressed === true || (child.down !== undefined && child.down === true);
+            }
+        }
+        return false;
+    }
+
+    readonly property real rFull: Appearance.rounding.scale === 0 ? 0 : Math.min(height / 2, Appearance.rounding.large)
+
+    property real topLeftRadius: (isPressed || prevIsPressed) ? rFull : (isFirst ? Appearance.rounding.large : Appearance.rounding.verysmall)
+    property real topRightRadius: (isPressed || prevIsPressed) ? rFull : (isFirst ? Appearance.rounding.large : Appearance.rounding.verysmall)
+    property real bottomLeftRadius: (isPressed || nextIsPressed) ? rFull : (isLast ? Appearance.rounding.large : Appearance.rounding.verysmall)
+    property real bottomRightRadius: (isPressed || nextIsPressed) ? rFull : (isLast ? Appearance.rounding.large : Appearance.rounding.verysmall)
+
+    Behavior on topLeftRadius { animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on topRightRadius { animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on bottomLeftRadius { animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on bottomRightRadius { animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+
     background: Rectangle {
         implicitHeight: 56
         color: Appearance.m3colors.m3surface
-        radius: Appearance.rounding.normal
+        topLeftRadius: root.topLeftRadius
+        topRightRadius: root.topRightRadius
+        bottomLeftRadius: root.bottomLeftRadius
+        bottomRightRadius: root.bottomRightRadius
         border.width: root.activeFocus ? 2 : 1
         border.color: root.activeFocus ? Appearance.m3colors.m3primary :
                        root.hovered ? Appearance.m3colors.m3outline : Appearance.m3colors.m3outlineVariant

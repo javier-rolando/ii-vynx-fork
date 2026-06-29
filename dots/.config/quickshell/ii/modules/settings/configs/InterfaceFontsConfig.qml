@@ -195,24 +195,19 @@ ContentPage {
             }
         }
 
-        ConfigRow {
+        RippleButtonWithIcon {
             visible: Config.options.appearance.icons.enableThemed
+            materialIcon: "magic_button"
+            mainText: Translation.tr("Apply Theme")
+            useDynamicRadius: true
+            implicitHeight: 48
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
-
-            RippleButtonWithIcon {
-                materialIcon: "magic_button"
-                mainText: Translation.tr("Apply Theme")
-                buttonRadius: Appearance.rounding.normal
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                colBackground: Appearance.colors.colPrimaryContainer
-                colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                colRipple: Appearance.colors.colPrimaryContainerActive
-                colText: Appearance.colors.colOnPrimaryContainer
-                onClicked: {
-                    IconThemes.applyTheme(false);
-                }
+            colBackground: Appearance.colors.colPrimaryContainer
+            colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+            colRipple: Appearance.colors.colPrimaryContainerActive
+            colText: Appearance.colors.colOnPrimaryContainer
+            onClicked: {
+                IconThemes.applyTheme(false);
             }
         }
 

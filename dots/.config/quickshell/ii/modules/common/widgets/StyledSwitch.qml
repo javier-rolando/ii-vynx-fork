@@ -14,7 +14,7 @@ Switch {
     property color inactiveColor: Appearance?.colors.colSurfaceContainerHighest ?? "#45464F"
 
     property bool isPressed: root.pressed || root.down
-    scale: isPressed ? 0.95 : 1.0
+    scale: (isPressed && enabled) ? 0.95 : 1.0
     Behavior on scale {
         NumberAnimation {
             duration: 150

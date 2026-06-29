@@ -27,8 +27,8 @@ ListView {
     property real mouseScrollDeltaThreshold: Config?.options.interactions.scrolling.mouseScrollDeltaThreshold ?? 120
 
     function resetDrag() {
-        root.dragIndex = -1
-        root.dragDistance = 0
+        root.dragIndex = -1;
+        root.dragDistance = 0;
     }
 
     maximumFlickVelocity: 3500
@@ -39,7 +39,7 @@ ListView {
         visible: Config?.options.interactions.scrolling.fasterTouchpadScroll
         anchors.fill: parent
         acceptedButtons: Qt.NoButton
-        onWheel: function(wheelEvent) {
+        onWheel: function (wheelEvent) {
             const delta = wheelEvent.angleDelta.y / root.mouseScrollDeltaThreshold;
             // The angleDelta.y of a touchpad is usually small and continuous,
             // while that of a mouse wheel is typically in multiples of ±120.
@@ -73,108 +73,168 @@ ListView {
     }
 
     add: Transition {
-        animations: animateAppearance ? (root.useSlideInAnimation ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "x",
-                from: root.dismissToLeft ? -(root.width + root.removeOvershoot) : (root.width + root.removeOvershoot),
-                to: 0,
-            }),
-        ] : [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: popin ? "opacity,scale" : "opacity",
-                from: 0,
-                to: 1,
-            }),
-        ]) : []
+        enabled: root.animateAppearance
+        ParallelAnimation {
+            // Slide Animation
+            NumberAnimation {
+                property: "x"
+                from: root.dismissToLeft ? -((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot) : ((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot)
+                to: 0
+                duration: root.useSlideInAnimation ? Appearance.animation.elementMoveEnter.duration : 0
+                easing.type: Appearance.animation.elementMoveEnter.type
+                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+            }
+            // Fade Animation
+            NumberAnimation {
+                properties: root.popin ? "opacity,scale" : "opacity"
+                from: !root.useSlideInAnimation ? 0 : 1
+                to: 1
+                duration: !root.useSlideInAnimation ? Appearance.animation.elementMoveEnter.duration : 0
+                easing.type: Appearance.animation.elementMoveEnter.type
+                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+            }
+        }
     }
 
     populate: Transition {
-        animations: (animateAppearance && animatePopulate) ? (root.useSlideInAnimation ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "x",
-                from: root.dismissToLeft ? -(root.width + root.removeOvershoot) : (root.width + root.removeOvershoot),
-                to: 0,
-            }),
-        ] : [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity,scale",
-                from: 0,
-                to: 1,
-            }),
-        ]) : []
+        enabled: root.animateAppearance
+        ParallelAnimation {
+            // Slide Animation
+            NumberAnimation {
+                property: "x"
+                from: root.dismissToLeft ? -((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot) : ((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot)
+                to: 0
+                duration: root.useSlideInAnimation ? Appearance.animation.elementMoveEnter.duration : 0
+                easing.type: Appearance.animation.elementMoveEnter.type
+                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+            }
+            // Fade Animation
+            NumberAnimation {
+                properties: root.popin ? "opacity,scale" : "opacity"
+                from: !root.useSlideInAnimation ? 0 : 1
+                to: 1
+                duration: !root.useSlideInAnimation ? Appearance.animation.elementMoveEnter.duration : 0
+                easing.type: Appearance.animation.elementMoveEnter.type
+                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+            }
+        }
     }
 
     addDisplaced: Transition {
-        animations: animateAppearance ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "y",
-            }),
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: popin ? "opacity,scale" : "opacity",
-                to: 1,
-            }),
-        ] : []
+        enabled: root.animateAppearance
+        ParallelAnimation {
+            NumberAnimation {
+                property: "y"
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                properties: root.popin ? "opacity,scale" : "opacity"
+                to: 1
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
     }
-    
+
     displaced: Transition {
-        animations: root.animateMovement ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "y",
-            }),
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity,scale",
-                to: 1,
-            }),
-        ] : []
+        enabled: root.animateMovement
+        ParallelAnimation {
+            NumberAnimation {
+                property: "y"
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                properties: "opacity,scale"
+                to: 1
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
     }
 
     move: Transition {
-        animations: root.animateMovement ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "y",
-            }),
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity,scale",
-                to: 1,
-            }),
-        ] : []
+        enabled: root.animateMovement
+        ParallelAnimation {
+            NumberAnimation {
+                property: "y"
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                properties: "opacity,scale"
+                to: 1
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
     }
+
     moveDisplaced: Transition {
-        animations: root.animateMovement ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "y",
-            }),
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity,scale",
-                to: 1,
-            }),
-        ] : []
+        enabled: root.animateMovement
+        ParallelAnimation {
+            NumberAnimation {
+                property: "y"
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                properties: "opacity,scale"
+                to: 1
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
     }
 
     remove: Transition {
-        animations: animateAppearance ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "x",
-                to: root.dismissToLeft ? -(root.width + root.removeOvershoot) : (root.width + root.removeOvershoot),
-            }),
-        ].concat(root.useSlideInAnimation ? [] : [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "opacity",
-                to: 0,
-            }),
-        ]) : []
+        enabled: root.animateAppearance
+        ParallelAnimation {
+            // Slide Animation
+            NumberAnimation {
+                property: "x"
+                to: root.dismissToLeft ? -((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot) : ((root.width < 100 ? Appearance.sizes.notificationPopupWidth : root.width) + root.removeOvershoot)
+                duration: root.useSlideInAnimation ? Appearance.animation.elementMoveExit.duration : 0
+                easing.type: Appearance.animation.elementMoveExit.type
+                easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve
+            }
+            // Fade Animation
+            NumberAnimation {
+                property: "opacity"
+                to: !root.useSlideInAnimation ? 0.0 : 1.0
+                duration: !root.useSlideInAnimation ? Appearance.animation.elementMoveExit.duration : 0
+                easing.type: Appearance.animation.elementMoveExit.type
+                easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve
+            }
+        }
     }
 
     // This is movement when something is removed, not removing animation!
-    removeDisplaced: Transition { 
-        animations: animateAppearance ? [
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                property: "y",
-            }),
-            Appearance?.animation.elementMove.numberAnimation.createObject(this, {
-                properties: "opacity,scale",
-                to: 1,
-            }),
-        ] : []
+    removeDisplaced: Transition {
+        enabled: root.animateAppearance
+        ParallelAnimation {
+            NumberAnimation {
+                property: "y"
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+            NumberAnimation {
+                properties: "opacity,scale"
+                to: 1
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
     }
 }

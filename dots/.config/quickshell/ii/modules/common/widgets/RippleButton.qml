@@ -24,10 +24,154 @@ Button {
     property var altAction
     property var middleClickAction
 
-    property real topLeftRadius: buttonEffectiveRadius
-    property real topRightRadius: buttonEffectiveRadius
-    property real bottomLeftRadius: buttonEffectiveRadius
-    property real bottomRightRadius: buttonEffectiveRadius
+    property bool useDynamicRadius: false
+
+    readonly property int itemIndex: {
+        if (!useDynamicRadius) return 0;
+        var p = parent;
+        if (!p) return 0;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1) return 0;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var idx = 0;
+        for (var i = startIdx; i < selfIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                idx++;
+            }
+        }
+        return idx;
+    }
+
+    readonly property int totalItems: {
+        if (!useDynamicRadius) return 1;
+        var p = parent;
+        if (!p) return 1;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1) return 1;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
+        var count = 0;
+        for (var i = startIdx; i <= endIdx; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius !== "undefined") {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    property bool isFirst: useDynamicRadius ? (itemIndex === 0) : false
+    property bool isLast: useDynamicRadius ? (itemIndex === totalItems - 1) : false
+
+    readonly property bool prevIsPressed: {
+        if (!useDynamicRadius) return false;
+        var p = parent;
+        if (!p) return false;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx <= 0) return false;
+        
+        var startIdx = 0;
+        for (var i = selfIdx - 1; i >= 0; --i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                startIdx = i + 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx - 1; i >= startIdx; --i) {
+            var child = children[i];
+            if (child.visible && typeof child.topLeftRadius !== "undefined") {
+                return child.isPressed === true || (child.down !== undefined && child.down === true);
+            }
+        }
+        return false;
+    }
+
+    readonly property bool nextIsPressed: {
+        if (!useDynamicRadius) return false;
+        var p = parent;
+        if (!p) return false;
+        var children = p.children;
+        var selfIdx = -1;
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i] === root) {
+                selfIdx = i;
+                break;
+            }
+        }
+        if (selfIdx === -1 || selfIdx >= children.length - 1) return false;
+        
+        var endIdx = children.length - 1;
+        for (var i = selfIdx + 1; i < children.length; ++i) {
+            if (children[i].visible && typeof children[i].topLeftRadius === "undefined") {
+                endIdx = i - 1;
+                break;
+            }
+        }
+        
+        for (var i = selfIdx + 1; i <= endIdx; ++i) {
+            var child = children[i];
+            if (child.visible && typeof child.topLeftRadius !== "undefined") {
+                return child.isPressed === true || (child.down !== undefined && child.down === true);
+            }
+        }
+        return false;
+    }
+
+    readonly property real rFull: useDynamicRadius ? (Appearance?.rounding?.scale === 0 ? 0 : Math.min(height / 2, Appearance?.rounding?.large ?? 23)) : buttonEffectiveRadius
+
+    property real topLeftRadius: useDynamicRadius ? ((isPressed || prevIsPressed) ? rFull : (isFirst ? Appearance?.rounding?.large ?? 23 : Appearance?.rounding?.verysmall ?? 4)) : buttonEffectiveRadius
+    property real topRightRadius: useDynamicRadius ? ((isPressed || prevIsPressed) ? rFull : (isFirst ? Appearance?.rounding?.large ?? 23 : Appearance?.rounding?.verysmall ?? 4)) : buttonEffectiveRadius
+    property real bottomLeftRadius: useDynamicRadius ? ((isPressed || nextIsPressed) ? rFull : (isLast ? Appearance?.rounding?.large ?? 23 : Appearance?.rounding?.verysmall ?? 4)) : buttonEffectiveRadius
+    property real bottomRightRadius: useDynamicRadius ? ((isPressed || nextIsPressed) ? rFull : (isLast ? Appearance?.rounding?.large ?? 23 : Appearance?.rounding?.verysmall ?? 4)) : buttonEffectiveRadius
+
+    Behavior on topLeftRadius { enabled: root.useDynamicRadius; animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on topRightRadius { enabled: root.useDynamicRadius; animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on bottomLeftRadius { enabled: root.useDynamicRadius; animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
+    Behavior on bottomRightRadius { enabled: root.useDynamicRadius; animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(root) }
 
     property color colBackground: ColorUtils.transparentize(Appearance?.colors.colLayer1Hover, 1) || "transparent"
     property color colBackgroundHover: Appearance?.colors.colLayer1Hover ?? "#E5DFED"
@@ -48,7 +192,6 @@ Button {
         animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
     }
 
-    readonly property real visualScale: scale
     scale: root.down ? 0.96 : (root.hovered ? 1.01 : 1.0)
     Behavior on scale {
         NumberAnimation {
@@ -144,7 +287,6 @@ Button {
 
     background: Rectangle {
         id: buttonBackground
-        scale: root.visualScale
         topLeftRadius: root.topLeftRadius
         topRightRadius: root.topRightRadius
         bottomLeftRadius: root.bottomLeftRadius
@@ -196,6 +338,5 @@ Button {
 
     contentItem: StyledText {
         text: root.buttonText
-        scale: root.visualScale
     }
 }

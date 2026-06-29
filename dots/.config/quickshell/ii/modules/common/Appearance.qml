@@ -289,6 +289,7 @@ Singleton {
             script += "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, blur = true, ignore_alpha = 0.0 }) ";
             script += "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true, ignore_alpha = 0.0 }) ";
             script += "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, blur = true, ignore_alpha = 0.0, order = -1 }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell:notificationPopup' }, noanim = true }) ";
             script += "hl.window_rule({ match = { title = '^(illogical-impulse Settings)$' }, no_blur = false, ignorealpha = " + a + " }) ";
             Quickshell.execDetached(["hyprctl", "eval", script]);
         }
@@ -312,6 +313,7 @@ Singleton {
             bs += "hl.layer_rule({ match = { namespace = 'quickshell:wTaskView' }, blur = true, ignore_alpha = 0.0 }) ";
             bs += "hl.layer_rule({ match = { namespace = 'quickshell:overviewWindowTransition' }, blur = true, ignore_alpha = 0.0 }) ";
             bs += "hl.layer_rule({ match = { namespace = 'quickshell:workspaceBlurOverlay' }, blur = true, ignore_alpha = 0.0, order = -1 }) ";
+            bs += "hl.layer_rule({ match = { namespace = 'quickshell:notificationPopup' }, noanim = true }) ";
             bs += "hl.window_rule({ match = { title = '^(illogical-impulse Settings)$' }, no_blur = false, ignorealpha = " + a + " }) ";
             Quickshell.execDetached(["hyprctl", "eval", bs]);
 

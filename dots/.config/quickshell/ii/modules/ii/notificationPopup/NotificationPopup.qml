@@ -13,7 +13,31 @@ Scope {
 
     PanelWindow {
         id: root
-        visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked
+        property bool active: (Notifications.popupList.length > 0)
+        property bool keepVisible: false
+
+        visible: keepVisible && !GlobalStates.screenLocked
+
+        Component.onCompleted: {
+            keepVisible = active;
+        }
+
+        onActiveChanged: {
+            if (active) {
+                hideTimer.stop();
+                keepVisible = true;
+            } else {
+                hideTimer.start();
+            }
+        }
+
+        Timer {
+            id: hideTimer
+            interval: (Appearance?.animation?.elementMove?.duration ?? 500) + 50
+            running: false
+            onTriggered: root.keepVisible = false
+        }
+
         screen: Quickshell.screens.find(s => Config.options.notifications.monitor.enable ? s.name === Config.options.notifications.monitor.name : s.name === Hyprland.focusedMonitor?.name) ?? null
 
         property string position: {
