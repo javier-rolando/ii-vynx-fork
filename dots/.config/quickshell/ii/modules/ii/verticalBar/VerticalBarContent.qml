@@ -108,6 +108,26 @@ Item { // Bar content region
                 centerIn: root.isDynamicIsland ? parent : undefined
             }
 
+            readonly property int islandSectionSpacing: {
+                const screenHeight = root.screen ? root.screen.height : 1080;
+                const frameThick = root.frameThickness;
+                const maxAllowedHeight = screenHeight - 2 * frameThick - 64; // 32px padding on top/bottom
+                
+                const topH = topSectionLayout.implicitHeight;
+                const centerH = centerSectionLayout.implicitHeight;
+                const bottomH = bottomSectionLayout.implicitHeight;
+                
+                const remaining = maxAllowedHeight - 24 - topH - centerH - bottomH;
+                
+                if (Config.options.bar.dynamicIslandLoadBalance) {
+                    return Math.min(60, Math.max(8, Math.floor(remaining / 2)));
+                } else {
+                    const preferred = Config.options.bar.dynamicIslandSpacingVertical ?? 16;
+                    const maxSpacing = Math.max(8, Math.floor(remaining / 2));
+                    return Math.min(preferred, maxSpacing);
+                }
+            }
+
             width: parent.width
             height: root.isDynamicIsland ? (Math.max(islandSections.implicitHeight + 24, 200)) : parent.height
 
@@ -165,9 +185,10 @@ Item { // Bar content region
         id: islandSections
         visible: root.isDynamicIsland
         anchors.centerIn: parent
-        spacing: 16
+        spacing: 0
 
         ColumnLayout { // Top items
+            id: topSectionLayout
             spacing: 4
             Repeater {
                 model: Config.options.bar.layouts.left
@@ -179,7 +200,13 @@ Item { // Bar content region
             }
         }
 
+        Item {
+            Layout.fillHeight: true
+            Layout.preferredHeight: barBackground.islandSectionSpacing
+        }
+
         ColumnLayout { // Center items
+            id: centerSectionLayout
             spacing: 4
             Repeater {
                 model: root.leftList
@@ -210,7 +237,13 @@ Item { // Bar content region
             }
         }
 
+        Item {
+            Layout.fillHeight: true
+            Layout.preferredHeight: barBackground.islandSectionSpacing
+        }
+
         ColumnLayout { // Bottom items
+            id: bottomSectionLayout
             spacing: 8
             Repeater {
                 model: Config.options.bar.layouts.right

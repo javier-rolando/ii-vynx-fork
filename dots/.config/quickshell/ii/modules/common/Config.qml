@@ -158,10 +158,10 @@ Singleton {
             property JsonObject policies: JsonObject {
                 property int ai: 1 // 0: No | 1: Yes | 2: Local
                 property int weeb: 0 // 0: No | 1: Open | 2: Closet
-                property int wallpapers: 1 // 0: No | 1: Yes
+                property int wallpapers: 0 // 0: No | 1: Yes
                 property int translator: 0 // 0: No | 1: Default (illogical-impulse) | 2: Expressive (reworked)
-                property int player: 1 // 0: No | 1: Yes
-                property int phone: 0 // 0: No | 1: Yes — Phone tab (future KDE Connect + scrcpy external)
+                property int player: 0 // 0: No | 1: Yes
+                property int phone: 1 // 0: No | 1: Yes — Phone tab (future KDE Connect + scrcpy external)
             }
 
             property JsonObject phone: JsonObject {
@@ -519,6 +519,9 @@ Singleton {
                 property bool bottom: false // Instead of top
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
+                property int dynamicIslandSpacingHorizontal: 48
+                property int dynamicIslandSpacingVertical: 16
+                property bool dynamicIslandLoadBalance: true
                 property int barGroupStyle: 1 // 0: Pills | 1: Island (opaque) | 2: Transparent (or maybe line-separated in the future)
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool useMaterialSymbolForTopLeftIcon: false

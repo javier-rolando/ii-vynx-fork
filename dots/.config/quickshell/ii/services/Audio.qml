@@ -17,7 +17,8 @@ Singleton {
     property PwNode source: Pipewire.defaultAudioSource
     readonly property real hardMaxValue: 2.00 // People keep joking about setting volume to 5172% so...
     property string audioTheme: Config.options.sounds.theme
-    property real value: sink?.audio.volume ?? 0
+    property real value: 0
+    property bool muted: false
     
     function friendlyDeviceName(node) {
         if (!node) return Translation.tr("Unknown");
@@ -54,6 +55,7 @@ Singleton {
         Audio.sink.audio.muted = !Audio.sink.audio.muted
     }
 
+    // Mic mute
     function toggleMicMute() {
         Audio.source.audio.muted = !Audio.source.audio.muted
     }
@@ -78,6 +80,20 @@ Singleton {
         Pipewire.preferredDefaultAudioSource = node;
     }
 
+    onSinkChanged: {
+        if (sink && sink.audio) {
+            root.value = sink.audio.volume;
+            root.muted = sink.audio.muted;
+        }
+    }
+
+    Component.onCompleted: {
+        if (sink && sink.audio) {
+            root.value = sink.audio.volume;
+            root.muted = sink.audio.muted;
+        }
+    }
+
     // Internals
     PwObjectTracker {
         objects: [sink, source]
@@ -88,6 +104,9 @@ Singleton {
         property bool lastReady: false
         property real lastVolume: 0
         function onVolumeChanged() {
+            if (sink && sink.audio) {
+                root.value = sink.audio.volume;
+            }
             if (!Config.options.audio.protection.enable) return;
             const newVolume = sink.audio.volume;
             // when resuming from suspend, we should not write volume to avoid pipewire volume reset issues
@@ -112,6 +131,11 @@ Singleton {
                 sink.audio.volume = Math.min(lastVolume, maxAllowed);
             }
             lastVolume = sink.audio.volume;
+        }
+        function onMutedChanged() {
+            if (sink && sink.audio) {
+                root.muted = sink.audio.muted;
+            }
         }
     }
 

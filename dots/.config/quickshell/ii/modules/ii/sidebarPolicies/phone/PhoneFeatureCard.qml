@@ -91,24 +91,11 @@ Item {
         id: cardBackground
         anchors.fill: parent
         radius: Appearance.rounding.normal
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop {
-                position: 0.0
-                color: root._isUnavailable || root._isOffline
-                    ? Appearance.colors.colLayer3
-                    : Appearance.colors.colPrimaryContainer
-            }
-            GradientStop {
-                position: 1.0
-                color: root._isUnavailable || root._isOffline
-                    ? ColorUtils.mix(Appearance.colors.colLayer3,
-                                     Appearance.colors.colSecondaryContainer, 0.35)
-                    : Appearance.colors.colTertiaryContainer
-            }
-        }
+        color: root._isUnavailable || root._isOffline
+            ? Appearance.colors.colLayer3
+            : Appearance.colors.colPrimaryContainer
         opacity: root.enabled ? 1.0 : 0.55
-        Behavior on gradient {
+        Behavior on color {
             animation: Appearance.animation.elementMoveFast
                 .colorAnimation.createObject(this)
         }

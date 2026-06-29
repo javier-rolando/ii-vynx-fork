@@ -169,6 +169,34 @@ Item {
                 }
             }
 
+            ConfigSlider {
+                buttonIcon: "space_bar"
+                text: Translation.tr("Dynamic Island spacing")
+                visible: Config.options.bar.cornerStyle === 3 && !Config.options.bar.dynamicIslandLoadBalance
+                usePercentTooltip: false
+                from: Config.options.bar.vertical ? 16 : 48
+                to: Config.options.bar.vertical ? 100 : 250
+                stepSize: 1
+                value: Config.options.bar.vertical ? Config.options.bar.dynamicIslandSpacingVertical : Config.options.bar.dynamicIslandSpacingHorizontal
+                onValueChanged: {
+                    if (Config.options.bar.vertical) {
+                        Config.options.bar.dynamicIslandSpacingVertical = value;
+                    } else {
+                        Config.options.bar.dynamicIslandSpacingHorizontal = value;
+                    }
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "balance"
+                text: Translation.tr("Automatic load balancing")
+                visible: Config.options.bar.cornerStyle === 3
+                checked: Config.options.bar.dynamicIslandLoadBalance
+                onCheckedChanged: {
+                    Config.options.bar.dynamicIslandLoadBalance = checked;
+                }
+            }
+
             ContentSubsection {
                 title: Translation.tr("Group style")
                 icon: "group_work"

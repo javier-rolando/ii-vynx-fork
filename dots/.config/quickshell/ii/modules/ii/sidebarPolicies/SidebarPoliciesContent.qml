@@ -14,37 +14,71 @@ Item {
     required property var scopeRoot
     property int sidebarPadding: 12
     anchors.fill: parent
-    
+
     // Toggles from Config
-    property bool aiChatEnabled: Config.options.policies.ai !== 0  
+    property bool aiChatEnabled: Config.options.policies.ai !== 0
     property bool translatorEnabled: Config.options.policies.translator !== 0
     property bool mediaEnabled: Config.options.policies.player !== 0
-    property bool wallpapersEnabled: Config.options.policies.wallpapers !== 0  
+    property bool wallpapersEnabled: Config.options.policies.wallpapers !== 0
     property bool animeEnabled: Config.options.policies.weeb !== 0
     property bool animeCloset: Config.options.policies.weeb === 2
 
     // Tab and Page mapping
     property var tabs: [
-        { icon: "neurology", name: Translation.tr("Intelligence"), enabled: root.aiChatEnabled, component: aiChat },
-        { icon: "translate", name: Translation.tr("Translator"), enabled: root.translatorEnabled, component: translator },
-        { icon: "music_note", name: Translation.tr("Media"), enabled: root.mediaEnabled, component: media },
-        { icon: "wallpaper", name: Translation.tr("Wallpapers"), enabled: root.wallpapersEnabled, component: wallpaperBrowser },
-        { icon: "bookmark_heart", name: Translation.tr("Anime"), enabled: root.animeEnabled && !root.animeCloset, component: anime },
-        { icon: "smartphone", name: Translation.tr("Phone"), enabled: Config.options.policies.phone !== 0, component: phonePlaceholder }
+        {
+            icon: "neurology",
+            name: Translation.tr("Intelligence"),
+            enabled: root.aiChatEnabled,
+            component: aiChat
+        },
+        {
+            icon: "translate",
+            name: Translation.tr("Translator"),
+            enabled: root.translatorEnabled,
+            component: translator
+        },
+        {
+            icon: "music_note",
+            name: Translation.tr("Media"),
+            enabled: root.mediaEnabled,
+            component: media
+        },
+        {
+            icon: "wallpaper",
+            name: Translation.tr("Wallpapers"),
+            enabled: root.wallpapersEnabled,
+            component: wallpaperBrowser
+        },
+        {
+            icon: "bookmark_heart",
+            name: Translation.tr("Anime"),
+            enabled: root.animeEnabled && !root.animeCloset,
+            component: anime
+        },
+        {
+            icon: "smartphone",
+            name: Translation.tr("Phone"),
+            enabled: Config.options.policies.phone !== 0,
+            component: phonePlaceholder
+        }
     ]
 
     property var activeTabs: tabs.filter(t => t.enabled)
-    property var tabButtonList: activeTabs.map(t => ({ icon: t.icon, name: t.name }))
+    property var tabButtonList: activeTabs.map(t => ({
+                icon: t.icon,
+                name: t.name
+            }))
     property int tabCount: activeTabs.length
     // Holds the previously-focused tab index so the bounce-in animation
     // (mirroring the Cheatsheet tab transition) knows the direction.
     property int _prevTabIndex: Persistent.states.sidebar.policies.tab
     Component.onCompleted: {
-        root._prevTabIndex = Persistent.states.sidebar.policies.tab
+        root._prevTabIndex = Persistent.states.sidebar.policies.tab;
     }
 
     function validateTabIndex() {
-        if (!Persistent.ready) return;
+        if (!Persistent.ready)
+            return;
         var t = Persistent.states.sidebar.policies.tab;
         if (tabCount > 0) {
             if (t < 0 || t >= tabCount) {
@@ -58,13 +92,13 @@ Item {
     }
 
     onActiveTabsChanged: {
-        root.validateTabIndex()
+        root.validateTabIndex();
     }
 
     Connections {
         target: Persistent
         function onReadyChanged() {
-            root.validateTabIndex()
+            root.validateTabIndex();
         }
     }
 
@@ -72,24 +106,23 @@ Item {
         target: Persistent.states.sidebar.policies
         ignoreUnknownSignals: true
         function onTabChanged() {
-            root.validateTabIndex()
+            root.validateTabIndex();
         }
     }
 
     function focusActiveItem() {
         if (swipeView.currentItem && swipeView.currentItem.item) {
-            swipeView.currentItem.item.forceActiveFocus()
+            swipeView.currentItem.item.forceActiveFocus();
         }
     }
 
-    Keys.onPressed: (event) => {
+    Keys.onPressed: event => {
         if (event.modifiers === Qt.ControlModifier) {
             if (event.key === Qt.Key_PageDown) {
-                swipeView.incrementCurrentIndex()
+                swipeView.incrementCurrentIndex();
                 event.accepted = true;
-            }
-            else if (event.key === Qt.Key_PageUp) {
-                swipeView.decrementCurrentIndex()
+            } else if (event.key === Qt.Key_PageUp) {
+                swipeView.decrementCurrentIndex();
                 event.accepted = true;
             }
         }
@@ -127,7 +160,7 @@ Item {
                 currentIndex: Persistent.states.sidebar.policies.tab
                 onCurrentIndexChanged: {
                     if (currentIndex >= 0 && currentIndex < root.tabCount && Persistent.states.sidebar.policies.tab !== currentIndex) {
-                        Persistent.states.sidebar.policies.tab = currentIndex
+                        Persistent.states.sidebar.policies.tab = currentIndex;
                     }
                 }
             }
@@ -146,16 +179,16 @@ Item {
                 currentIndex: Persistent.states.sidebar.policies.tab
                 onCurrentIndexChanged: {
                     if (currentIndex >= 0 && currentIndex < root.tabCount && Persistent.states.sidebar.policies.tab !== currentIndex) {
-                        Persistent.states.sidebar.policies.tab = currentIndex
+                        Persistent.states.sidebar.policies.tab = currentIndex;
                     }
                     Qt.callLater(() => {
-                        root._prevTabIndex = currentIndex
-                    })
+                        root._prevTabIndex = currentIndex;
+                    });
                 }
 
                 Component.onCompleted: {
                     if (contentItem) {
-                        contentItem.highlightMoveDuration = 0
+                        contentItem.highlightMoveDuration = 0;
                     }
                 }
 
@@ -192,18 +225,18 @@ Item {
                         readonly property bool isCurrent: swipeView.currentIndex === index
                         onIsCurrentChanged: {
                             if (isCurrent) {
-                                const diff = index - root._prevTabIndex
+                                const diff = index - root._prevTabIndex;
                                 if (diff !== 0) {
-                                    bounceAnim.stop()
-                                    opacityAnim.stop()
-                                    trans.x = diff > 0 ? 120 : -120
-                                    tabDelegate.opacity = 0
-                                    bounceAnim.start()
-                                    opacityAnim.start()
+                                    bounceAnim.stop();
+                                    opacityAnim.stop();
+                                    trans.x = diff > 0 ? 120 : -120;
+                                    tabDelegate.opacity = 0;
+                                    bounceAnim.start();
+                                    opacityAnim.start();
                                 }
                             } else {
-                                tabDelegate.opacity = 1
-                                trans.x = 0
+                                tabDelegate.opacity = 1;
+                                trans.x = 0;
                             }
                         }
 
@@ -228,7 +261,8 @@ Item {
                         }
 
                         onLoaded: {
-                            if (item) item.anchors.fill = this
+                            if (item)
+                                item.anchors.fill = this;
                         }
                     }
                 }
@@ -254,9 +288,9 @@ Item {
             id: media
             SidebarPlayerControl {}
         }
-        Component {  
-            id: wallpaperBrowser  
-            WallpaperBrowserUI {}  
+        Component {
+            id: wallpaperBrowser
+            WallpaperBrowserUI {}
         }
         Component {
             id: anime

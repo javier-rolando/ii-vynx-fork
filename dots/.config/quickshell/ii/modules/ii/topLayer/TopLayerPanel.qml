@@ -13,6 +13,7 @@ import qs.modules.ii.sidebarPolicies as Policies
 import qs.modules.ii.sidebarDashboard as Dashboard
 import qs.modules.ii.wrappedFrame as Frame
 import qs.modules.ii.topLayer.search as SearchConnect
+import qs.modules.ii.topLayer.osd as OsdConnect
 import qs.modules.ii.overview
 
 PanelWindow {
@@ -72,26 +73,22 @@ PanelWindow {
     readonly property bool leftSidebarActiveOnMonitor: GlobalStates.animatedLeftSidebarWidth > 0 && screen.name === GlobalStates.activeLeftSidebarMonitor && !GlobalStates.policiesDetached
     readonly property bool rightSidebarActiveOnMonitor: GlobalStates.animatedRightSidebarWidth > 0 && screen.name === GlobalStates.activeRightSidebarMonitor
     readonly property bool searchOpenOnMonitor: GlobalStates.overviewOpen && GlobalStates.searchConnectActive && screen.name === GlobalStates.activeSearchMonitor
+    readonly property bool osdOpenOnMonitor: GlobalStates.osdVolumeOpen && GlobalStates.osdConnectActive && screen.name === (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0])?.name
 
     readonly property bool hasFullscreenWindowOnMonitor: {
         const monitorData = HyprlandData.monitors.find(m => m.name === topPanel.screen.name);
         const specialWsName = monitorData?.specialWorkspace?.name;
         const workspaces = Hyprland.workspaces.values.filter(w => w.monitor && w.monitor.name === topPanel.screen.name);
         return workspaces.some(workspace => {
-            const isWorkspaceActive = workspace.active || 
-                (specialWsName && specialWsName !== "" && 
-                 (workspace.name === specialWsName || 
-                  workspace.name === "special:" + specialWsName ||
-                  (specialWsName === "special:special" && workspace.name === "special") ||
-                  (specialWsName === "special" && workspace.name === "special:special")));
-            
-            return isWorkspaceActive && 
-                workspace.toplevels.values.some(toplevel => toplevel.wayland && toplevel.wayland.fullscreen);
+            const isWorkspaceActive = workspace.active || (specialWsName && specialWsName !== "" && (workspace.name === specialWsName || workspace.name === "special:" + specialWsName || (specialWsName === "special:special" && workspace.name === "special") || (specialWsName === "special" && workspace.name === "special:special")));
+
+            return isWorkspaceActive && workspace.toplevels.values.some(toplevel => toplevel.wayland && toplevel.wayland.fullscreen);
         });
     }
 
     readonly property bool leftSidebarWarmOnMonitor: {
-        if (GlobalStates.policiesDetached) return false;
+        if (GlobalStates.policiesDetached)
+            return false;
         if (GlobalStates.activeLeftSidebarMonitor !== "") {
             return screen.name === GlobalStates.activeLeftSidebarMonitor;
         }
@@ -133,7 +130,7 @@ PanelWindow {
         sourceComponent: Frame.WrappedFrameVisuals {
             showBarBackground: horizontalBarLoader.item ? horizontalBarLoader.item.showBarBackground : (verticalBarLoader.item ? verticalBarLoader.item.showBarBackground : false)
             screen: topPanel.screen
-            
+
             property real hBarHiddenAmount: topPanel.hBarHiddenAmount
             property real vBarHiddenAmount: topPanel.vBarHiddenAmount
 
@@ -326,7 +323,7 @@ PanelWindow {
 
                 property alias maskItem: hoverMaskRegion
                 property real hiddenAmount: (Config?.options.bar.autoHide.enable && !mustShow) ? Appearance.sizes.barHeight : 0
-                
+
                 Behavior on hiddenAmount {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(hBarItem)
                 }
@@ -499,7 +496,7 @@ PanelWindow {
 
                 property alias maskItem: hoverMaskRegion
                 property real hiddenAmount: (Config?.options.bar.autoHide.enable && !mustShow) ? Appearance.sizes.verticalBarWidth : 0
-                
+
                 Behavior on hiddenAmount {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(vBarItem)
                 }
@@ -536,9 +533,9 @@ PanelWindow {
     Rectangle {
         id: leftSidebar
         x: -(width - GlobalStates.animatedLeftSidebarWidth)
-        y: (!topPanel.barVertical && !topPanel.barBottom) ? Appearance.sizes.barHeight : 0
+        y: (!topPanel.barVertical && !topPanel.barBottom && Config.options.bar.cornerStyle === 0) ? Appearance.sizes.barHeight : 0
         width: Math.round(Math.max(GlobalStates.policiesWidth, GlobalStates.animatedLeftSidebarWidth))
-        height: Math.round((!topPanel.barVertical) ? (parent.height - Appearance.sizes.barHeight) : parent.height)
+        height: Math.round((!topPanel.barVertical && Config.options.bar.cornerStyle === 0) ? (parent.height - Appearance.sizes.barHeight) : parent.height)
         color: Config.options.bar.expressiveColors ? activeTheme.barBackground : Appearance.colors.colLayer0
         border.width: GlobalStates.connectModeActive ? 0 : 1
         border.color: GlobalStates.connectModeActive ? "transparent" : Appearance.colors.colLayer0Border
@@ -572,7 +569,7 @@ PanelWindow {
             visible: true
             width: GlobalStates.policiesWidth
             height: topPanel.height - (Appearance.sizes.hyprlandGapsOut * 2)
-            
+
             Rectangle {
                 anchors.fill: parent
                 focus: true
@@ -580,7 +577,7 @@ PanelWindow {
                 radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
                 border.width: 1
                 border.color: Appearance.colors.colLayer0Border
-                
+
                 Loader {
                     anchors.fill: parent
                     active: true
@@ -588,8 +585,8 @@ PanelWindow {
                         scopeRoot: topPanel
                     }
                 }
-                
-                Keys.onPressed: (event) => {
+
+                Keys.onPressed: event => {
                     if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_D) {
                         GlobalStates.policiesDetached = false;
                         event.accepted = true;
@@ -603,9 +600,9 @@ PanelWindow {
     Rectangle {
         id: rightSidebar
         x: parent.width - Math.round(GlobalStates.animatedRightSidebarWidth)
-        y: (!topPanel.barVertical && !topPanel.barBottom) ? Appearance.sizes.barHeight : 0
+        y: (!topPanel.barVertical && !topPanel.barBottom && Config.options.bar.cornerStyle === 0) ? Appearance.sizes.barHeight : 0
         width: Math.round(GlobalStates.dashboardWidth)
-        height: Math.round((!topPanel.barVertical) ? (parent.height - Appearance.sizes.barHeight) : parent.height)
+        height: Math.round((!topPanel.barVertical && Config.options.bar.cornerStyle === 0) ? (parent.height - Appearance.sizes.barHeight) : parent.height)
         color: "transparent"
         border.width: 0
         visible: topPanel.rightSidebarWarmOnMonitor && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.rightSidebarActiveOnMonitor)
@@ -629,7 +626,7 @@ PanelWindow {
     // Cantos decoradores de Workspace para o modo Hug no Connect Mode
     Loader {
         id: leftSidebarTopCornerLoader
-        active: topPanel.leftSidebarActiveOnMonitor && Config.options.bar.cornerStyle === 0 && Config.options.appearance.fakeScreenRounding != 3 && topPanel.barBottom && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.leftSidebarOpenOnMonitor)
+        active: topPanel.leftSidebarActiveOnMonitor && Config.options.bar.cornerStyle !== 1 && Config.options.appearance.fakeScreenRounding != 3 && (topPanel.barBottom || Config.options.bar.cornerStyle !== 0) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.leftSidebarOpenOnMonitor)
         x: GlobalStates.animatedLeftSidebarWidth
         y: 0
         width: Appearance.rounding.screenRounding
@@ -643,7 +640,7 @@ PanelWindow {
 
     Loader {
         id: leftSidebarBottomCornerLoader
-        active: topPanel.leftSidebarActiveOnMonitor && Config.options.bar.cornerStyle === 0 && Config.options.appearance.fakeScreenRounding != 3 && (topPanel.barVertical === topPanel.barBottom) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.leftSidebarOpenOnMonitor)
+        active: topPanel.leftSidebarActiveOnMonitor && Config.options.bar.cornerStyle !== 1 && Config.options.appearance.fakeScreenRounding != 3 && (topPanel.barVertical === topPanel.barBottom || Config.options.bar.cornerStyle !== 0) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.leftSidebarOpenOnMonitor)
         x: GlobalStates.animatedLeftSidebarWidth
         anchors.bottom: parent.bottom
         width: Appearance.rounding.screenRounding
@@ -657,7 +654,7 @@ PanelWindow {
 
     Loader {
         id: rightSidebarTopCornerLoader
-        active: topPanel.rightSidebarActiveOnMonitor && Config.options.bar.cornerStyle === 0 && Config.options.appearance.fakeScreenRounding != 3 && (topPanel.barVertical !== topPanel.barBottom) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.rightSidebarOpenOnMonitor)
+        active: topPanel.rightSidebarActiveOnMonitor && Config.options.bar.cornerStyle !== 1 && Config.options.appearance.fakeScreenRounding != 3 && (topPanel.barVertical !== topPanel.barBottom || Config.options.bar.cornerStyle !== 0) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.rightSidebarOpenOnMonitor)
         anchors.right: parent.right
         anchors.rightMargin: GlobalStates.animatedRightSidebarWidth
         y: 0
@@ -672,7 +669,7 @@ PanelWindow {
 
     Loader {
         id: rightSidebarBottomCornerLoader
-        active: topPanel.rightSidebarActiveOnMonitor && Config.options.bar.cornerStyle === 0 && Config.options.appearance.fakeScreenRounding != 3 && (!topPanel.barBottom) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.rightSidebarOpenOnMonitor)
+        active: topPanel.rightSidebarActiveOnMonitor && Config.options.bar.cornerStyle !== 1 && Config.options.appearance.fakeScreenRounding != 3 && (!topPanel.barBottom || Config.options.bar.cornerStyle !== 0) && (!topPanel.hasFullscreenWindowOnMonitor || topPanel.rightSidebarOpenOnMonitor)
         anchors.right: parent.right
         anchors.rightMargin: GlobalStates.animatedRightSidebarWidth
         anchors.bottom: parent.bottom
@@ -689,9 +686,7 @@ PanelWindow {
     Loader {
         id: searchDropLoader
         z: 10
-        active: GlobalStates.searchConnectActive
-                && !GlobalStates.screenLocked
-                && (!topPanel.hasFullscreenWindowOnMonitor || GlobalStates.overviewOpen || (searchDropLoader.item && searchDropLoader.item.openProgress > 0.001))
+        active: GlobalStates.searchConnectActive && !GlobalStates.screenLocked && (!topPanel.hasFullscreenWindowOnMonitor || GlobalStates.overviewOpen || (searchDropLoader.item && searchDropLoader.item.openProgress > 0.001))
         focus: searchOpenOnMonitor
         sourceComponent: Component {
             SearchConnect.SearchDrop {
@@ -713,6 +708,34 @@ PanelWindow {
                 animatedRightSidebarWidth: GlobalStates.animatedRightSidebarWidth
                 leftSidebarActiveOnMonitor: topPanel.leftSidebarActiveOnMonitor
                 rightSidebarActiveOnMonitor: topPanel.rightSidebarActiveOnMonitor
+            }
+        }
+    }
+
+    // 5. OSD Drop (Connect Mode integration)
+    Loader {
+        id: osdDropLoader
+        z: 11
+        active: GlobalStates.osdConnectActive && !GlobalStates.screenLocked
+        sourceComponent: Component {
+            OsdConnect.OsdDrop {
+                screen: topPanel.screen
+                panelWindow: topPanel
+                barVertical: topPanel.barVertical
+                barBottom: topPanel.barBottom
+                barOnLeft: topPanel.barOnLeft
+                barOnRight: topPanel.barOnRight
+                usingWrappedFrame: topPanel.usingWrappedFrame
+                frameThickness: Config.options.appearance.wrappedFrameThickness
+                barHeight: Appearance.sizes.barHeight
+                verticalBarWidth: Appearance.sizes.verticalBarWidth
+                hBarHiddenAmount: topPanel.hBarHiddenAmount
+                vBarHiddenAmount: topPanel.vBarHiddenAmount
+                animatedLeftSidebarWidth: GlobalStates.animatedLeftSidebarWidth
+                animatedRightSidebarWidth: GlobalStates.animatedRightSidebarWidth
+                leftSidebarActiveOnMonitor: topPanel.leftSidebarActiveOnMonitor
+                rightSidebarActiveOnMonitor: topPanel.rightSidebarActiveOnMonitor
+                hasFullscreenWindow: topPanel.hasFullscreenWindowOnMonitor
             }
         }
     }
@@ -770,9 +793,7 @@ PanelWindow {
     // Static mask item for search drop bounds
     Item {
         id: searchDropMaskItem
-        visible: searchDropLoader.active
-                 && searchDropLoader.item
-                 && searchDropLoader.item.isWidgetActive
+        visible: searchDropLoader.active && searchDropLoader.item && searchDropLoader.item.isWidgetActive
         x: {
             if (searchDropLoader.item && searchDropLoader.item.isOverviewVisible)
                 return 0;
@@ -793,6 +814,16 @@ PanelWindow {
                 return topPanel.height;
             return searchDropLoader.item ? (searchDropLoader.item.maskItem ? searchDropLoader.item.maskItem.height : 0) : 0;
         }
+    }
+
+    // Static mask item for OSD drop bounds
+    Item {
+        id: osdDropMaskItem
+        visible: osdDropLoader.active && osdDropLoader.item && osdDropLoader.item.isWidgetActive
+        x: osdDropLoader.item ? osdDropLoader.item.x + (osdDropLoader.item.maskItem ? osdDropLoader.item.maskItem.x : 0) : 0
+        y: osdDropLoader.item ? osdDropLoader.item.y + (osdDropLoader.item.maskItem ? osdDropLoader.item.maskItem.y : 0) : 0
+        width: osdDropLoader.item ? (osdDropLoader.item.maskItem ? osdDropLoader.item.maskItem.width : 0) : 0
+        height: osdDropLoader.item ? (osdDropLoader.item.maskItem ? osdDropLoader.item.maskItem.height : 0) : 0
     }
 
     // Mask region definitions
@@ -832,6 +863,10 @@ PanelWindow {
         Region {
             // Search drop
             item: searchDropMaskItem
+        }
+        Region {
+            // OSD drop
+            item: osdDropMaskItem
         }
     }
 
@@ -875,7 +910,6 @@ PanelWindow {
                     GlobalStates.sidebarLeftOpen = false;
                 }
             }
-
         }
     }
 

@@ -23,6 +23,20 @@ Item { // Bar content region
     property bool hasActiveWindows: false
     property bool showBarBackground: root.hasActiveWindows && Config.options.bar.barBackgroundStyle === 2 || Config.options.bar.barBackgroundStyle === 1
     readonly property bool isDynamicIsland: Config.options.bar.cornerStyle === 3
+    readonly property bool isSearchActiveHere: GlobalStates.overviewOpen && (root.screen ? GlobalStates.activeSearchMonitor === root.screen.name : false)
+    readonly property bool isSearchClipboardMode: LauncherSearch.query.startsWith(Config.options.search.prefix.clipboard)
+    readonly property bool isSearchBluetoothMode: LauncherSearch.query.startsWith(Config.options.search.prefix.bluetooth)
+    readonly property bool isSearchTranslatorMode: LauncherSearch.query.startsWith(Config.options.search.prefix.translator)
+    readonly property bool isSearchMediaDownloaderMode: Config.options.mediaDownloader.enabled && LauncherSearch.query.startsWith(Config.options.search.prefix.mediaDownloader)
+    readonly property bool isSearchSpecialMode: isSearchClipboardMode || isSearchBluetoothMode || isSearchTranslatorMode || isSearchMediaDownloaderMode
+
+    readonly property real expectedSearchWidth: {
+        if (isSearchSpecialMode) {
+            return (Config.options.search.clipboard.panelWidth ?? 860) + 48;
+        } else {
+            return Config.options.search.baseWidth + 48;
+        }
+    }
     readonly property real frameThickness: Config.options.appearance.fakeScreenRounding === 3 ? Config.options.appearance.wrappedFrameThickness : 0
     readonly property real islandWidth: isDynamicIsland ? barBackground.width : 0
 
@@ -87,8 +101,14 @@ Item { // Bar content region
         readonly property bool barAtTop: !Config.options.bar.bottom
         gradient: Gradient {
             orientation: Gradient.Vertical
-            GradientStop { position: transparentGradientLayer.barAtTop ? 0.0 : 1.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.30) }
-            GradientStop { position: transparentGradientLayer.barAtTop ? 1.0 : 0.0; color: "transparent" }
+            GradientStop {
+                position: transparentGradientLayer.barAtTop ? 0.0 : 1.0
+                color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.30)
+            }
+            GradientStop {
+                position: transparentGradientLayer.barAtTop ? 1.0 : 0.0
+                color: "transparent"
+            }
         }
     }
 
@@ -118,8 +138,35 @@ Item { // Bar content region
                 margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0
             }
 
-            readonly property int islandSectionSpacing: 48 //spacing between the three modules
-            width: root.isDynamicIsland ? (Math.max(islandSections.implicitWidth + 12, 200)) : parent.width
+            readonly property int islandSectionSpacing: {
+                const screenWidth = root.screen ? root.screen.width : 1920;
+                const frameThick = root.frameThickness;
+                const maxAllowedWidth = screenWidth - 2 * frameThick - 64; // 32px padding on each side
+                
+                const leftW = leftSectionLayout.implicitWidth;
+                const centerW = centerSectionLayout.implicitWidth;
+                const rightW = rightSectionLayout.implicitWidth;
+                
+                const remaining = maxAllowedWidth - 32 - leftW - centerW - rightW;
+                
+                if (Config.options.bar.dynamicIslandLoadBalance) {
+                    return Math.min(100, Math.max(16, Math.floor(remaining / 2)));
+                } else {
+                    const preferred = Config.options.bar.dynamicIslandSpacingHorizontal ?? 48;
+                    const maxSpacing = Math.max(16, Math.floor(remaining / 2));
+                    return Math.min(preferred, maxSpacing);
+                }
+            }
+            width: {
+                if (!root.isDynamicIsland)
+                    return parent.width;
+                const baseWidth = Math.max(islandSections.implicitWidth + 32, 200);
+                if (GlobalStates.connectModeActive && root.isSearchActiveHere) {
+                    const requiredWidth = root.expectedSearchWidth + 100;
+                    return Math.max(baseWidth, requiredWidth);
+                }
+                return baseWidth;
+            }
 
             color: Qt.rgba(backgroundGroup.actualColor.r, backgroundGroup.actualColor.g, backgroundGroup.actualColor.b, 1.0)
             property real baseRadius: root.isDynamicIsland ? height / 2 : (Config.options.bar.cornerStyle === 1 || Config.options.appearance.fakeScreenRounding === 4 ? Appearance.rounding.windowRounding : 0)
@@ -132,7 +179,13 @@ Item { // Bar content region
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 450
+                    duration: {
+                        if (root.isDynamicIsland) {
+                            const multiplier = Appearance.animMultiplier ?? 1.0;
+                            return Math.round((root.isSearchActiveHere ? 450 : 280) * multiplier);
+                        }
+                        return 450;
+                    }
                     easing.type: root.isDynamicIsland ? Easing.OutBack : Easing.OutExpo
                 }
             }
@@ -263,14 +316,16 @@ Item { // Bar content region
     RowLayout { // Combined Island section
         id: islandSections
         visible: root.isDynamicIsland
+        width: root.isDynamicIsland ? barBackground.width - 32 : implicitWidth
         anchors {
             top: backgroundGroup.top
             bottom: backgroundGroup.bottom
             horizontalCenter: backgroundGroup.horizontalCenter
         }
-        spacing: barBackground.islandSectionSpacing
+        spacing: 0
 
         RowLayout { // Left
+            id: leftSectionLayout
             spacing: 4
             Repeater {
                 model: Config.options.bar.layouts.left
@@ -281,7 +336,13 @@ Item { // Bar content region
             }
         }
 
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredWidth: barBackground.islandSectionSpacing
+        }
+
         RowLayout { // Center
+            id: centerSectionLayout
             spacing: 4
             Repeater {
                 model: root.leftList
@@ -309,7 +370,13 @@ Item { // Bar content region
             }
         }
 
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredWidth: barBackground.islandSectionSpacing
+        }
+
         RowLayout { // Right
+            id: rightSectionLayout
             spacing: 8
             Repeater {
                 model: Config.options.bar.layouts.right

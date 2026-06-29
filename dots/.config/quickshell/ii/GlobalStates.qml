@@ -60,6 +60,18 @@ Singleton {
     property real searchDropExclusionHeight: 0
     property real searchDropTopRadius: 0
     property real searchDropBottomRadius: 0
+
+    property bool osdDropActive: false
+    property real osdDropExclusionX: 0
+    property real osdDropExclusionY: 0
+    property real osdDropExclusionWidth: 0
+    property real osdDropExclusionHeight: 0
+    property real osdDropTopRadius: 0
+    property real osdDropBottomRadius: 0
+
+    property string osdCurrentIndicator: "volume"
+    property string osdProtectionMessage: ""
+    signal osdInteraction()
     property bool policiesExtended: false
     property bool policiesPinned: false
     property bool policiesDetached: false
@@ -158,34 +170,53 @@ Singleton {
     }
 
     readonly property bool connectModeActive: {
-        if (!Config.ready) return false;
+        if (!Config.ready)
+            return false;
         const style = Config.options.sidebar.sidebarStyle || "default";
-        if (style !== "connect") return false;
+        if (style !== "connect")
+            return false;
 
         // Connect style is disabled if the bar background style is Transparent
-        if (Config.options.bar.barBackgroundStyle === 0) return false;
+        if (Config.options.bar.barBackgroundStyle === 0)
+            return false;
 
         // Works in all rounding modes except Edge (4)
-        if (Config.options.appearance.fakeScreenRounding === 4) return false;
+        if (Config.options.appearance.fakeScreenRounding === 4)
+            return false;
 
-        // Only works with cornerStyle 0 (Hug) or 2 (Rect)
+        // Works with cornerStyle 0 (Hug), 2 (Rect), or 3 (Dynamic Island)
         const cs = Config.options.bar.cornerStyle;
-        return cs === 0 || cs === 2;
+        return cs === 0 || cs === 2 || cs === 3;
     }
 
     readonly property bool searchConnectActive: {
-        if (!connectModeActive) return false;
-        if (Config.options.search.connectStyle !== "connect") return false;
+        if (!connectModeActive)
+            return false;
+        if (Config.options.search.connectStyle !== "connect")
+            return false;
 
         // Float mode (cornerStyle 1) excluded — bar disconnected from edges
-        if (Config.options.bar.cornerStyle === 1) return false;
+        if (Config.options.bar.cornerStyle === 1)
+            return false;
 
         // All other corner styles (Hug, Rect, Dynamic Island) supported
         return true;
     }
 
+    readonly property bool osdConnectActive: {
+        if (!connectModeActive)
+            return false;
+
+        // Float mode (cornerStyle 1) excluded — bar disconnected from edges
+        if (Config.options.bar.cornerStyle === 1)
+            return false;
+
+        return true;
+    }
+
     function enforceSidebarStyle() {
-        if (!Config.ready) return;
+        if (!Config.ready)
+            return;
         if (Config.options.bar.barBackgroundStyle === 0 && Config.options.sidebar.sidebarStyle === "connect") {
             Config.options.sidebar.sidebarStyle = "default";
         }
@@ -220,12 +251,18 @@ Singleton {
 
         const p = Config.options.policies;
         let activeCount = 0;
-        if (p.ai !== 0) activeCount++;
-        if (p.translator !== 0) activeCount++;
-        if (p.player !== 0) activeCount++;
-        if (p.wallpapers !== 0) activeCount++;
-        if (p.weeb !== 0 && p.weeb !== 2) activeCount++;
-        if (p.phone !== 0) activeCount++;
+        if (p.ai !== 0)
+            activeCount++;
+        if (p.translator !== 0)
+            activeCount++;
+        if (p.player !== 0)
+            activeCount++;
+        if (p.wallpapers !== 0)
+            activeCount++;
+        if (p.weeb !== 0 && p.weeb !== 2)
+            activeCount++;
+        if (p.phone !== 0)
+            activeCount++;
 
         const minTabs = 3;
         const perTabWidth = 100;
@@ -406,13 +443,13 @@ Singleton {
 
     onOverviewOpenChanged: {
         if (root.overviewOpen && root.searchConnectActive && root.activeSearchMonitor === "") {
-            root.activeSearchMonitor = Hyprland.focusedMonitor?.name ?? ""
+            root.activeSearchMonitor = Hyprland.focusedMonitor?.name ?? "";
         }
         if (!root.overviewOpen && root.searchConnectActive) {
-            root.activeSearchMonitor = ""
+            root.activeSearchMonitor = "";
             // Overview.qml's PanelWindow (which resets searchOnlyMode) is inactive in
             // connect mode — reset it here so the next SUPER press opens the full overview.
-            root.searchOnlyMode = false
+            root.searchOnlyMode = false;
         }
     }
 

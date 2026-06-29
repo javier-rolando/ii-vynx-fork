@@ -89,7 +89,6 @@ Item {
                 Layout.bottomMargin: 0
             }
 
-
             LoaderedQuickPanelImplementation {
                 id: classicQuickPanelLoader
                 styleName: "classic"
@@ -298,9 +297,9 @@ Item {
                     Item {
                         anchors.fill: parent
                         visible: Config.options.sidebar.dashboardHeader.profileImageType === "user_profile"
-                        
+
                         readonly property string _style: Config.options.userProfile.imageStyle
-                        
+
                         // Custom
                         Item {
                             anchors.fill: parent
@@ -337,7 +336,7 @@ Item {
                                 id: initialAvatarSource
                                 anchors.fill: parent
                                 source: parent.visible ? Directories.userAvatarPathAccountsService : ""
-                                sourceSize.width:  parent.width
+                                sourceSize.width: parent.width
                                 sourceSize.height: parent.height
                                 fillMode: Image.PreserveAspectCrop
                                 visible: false
@@ -374,41 +373,60 @@ Item {
                         // Expressive
                         MaterialShape {
                             anchors.fill: parent
-                            
+
                             function resolveShapeInner(s) {
-                                switch(s) {
-                                    case "Cookie9Sided":  return MaterialShape.Shape.Cookie9Sided;
-                                    case "Cookie12Sided": return MaterialShape.Shape.Cookie12Sided;
-                                    case "Squircle":      return MaterialShape.Shape.Squircle;
-                                    case "Circle":        return MaterialShape.Shape.Circle;
-                                    case "Clover4Leaf":   return MaterialShape.Shape.Clover4Leaf;
-                                    case "Burst":         return MaterialShape.Shape.Burst;
-                                    case "Heart":         return MaterialShape.Shape.Heart;
-                                    case "Bun":           return MaterialShape.Shape.Bun;
-                                    default:              return MaterialShape.Shape.Cookie9Sided;
+                                switch (s) {
+                                case "Cookie9Sided":
+                                    return MaterialShape.Shape.Cookie9Sided;
+                                case "Cookie12Sided":
+                                    return MaterialShape.Shape.Cookie12Sided;
+                                case "Squircle":
+                                    return MaterialShape.Shape.Squircle;
+                                case "Circle":
+                                    return MaterialShape.Shape.Circle;
+                                case "Clover4Leaf":
+                                    return MaterialShape.Shape.Clover4Leaf;
+                                case "Burst":
+                                    return MaterialShape.Shape.Burst;
+                                case "Heart":
+                                    return MaterialShape.Shape.Heart;
+                                case "Bun":
+                                    return MaterialShape.Shape.Bun;
+                                default:
+                                    return MaterialShape.Shape.Cookie9Sided;
                                 }
                             }
                             shape: resolveShapeInner(Config.options.userProfile.avatarShape)
-                            
+
                             property color resolvedColor: {
-                                switch(Config.options.userProfile.avatarColor) {
-                                    case "primary": return Appearance.colors.colPrimary;
-                                    case "secondary": return Appearance.colors.colSecondary;
-                                    case "tertiary": return Appearance.colors.colTertiary;
-                                    case "error": return Appearance.colors.colError;
-                                    default: return Appearance.colors.colPrimary;
+                                switch (Config.options.userProfile.avatarColor) {
+                                case "primary":
+                                    return Appearance.colors.colPrimary;
+                                case "secondary":
+                                    return Appearance.colors.colSecondary;
+                                case "tertiary":
+                                    return Appearance.colors.colTertiary;
+                                case "error":
+                                    return Appearance.colors.colError;
+                                default:
+                                    return Appearance.colors.colPrimary;
                                 }
                             }
                             property color resolvedOnColor: {
-                                switch(Config.options.userProfile.avatarColor) {
-                                    case "primary": return Appearance.colors.colOnPrimary;
-                                    case "secondary": return Appearance.colors.colOnSecondary;
-                                    case "tertiary": return Appearance.colors.colOnTertiary;
-                                    case "error": return Appearance.colors.colOnError;
-                                    default: return Appearance.colors.colOnPrimary;
+                                switch (Config.options.userProfile.avatarColor) {
+                                case "primary":
+                                    return Appearance.colors.colOnPrimary;
+                                case "secondary":
+                                    return Appearance.colors.colOnSecondary;
+                                case "tertiary":
+                                    return Appearance.colors.colOnTertiary;
+                                case "error":
+                                    return Appearance.colors.colOnError;
+                                default:
+                                    return Appearance.colors.colOnPrimary;
                                 }
                             }
-                            
+
                             color: resolvedColor
                             visible: parent._style === "expressive"
 
@@ -431,7 +449,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 0
                     visible: Config.options.sidebar.dashboardHeader.textMode !== "none"
-                    
+
                     StyledText {
                         font.pixelSize: Appearance.font.pixelSize.smallie
                         color: Appearance.colors.colOnLayer0
@@ -441,8 +459,10 @@ Item {
                                 const greeting = Config.options.userProfile.customGreeting;
                                 return (greeting !== "" ? greeting : Translation.tr("Hello,")) + " " + (Config.options.userProfile.customName !== "" ? Config.options.userProfile.customName : SystemInfo.username);
                             }
-                            if (mode === "uptime") return Translation.tr("Uptime") + ": " + DateTime.uptime;
-                            if (mode === "custom") return Config.options.sidebar.dashboardHeader.customText;
+                            if (mode === "uptime")
+                                return Translation.tr("Uptime") + ": " + DateTime.uptime;
+                            if (mode === "custom")
+                                return Config.options.sidebar.dashboardHeader.customText;
                             return "";
                         }
                         font.bold: true
