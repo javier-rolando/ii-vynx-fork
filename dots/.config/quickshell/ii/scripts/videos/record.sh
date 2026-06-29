@@ -133,12 +133,14 @@ get_best_codec() {
     fi
 
     # If "auto" or the chosen GPU codec is not available, auto-detect:
-    if ffmpeg -encoders 2>/dev/null | grep -q "h264_nvenc"; then
-        echo "h264_nvenc"
-    elif ffmpeg -encoders 2>/dev/null | grep -q "h264_vaapi" && [ -e /dev/dri/renderD128 ]; then
+    # Check vaapi/amf before nvenc: ffmpeg can be compiled with nvenc support
+    # even on non-NVIDIA systems, causing runtime failures loading libcuda.so.1
+    if ffmpeg -encoders 2>/dev/null | grep -q "h264_vaapi" && [ -e /dev/dri/renderD128 ]; then
         echo "h264_vaapi"
     elif ffmpeg -encoders 2>/dev/null | grep -q "h264_amf"; then
         echo "h264_amf"
+    elif ffmpeg -encoders 2>/dev/null | grep -q "h264_nvenc"; then
+        echo "h264_nvenc"
     else
         echo "libx264"
     fi
