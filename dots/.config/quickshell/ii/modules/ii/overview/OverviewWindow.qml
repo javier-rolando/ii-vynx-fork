@@ -129,8 +129,7 @@ Item { // Window
         id: windowPreview
         anchors.fill: parent
         captureSource: root.toplevel
-        // Performance: live false to avoid continuous screencopy overhead
-        live: false
+        live: true
         z: 1
 
         // Color overlay for interactions
