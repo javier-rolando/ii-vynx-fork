@@ -4,7 +4,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("kdeconnect-indicator")
 	hl.exec_cmd("fcitx5")
 	hl.exec_cmd("sleep 1 && setxkbmap latam")
-	hl.exec_cmd(
-		"linux-wallpaperengine --disable-mouse --scaling fill --silent --screen-root DP-2 --assets-dir /mnt/ssd/SteamLibrary/steamapps/common/wallpaper_engine/assets /mnt/ssd/SteamLibrary/steamapps/workshop/content/431960/3264616910"
-	)
+	-- hl.exec_cmd(
+	-- 	"linux-wallpaperengine --disable-mouse --scaling fill --silent --screen-root DP-2 --assets-dir /mnt/ssd/SteamLibrary/steamapps/common/wallpaper_engine/assets /mnt/ssd/SteamLibrary/steamapps/workshop/content/431960/3264616910"
+	-- )
 end)
