@@ -3,6 +3,7 @@ pragma Singleton
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
+import qs.services
 import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell
@@ -18,7 +19,7 @@ Singleton {
     Component.onCompleted: Qt.callLater(_scheduleResultsUpdate)
 
     function ensurePrefix(prefix) {
-        if ([Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch, Config.options.search.prefix.windowSearch, Config.options.search.prefix.fileBrowser, Config.options.search.prefix.fileSearch].some(i => root.query.startsWith(i))) {
+        if ([Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch, Config.options.search.prefix.windowSearch, Config.options.search.prefix.fileBrowser, Config.options.search.prefix.fileSearch, Config.options.search.prefix.materialSymbols].some(i => root.query.startsWith(i))) {
             root.query = prefix + root.query.slice(1);
         } else {
             root.query = prefix + root.query;
@@ -177,6 +178,12 @@ Singleton {
                 }
                 KeyringStorage.setNestedField(["apiKeys", "genius"], args.trim());
                 Quickshell.execDetached(["notify-send", "Genius API", Translation.tr("API key saved!"), "-a", "Shell"]);
+            }
+        },
+        {
+            action: "songrec",
+            execute: () => {
+                SongRec.toggleRunning(true);
             }
         },
     ]

@@ -20,6 +20,8 @@ Rectangle {
 
     color: Appearance.colors.colLayer2Base
 
+    property Component rightAction: null
+
     readonly property int itemIndex: {
         var p = parent;
         if (!p) return 0;
@@ -238,9 +240,20 @@ Rectangle {
             }
         }
 
-        MaterialTextField {
-            id: textFieldWidget
+        RowLayout {
             Layout.fillWidth: true
+            spacing: 8
+
+            MaterialTextField {
+                id: textFieldWidget
+                Layout.fillWidth: true
+            }
+
+            Loader {
+                active: root.rightAction !== null
+                sourceComponent: root.rightAction
+                Layout.alignment: Qt.AlignVCenter
+            }
         }
     }
 }

@@ -73,6 +73,18 @@ ContentPage {
     ContentSection {
         icon: "smartphone"
         title: Translation.tr("Phone & scrcpy Integration")
+        visible: Config.options.policies.phone !== 0
+
+        ContentSubsectionLabel { text: Translation.tr("Display") }
+
+        ConfigSwitch {
+            buttonIcon: "view_in_ar"
+            text: Translation.tr("Show Mirror / Webcam / Microphone cards")
+            checked: Config.options.phone.showPeripheralCards
+            onCheckedChanged: {
+                Config.options.phone.showPeripheralCards = checked;
+            }
+        }
 
         ContentSubsectionLabel { text: Translation.tr("Connection Settings") }
 

@@ -56,9 +56,15 @@ Singleton {
 
     Connections {
         target: Config
-        function onReadyChanged() { // Apply wallpaper on config ready if it's a video
-            if (!Config.ready || !root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) return;
-            root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
+        function onReadyChanged() {
+            if (!Config.ready) return;
+            if (Config.options.background.useWallpaperEngine) {
+                if (Config.options.background.wallpaperEngineId) {
+                    root.apply(Config.options.background.wallpaperEngineId, Appearance.m3colors.darkmode);
+                }
+            } else if (root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) {
+                root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
+            }
         }
     }
     

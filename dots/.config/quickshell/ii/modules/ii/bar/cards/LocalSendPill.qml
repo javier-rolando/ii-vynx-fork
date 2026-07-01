@@ -8,7 +8,7 @@ Rectangle {
     Layout.fillWidth: true
     implicitHeight: 64
     radius: Appearance.rounding.full
-    color: LocalSend.serverRunning ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
+    color: LocalSend.serverRunning ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSurfaceContainerHighest
 
     MaterialShape {
         shapeString: "Circle"

@@ -165,6 +165,7 @@ Singleton {
             }
 
             property JsonObject phone: JsonObject {
+                property bool showPeripheralCards: true
                 property JsonObject scrcpy: JsonObject {
                     property bool stayAwake: false  // bare scrcpy default — don't add overhead
                     property bool turnScreenOff: false  // turning screen off causes input delay on Samsung (touch sampling rate drops)
@@ -437,6 +438,8 @@ Singleton {
                         property real x: 100
                         property real y: 100
                     }
+                    property bool enableInnerShadow: true
+                    property bool enableShadows: true
                 }
                 property bool scaleLargeWallpapers: true
                 property bool animateWallpaperChanges: true
@@ -448,6 +451,20 @@ Singleton {
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
                 property bool hideWhenFullscreen: true
+                property bool useWallpaperEngine: false
+                property string wallpaperEngineId: ""
+                property string wallpaperEngineAssetsPath: ""
+                property bool wpeSilent: true
+                property real wpeVolume: 50
+                property bool wpeNoAutoMute: false
+                property bool wpeNoAudioProcessing: false
+                property int wpeFps: 30
+                property string wpeScreenSpan: ""
+                property string wpeScaling: "default"
+                property bool wpeDisableMouse: false
+                property bool wpeDisableParallax: false
+                property bool wpeNoFullscreenPause: false
+                property bool wpePauseWhenWindowsOpen: false
                 property int zoomOutStyle: 0 // 0: Blurred Backing | 1: Mirrored Plane
                 property bool blurWhenWindowsOpen: false
                 property int blurWhenWindowsOpenRadius: 80
@@ -1094,6 +1111,7 @@ Singleton {
                     property string fileBrowser: "~"
                     property string translator: "@"
                     property string mediaDownloader: "!"
+                    property string materialSymbols: "*"
                 }
                 property JsonObject imageSearch: JsonObject {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="

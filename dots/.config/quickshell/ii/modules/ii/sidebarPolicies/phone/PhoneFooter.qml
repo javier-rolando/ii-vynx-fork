@@ -39,8 +39,9 @@ import qs.services
 Item {
     id: root
 
-    implicitHeight: footerColumn.implicitHeight
-    height: implicitHeight
+    implicitHeight: visible ? footerColumn.implicitHeight : 0
+    height: visible ? implicitHeight : 0
+    visible: Config.options.phone.showPeripheralCards
 
     signal requestOpenSubPage(url target)
 

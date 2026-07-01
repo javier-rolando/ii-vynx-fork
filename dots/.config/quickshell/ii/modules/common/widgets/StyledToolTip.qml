@@ -1,3 +1,4 @@
+import qs
 import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
@@ -9,7 +10,8 @@ ToolTip {
     property bool extraVisibleCondition: true
     property bool alternativeVisibleCondition: false
 
-    readonly property bool internalVisibleCondition: (extraVisibleCondition && (parent.hovered === undefined || parent?.hovered)) || alternativeVisibleCondition
+    readonly property bool sidebarOpen: !GlobalStates || GlobalStates.sidebarRightOpen || GlobalStates.sidebarLeftOpen
+    readonly property bool internalVisibleCondition: ((extraVisibleCondition && (parent.hovered === undefined || parent?.hovered)) || alternativeVisibleCondition) && sidebarOpen
     verticalPadding: 5
     horizontalPadding: 10
     background: null

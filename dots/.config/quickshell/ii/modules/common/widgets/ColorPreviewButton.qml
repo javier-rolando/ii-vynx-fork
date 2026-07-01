@@ -25,10 +25,16 @@ RippleButton {
     readonly property string customThemeCommand: `jq -r '.primary, .primary_container, .secondary' ${customThemeFilePath}`
 
     readonly property string wallpaperPath: (Config.options && Config.options.background && Config.options.background.wallpaperPath) ? Config.options.background.wallpaperPath : ""
+    readonly property string activeWallpaperPath: {
+        if (Config.options && Config.options.background && Config.options.background.useWallpaperEngine) {
+            return "/tmp/wpe_screenshot.png";
+        }
+        return wallpaperPath;
+    }
     readonly property string scriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/colors/generate_colors_material.py`)
 
     readonly property string resolvedScheme: root.colorScheme === "scheme-auto" ? "scheme-tonal-spot" : root.colorScheme
-    property string fullCommand: root.wallpaperPath !== "" ? `${root.scriptPath} --path ${root.wallpaperPath} --scheme ${root.resolvedScheme} --preview` : ""
+    property string fullCommand: root.activeWallpaperPath !== "" ? `${root.scriptPath} --path ${root.activeWallpaperPath} --scheme ${root.resolvedScheme} --preview` : ""
 
     // these are not actually primary, secondary and tertiary, they are just the three colors we get from the script
     property color primaryColor: "transparent"
@@ -78,6 +84,22 @@ RippleButton {
     }
 
     onWallpaperPathChanged: {
+        if (shouldLoad && root.effectiveCommand !== "") {
+            loaded = false;
+            colorFetchProcess.running = true;
+        }
+    }
+
+    readonly property string wpeId: (Config.options && Config.options.background) ? Config.options.background.wallpaperEngineId : ""
+    onWpeIdChanged: {
+        if (shouldLoad && root.effectiveCommand !== "") {
+            loaded = false;
+            colorFetchProcess.running = true;
+        }
+    }
+
+    property bool useWpe: (Config.options && Config.options.background) ? Config.options.background.useWallpaperEngine : false
+    onUseWpeChanged: {
         if (shouldLoad && root.effectiveCommand !== "") {
             loaded = false;
             colorFetchProcess.running = true;

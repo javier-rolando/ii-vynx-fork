@@ -18,7 +18,12 @@ Item {
         id: wallpaperPreview
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-        source: Config.options.background.wallpaperPath !== "" ? Config.options.background.wallpaperPath : `${Directories.assetsPath}/images/default_wallpaper.png`
+        source: {
+            if (Config.options.background.useWallpaperEngine) {
+                return "file:///tmp/wpe_screenshot.png?t=" + Config.options.background.wallpaperEngineId;
+            }
+            return Config.options.background.wallpaperPath !== "" ? Config.options.background.wallpaperPath : `${Directories.assetsPath}/images/default_wallpaper.png`
+        }
         cache: false
         layer.enabled: true
         layer.effect: OpacityMask {
@@ -68,6 +73,11 @@ Item {
             id: fileNameLabel
             anchors.centerIn: parent
             property string fileName: {
+                if (Config.options.background.useWallpaperEngine) {
+                    const id = Config.options.background.wallpaperEngineId;
+                    const parts = id.split("/");
+                    return "Wallpaper Engine: " + parts[parts.length - 1];
+                }
                 const path = Config.options.background.wallpaperPath;
                 if (path === "")
                     return "Click to select wallpaper";
