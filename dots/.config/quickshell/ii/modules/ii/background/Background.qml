@@ -588,9 +588,7 @@ Scope {
                                 width: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperW : parent.width
                                 height: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperH : parent.height
 
-                                // visible: opacity > 0 && !bgRoot.wallpaperIsVideo
-                                visible: false
-                                layer.enabled: Config.options.lock.blur.enable
+                                visible: opacity > 0 && !bgRoot.wallpaperIsVideo
                                 opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
                                 sourceSize: Config.options.background.scaleLargeWallpapers ? Qt.size(bgRoot.screen.width > 0 ? Math.round(bgRoot.screen.width * bgRoot.preferredWallpaperScale) : 1920, bgRoot.screen.height > 0 ? Math.round(bgRoot.screen.height * bgRoot.preferredWallpaperScale) : 1080) : Qt.size(-1, -1)
 
