@@ -769,7 +769,7 @@ RippleButton {
                                     font.pixelSize: 9
                                     font.family: Appearance.font.family.main
                                     font.weight: Font.Bold
-                                    color: Appearance.colors.colOnPrimary
+                                    color: Appearance.colors.colOnSurfaceVariant
                                 }
                             }
                             Rectangle {
@@ -785,7 +785,7 @@ RippleButton {
                                     font.pixelSize: 9
                                     font.family: Appearance.font.family.main
                                     font.weight: Font.Bold
-                                    color: Appearance.colors.colOnPrimary
+                                    color: Appearance.colors.colOnSurfaceVariant
                                 }
                             }
                         }

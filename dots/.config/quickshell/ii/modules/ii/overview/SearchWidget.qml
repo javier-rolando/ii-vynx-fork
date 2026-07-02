@@ -781,8 +781,7 @@ Item {
                             interval: 150
                             repeat: false
                             onTriggered: {
-                                if (!root.isAnySpecialMode)
-                                    root.rebuildSearchResults();
+                                root.rebuildSearchResults();
                             }
                         }
 
@@ -927,7 +926,6 @@ Item {
                     Connections {
                         target: LauncherSearch
                         function onResultsChanged() {
-                            if (root.isAnySpecialMode) return;
                             root.loadedResultsCount = 50;
                             root.maxSearchItems = 50;
                             // Immediately show first 15 results for snappy visual feedback
