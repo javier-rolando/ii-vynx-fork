@@ -63,10 +63,11 @@ for _, code in ipairs({ 87, 88, 89, 83, 84, 85, 79, 80, 81, 90 }) do
 	hl.unbind("SUPER + code:" .. code)
 end
 
--- Helpers
+-- State
 local ws_layouts = {} -- tracks per-workspace layout overrides
 local AUTO_SWITCH_THRESHOLD = 4
 
+-- Dispatch
 local function warp_dispatch(dispatch_fn)
 	hl.config({ cursor = { no_warps = false } })
 	local r = hl.dispatch(dispatch_fn)
@@ -74,51 +75,7 @@ local function warp_dispatch(dispatch_fn)
 	return r
 end
 
-local function grid_focus(dir)
-	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
-	if not r.ok then
-		local wins = hl.get_workspace_windows("name:" .. hl.get_active_workspace().name)
-		if #wins == 0 then
-			return
-		end
-		table.sort(wins, function(a, b)
-			return a.at.x < b.at.x
-		end)
-		local target = dir == "l" and wins[#wins] or wins[1]
-		warp_dispatch(hl.dsp.focus({ window = target }))
-	end
-end
-
-local function smart_focus(dir)
-	if ws_layout(hl.get_active_workspace().name) == "lua:grid" then
-		grid_focus(dir)
-		return
-	end
-	local fallback = { l = "cyclenext", r = "cycleprev" }
-	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
-	if not r.ok and fallback[dir] then
-		warp_dispatch(hl.dsp.layout(fallback[dir]))
-	end
-end
-
-local function smart_swap(dir)
-	local fallback = { l = "swapnext", r = "swapprev" }
-	local r = hl.dispatch(hl.dsp.window.swap({ direction = dir }))
-	if not r.ok and fallback[dir] then
-		hl.dispatch(hl.dsp.layout(fallback[dir]))
-	end
-end
-
-local function toggle_float_center()
-	local floating = hl.get_active_window().floating
-	hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
-	if not floating then
-		local m = hl.get_active_monitor()
-		hl.dispatch(hl.dsp.window.resize({ x = math.floor(m.width * 0.8), y = math.floor(m.height * 0.8), "exact" }))
-		hl.dispatch(hl.dsp.window.center())
-	end
-end
-
+-- Layout management
 local function ws_layout(ws_name)
 	return ws_layouts[ws_name] or hl.get_config("general.layout")
 end
@@ -167,6 +124,52 @@ hl.on("window.close", function(w)
 		switch_layout("master", ws.name)
 	end
 end)
+
+-- Focus / window helpers
+local function grid_focus(dir)
+	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
+	if not r.ok then
+		local wins = hl.get_workspace_windows("name:" .. hl.get_active_workspace().name)
+		if #wins == 0 then
+			return
+		end
+		table.sort(wins, function(a, b)
+			return a.at.x < b.at.x
+		end)
+		local target = dir == "l" and wins[#wins] or wins[1]
+		warp_dispatch(hl.dsp.focus({ window = target }))
+	end
+end
+
+local function smart_focus(dir)
+	if ws_layout(hl.get_active_workspace().name) == "lua:grid" then
+		grid_focus(dir)
+		return
+	end
+	local fallback = { l = "cyclenext", r = "cycleprev" }
+	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
+	if not r.ok and fallback[dir] then
+		warp_dispatch(hl.dsp.layout(fallback[dir]))
+	end
+end
+
+local function smart_swap(dir)
+	local fallback = { l = "swapnext", r = "swapprev" }
+	local r = hl.dispatch(hl.dsp.window.swap({ direction = dir }))
+	if not r.ok and fallback[dir] then
+		hl.dispatch(hl.dsp.layout(fallback[dir]))
+	end
+end
+
+local function toggle_float_center()
+	local floating = hl.get_active_window().floating
+	hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+	if not floating then
+		local m = hl.get_active_monitor()
+		hl.dispatch(hl.dsp.window.resize({ x = math.floor(m.width * 0.8), y = math.floor(m.height * 0.8), "exact" }))
+		hl.dispatch(hl.dsp.window.center())
+	end
+end
 
 -- Shell config / keybinds
 hl.bind(
