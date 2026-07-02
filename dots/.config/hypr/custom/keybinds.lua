@@ -71,7 +71,26 @@ local function warp_dispatch(dispatch_fn)
 	return r
 end
 
+local function grid_focus(dir)
+	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
+	if not r.ok then
+		local wins = hl.get_workspace_windows("name:" .. hl.get_active_workspace().name)
+		if #wins == 0 then
+			return
+		end
+		table.sort(wins, function(a, b)
+			return a.at.x < b.at.x
+		end)
+		local target = dir == "l" and wins[#wins] or wins[1]
+		warp_dispatch(hl.dsp.focus({ window = target }))
+	end
+end
+
 local function smart_focus(dir)
+	if ws_layout(hl.get_active_workspace().name) == "lua:grid" then
+		grid_focus(dir)
+		return
+	end
 	local fallback = { l = "cyclenext", r = "cycleprev" }
 	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
 	if not r.ok and fallback[dir] then
@@ -97,13 +116,57 @@ local function toggle_float_center()
 	end
 end
 
-local function switch_layout(layout)
-	local ws_name = hl.get_active_workspace().name
+local ws_layouts = {} -- tracks per-workspace layout overrides
+local AUTO_SWITCH_THRESHOLD = 4
+
+local function ws_layout(ws_name)
+	return ws_layouts[ws_name] or hl.get_config("general.layout")
+end
+
+local function count_tiled(ws_name)
+	local wins = hl.get_workspace_windows("name:" .. ws_name)
+	local n = 0
+	for _, w in ipairs(wins) do
+		if not w.floating then
+			n = n + 1
+		end
+	end
+	return n
+end
+
+local function switch_layout(layout, ws_name)
+	ws_name = ws_name or hl.get_active_workspace().name
 	hl.workspace_rule({ workspace = "name:" .. ws_name, layout = layout })
 	local gaps = layout == "dwindle" and { top = 5, right = 1360, bottom = 5, left = 1360 }
 		or { top = 5, right = 5, bottom = 5, left = 5 }
 	hl.workspace_rule({ workspace = "name:" .. ws_name .. " w[t1]f[-1]", gaps_out = gaps })
+	ws_layouts[ws_name] = layout
 end
+
+hl.on("window.open", function(w)
+	if w.workspace == nil or w.floating then
+		return
+	end
+	local ws = w.workspace
+	if count_tiled(ws.name) >= AUTO_SWITCH_THRESHOLD and ws_layout(ws.name) == "master" then
+		local t
+		t = hl.timer(function()
+			t:set_enabled(false)
+			switch_layout("lua:grid", ws.name)
+		end, { timeout = 20, type = "repeat" })
+	end
+end)
+
+hl.on("window.close", function(w)
+	if w.workspace == nil or w.floating then
+		return
+	end
+	local ws = w.workspace
+	-- window.close fires before removal, so the closing window is still counted
+	if count_tiled(ws.name) <= AUTO_SWITCH_THRESHOLD and ws_layout(ws.name) == "lua:grid" then
+		switch_layout("master", ws.name)
+	end
+end)
 
 -- Shell config / keybinds
 hl.bind(
@@ -123,7 +186,8 @@ hl.bind("SUPER + Apostrophe", hl.dsp.global("quickshell:cheatsheetToggle"), { de
 -- Core apps / window management
 hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal))
 hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("warp-terminal"))
-hl.bind("SUPER + B", hl.dsp.exec_cmd(browser))
+hl.bind("SUPER + B", hl.dsp.exec_cmd("zen --profile='/home/javier/.zen/cwbhpa62.Default Profile'"))
+hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd("zen --profile='/home/javier/.zen/Xsq04O6W.Profile 1'"))
 hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("SUPER + CTRL + Q", hl.dsp.exit())
 hl.bind("SUPER + SHIFT + E", hl.dsp.exec_cmd(fileManager))
@@ -150,6 +214,34 @@ hl.bind("SUPER + Right", hl.dsp.layout("orientationprev"))
 hl.bind("SUPER + I", hl.dsp.layout("rollnext"))
 hl.bind("SUPER + O", hl.dsp.layout("rollprev"))
 
+hl.layout.register("grid", {
+	recalculate = function(ctx)
+		local n = #ctx.targets
+		if n == 0 then
+			return
+		end
+
+		local cols = math.min(n, 4)
+		local base = math.floor(n / cols)
+		local extra = n % cols -- first `extra` columns get one extra window
+
+		local idx = 1
+		for col = 1, cols do
+			local col_rows = base + (col <= extra and 1 or 0)
+			local col_box = ctx:column(col, cols)
+			for row = 1, col_rows do
+				ctx.targets[idx]:place({
+					x = col_box.x,
+					y = col_box.y + col_box.h * (row - 1) / col_rows,
+					w = col_box.w,
+					h = col_box.h / col_rows,
+				})
+				idx = idx + 1
+			end
+		end
+	end,
+})
+
 -- Layout switch
 hl.bind("SUPER + code:87", function()
 	switch_layout("master")
@@ -168,6 +260,9 @@ hl.bind("SUPER + code:89", function()
 end, { passthrough = true })
 hl.bind("CTRL + SUPER + O", function()
 	switch_layout("scrolling")
+end, { passthrough = true })
+hl.bind("CTRL + SUPER + Y", function()
+	switch_layout("lua:grid")
 end, { passthrough = true })
 
 -- App shortcuts
@@ -278,7 +373,7 @@ hl.bind("SUPER + M", hl.dsp.workspace.toggle_special("spotify"))
 hl.bind("SUPER + ALT + E", hl.dsp.workspace.toggle_special("yazi"))
 hl.bind("SUPER + ALT + T", hl.dsp.workspace.toggle_special("translate"))
 hl.bind("SUPER + ntilde", hl.dsp.workspace.toggle_special("term"))
-hl.bind("SUPER + SHIFT + B", hl.dsp.workspace.toggle_special("btop"))
+hl.bind("SUPER + ALT + B", hl.dsp.workspace.toggle_special("btop"))
 hl.bind("SUPER + SHIFT + W", hl.dsp.window.move({ workspace = "special" }))
 hl.bind("SUPER + ALT + W", hl.dsp.window.move({ workspace = "special", follow = false }))
 hl.bind("SUPER + ALT + U", hl.dsp.workspace.toggle_special("update"))
