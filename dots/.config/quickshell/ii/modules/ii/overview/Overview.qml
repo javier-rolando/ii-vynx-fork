@@ -551,11 +551,22 @@ Scope {
         name: "searchToggleRelease"
         description: "Toggles search on release"
 
+        // Debounce: prevents double-fire from the global shortcuts protocol.
+        // When SUPER_L is bound as both modifier (SUPER) and trigger key (SUPER_L),
+        // the compositor sends `released` twice: once for the key release and once
+        // for the modifier state change. The 50ms window catches both without
+        // affecting normal press-release cycles.
+        property int _lastToggleTime: 0
+
         onPressed: {
             GlobalStates.superReleaseMightTrigger = true;
         }
 
         onReleased: {
+            const now = Date.now();
+            if (now - _lastToggleTime < 50) return;
+            _lastToggleTime = now;
+
             if (!GlobalStates.superReleaseMightTrigger) {
                 GlobalStates.superReleaseMightTrigger = true;
                 return;

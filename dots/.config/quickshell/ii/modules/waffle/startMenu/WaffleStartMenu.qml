@@ -112,11 +112,17 @@ Scope {
         name: "searchToggleRelease"
         description: "Toggles search on release"
 
+        property int _lastToggleTime: 0
+
         onPressed: {
             GlobalStates.superReleaseMightTrigger = true;
         }
 
         onReleased: {
+            const now = Date.now();
+            if (now - _lastToggleTime < 50) return;
+            _lastToggleTime = now;
+
             if (!GlobalStates.superReleaseMightTrigger) {
                 GlobalStates.superReleaseMightTrigger = true;
                 return;
