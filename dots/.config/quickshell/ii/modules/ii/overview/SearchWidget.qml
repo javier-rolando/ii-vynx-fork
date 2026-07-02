@@ -606,6 +606,26 @@ Item {
                         if (currentIndex >= count - 5 && count < root.getFilteredResultsCount()) {
                             root.loadMoreResults();
                         }
+                        for (var i = 0; i < appResultsRepeater.count; i++) {
+                            var s = appResultsRepeater.itemAt(i);
+                            if (s && s.currentPosition === currentIndex && s.hasData) {
+                                var itemTop = s.yPos;
+                                var itemBottom = s.yPos + s.height;
+                                var viewTop = appResultsFlick.contentY + topMargin;
+                                var viewBottom = appResultsFlick.contentY + appResultsFlick.height - bottomMargin;
+                                var maxY = Math.max(0, _contentAreaHeight - appResultsFlick.height);
+                                var newY = appResultsFlick.contentY;
+                                if (itemBottom > viewBottom)
+                                    newY = Math.min(maxY, itemBottom - appResultsFlick.height + bottomMargin);
+                                else if (itemTop < viewTop)
+                                    newY = Math.max(0, itemTop - topMargin);
+                                if (newY !== appResultsFlick.contentY) {
+                                    appResults._scrollTargetY = newY;
+                                    appResultsFlick.contentY = newY;
+                                }
+                                break;
+                            }
+                        }
                     }
 
                     readonly property Item currentItem: {
