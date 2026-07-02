@@ -64,6 +64,9 @@ for _, code in ipairs({ 87, 88, 89, 83, 84, 85, 79, 80, 81, 90 }) do
 end
 
 -- Helpers
+local ws_layouts = {} -- tracks per-workspace layout overrides
+local AUTO_SWITCH_THRESHOLD = 4
+
 local function warp_dispatch(dispatch_fn)
 	hl.config({ cursor = { no_warps = false } })
 	local r = hl.dispatch(dispatch_fn)
@@ -115,9 +118,6 @@ local function toggle_float_center()
 		hl.dispatch(hl.dsp.window.center())
 	end
 end
-
-local ws_layouts = {} -- tracks per-workspace layout overrides
-local AUTO_SWITCH_THRESHOLD = 4
 
 local function ws_layout(ws_name)
 	return ws_layouts[ws_name] or hl.get_config("general.layout")
