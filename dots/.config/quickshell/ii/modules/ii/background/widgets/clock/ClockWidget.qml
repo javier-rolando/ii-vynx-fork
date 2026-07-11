@@ -20,9 +20,24 @@ AbstractBackgroundWidget {
     readonly property bool forceCenter: (GlobalStates.screenLocked && Config.options.lock.centerClock)
     readonly property bool shouldShow: (!Config.options.background.widgets.clock.showOnlyWhenLocked || GlobalStates.screenLocked)
     property bool wallpaperSafetyTriggered: false
+    readonly property real centeringX: (root.screenWidth - root.implicitWidth) / 2
+    readonly property real centeringY: (root.screenHeight - root.implicitHeight) / 2
+
+    onForceCenterChanged: {
+        root.animDuration = 700;
+        animResetTimer.restart();
+    }
+
+    Timer {
+        id: animResetTimer
+        interval: 750
+        repeat: false
+        onTriggered: { root.animDuration = Appearance.animation.elementMove.duration; }
+    }
+
     needsColText: clockStyle === "digital"
-    targetX: forceCenter ? ((root.screenWidth - root.width) / 2) : ((placementStrategy === "free" || placementStrategy === "draggable") ? Math.max(0, Math.min(configEntry.x, scaledScreenWidth - width)) : calculatedX)
-    targetY: forceCenter ? ((root.screenHeight - root.height) / 2) : ((placementStrategy === "free" || placementStrategy === "draggable") ? Math.max(0, Math.min(configEntry.y, scaledScreenHeight - height)) : calculatedY)
+    targetX: forceCenter ? centeringX : ((placementStrategy === "free" || placementStrategy === "draggable") ? Math.max(0, Math.min(configEntry.x, scaledScreenWidth - width)) : calculatedX)
+    targetY: forceCenter ? centeringY : ((placementStrategy === "free" || placementStrategy === "draggable") ? Math.max(0, Math.min(configEntry.y, scaledScreenHeight - height)) : calculatedY)
     visibleWhenLocked: true
 
     property var textHorizontalAlignment: {
@@ -40,11 +55,11 @@ AbstractBackgroundWidget {
         anchors.centerIn: parent
         spacing: 10
 
-        FadeLoader {
+        Loader {
             id: cookieClockLoader
             anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "cookie" && (root.shouldShow)
-            fade: false
+            active: true
+            visible: root.clockStyle === "cookie" && (root.shouldShow)
             sourceComponent: Column {
                 spacing: 10
                 CookieClock {
@@ -58,11 +73,11 @@ AbstractBackgroundWidget {
             }
         }
 
-        FadeLoader {
+        Loader {
             id: digitalClockLoader
             anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "digital" && (root.shouldShow)
-            fade: false
+            active: true
+            visible: root.clockStyle === "digital" && (root.shouldShow)
             sourceComponent: DigitalClock {
                 colText: root.colText
                 colTextSecondary: root.colTextSecondary
@@ -71,11 +86,11 @@ AbstractBackgroundWidget {
             }
         }
 
-        FadeLoader {
+        Loader {
             id: nagasakiClockLoader
             anchors.horizontalCenter: parent.horizontalCenter
-            shown: root.clockStyle === "nagasaki" && (root.shouldShow)
-            fade: false
+            active: true
+            visible: root.clockStyle === "nagasaki" && (root.shouldShow)
             sourceComponent: NagasakiClock {}
         }
         StatusRow {

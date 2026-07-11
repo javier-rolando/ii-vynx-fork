@@ -7,7 +7,6 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.overview
-import qs.modules.ii.bar
 
 // ── Animation strategy ──────────────────────────────────────────────────────
 // Caestelia-inspired: uses expressiveFastSpatial (spring overshoot y1=1.67)
@@ -20,11 +19,6 @@ Item {
     focus: true
     width: screenWidth
     height: screenHeight
-
-    BarThemes {
-        id: barThemes
-    }
-    readonly property var activeTheme: barThemes.getTheme(Config.options.bar.expressiveColorTheme)
 
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Escape) {
@@ -58,9 +52,9 @@ Item {
     property int frameThickness: 0
     property int barHeight: Appearance.sizes.barHeight
     property int verticalBarWidth: Appearance.sizes.verticalBarWidth
-    property real barMargin: 0
     property real hBarHiddenAmount: 0
     property real vBarHiddenAmount: 0
+    property real barMargin: 0
     property real animatedLeftSidebarWidth: 0
     property real animatedRightSidebarWidth: 0
     property bool leftSidebarActiveOnMonitor: false
@@ -224,7 +218,7 @@ Item {
             // animHeight * 0.8 reaches windowRounding quickly without overshoot.
             topRadius: Math.min(_wr, root.animHeight * 0.8)
             bottomRadius: Math.min(_wr, root.animHeight)
-            fillColor: Config.options.bar.expressiveColors ? root.activeTheme.barBackground : Appearance.colors.colLayer0
+            fillColor: Appearance.colors.colBackgroundSurfaceContainer
             transform: Scale {
                 xScale: 1
                 yScale: barBottom ? -1 : 1
@@ -250,7 +244,7 @@ Item {
             id: topLeftCorner
             visible: false
             implicitSize: dropContainer._cornerRadius
-            color: Config.options.bar.expressiveColors ? root.activeTheme.barBackground : Appearance.colors.colLayer0
+            color: Appearance.colors.colLayer0
             corner: RoundCorner.CornerEnum.BottomRight
             anchors.right: parent.left
             anchors.top: parent.top
@@ -260,7 +254,7 @@ Item {
             id: topRightCorner
             visible: false
             implicitSize: dropContainer._cornerRadius
-            color: Config.options.bar.expressiveColors ? root.activeTheme.barBackground : Appearance.colors.colLayer0
+            color: Appearance.colors.colLayer0
             corner: RoundCorner.CornerEnum.BottomLeft
             anchors.left: parent.right
             anchors.top: parent.top
@@ -271,7 +265,7 @@ Item {
             id: bottomLeftCorner
             visible: dropContainer._showCorners && root.barBottom
             implicitSize: dropContainer._cornerRadius
-            color: Config.options.bar.expressiveColors ? root.activeTheme.barBackground : Appearance.colors.colLayer0
+            color: Appearance.colors.colLayer0
             corner: RoundCorner.CornerEnum.TopRight
             extendHorizontal: true
             extendVertical: true
@@ -283,7 +277,7 @@ Item {
             id: bottomRightCorner
             visible: dropContainer._showCorners && root.barBottom
             implicitSize: dropContainer._cornerRadius
-            color: Config.options.bar.expressiveColors ? root.activeTheme.barBackground : Appearance.colors.colLayer0
+            color: Appearance.colors.colLayer0
             corner: RoundCorner.CornerEnum.TopLeft
             extendHorizontal: true
             extendVertical: true

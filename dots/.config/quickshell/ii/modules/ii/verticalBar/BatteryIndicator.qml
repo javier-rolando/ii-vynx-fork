@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import qs.modules.ii.bar as Bar
+import qs.modules.ii.bar.popups.battery
 import Quickshell.Services.UPower
 
 MouseArea {
@@ -252,11 +253,7 @@ MouseArea {
                             z: 0
 
                             Rectangle {
-                                y: 3
-                                anchors.left: parent.left
-
-                                height: 8
-                                width: batteryContainer.width - 9
+                                anchors.fill: parent
                                 radius: 2
 
                                 color: {
@@ -339,7 +336,7 @@ MouseArea {
 
     Component {
         id: popupComponent
-        Bar.BatteryPopup {
+        BatteryPopup {
             hoverTarget: root
         }
     }
