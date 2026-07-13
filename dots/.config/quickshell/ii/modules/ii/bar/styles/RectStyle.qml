@@ -47,6 +47,22 @@ Item {
         }
     }
 
+    Rectangle {
+        id: bottomShadowGradient
+        visible: Config.options.bar.dropShadow && !Config.options.bar.autoHide.enable
+        anchors {
+            bottom: barBackground.bottom
+            left: barBackground.left
+            right: barBackground.right
+        }
+        height: 6
+        radius: barBackground.radius
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "transparent" }
+            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.12) }
+        }
+    }
+
     Item {
         id: leftStopper
         anchors { top: parent.top; bottom: parent.bottom; left: parent.left; leftMargin: 4 }

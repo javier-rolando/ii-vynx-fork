@@ -48,7 +48,8 @@ Item {
     }
 
     function loadMoreResults() {
-        if (!GlobalStates.overviewOpen) return;
+        if (!GlobalStates.overviewOpen)
+            return;
         const total = root.getFilteredResultsCount();
         if (loadedResultsCount < total) {
             loadedResultsCount = Math.min(total, loadedResultsCount + 50);
@@ -66,7 +67,6 @@ Item {
     readonly property bool alwaysListAppsMode: Config.options.search.alwaysListApps && !root.isAnySpecialMode
     property bool showResults: searchingText != "" || isAnySpecialMode || alwaysListAppsMode || (searchingText === "" && LauncherSearch.results.length > 0)
     property string overviewPosition: Config.options.overview?.position ?? ""
-    
 
     // Re-enable item transitions after panel open animation completes
     Timer {
@@ -288,7 +288,7 @@ Item {
             else if (root.isMediaDownloaderMode)
                 baseW = Config.options.search.clipboard.panelWidth ?? 860;
             else if (root.isMaterialSymbolsMode)
-                baseW = Config.options.search.clipboard.panelWidth ?? 860;
+                baseW = 380;
             else
                 baseW = Math.max(Config.options.search.baseWidth, gridLayout.implicitWidth);
 
@@ -491,9 +491,7 @@ Item {
                 }
 
                 Behavior on implicitHeight {
-                    // Disabled during active debounce to avoid layout thrashing
-                    // while the user is still typing rapidly
-                    enabled: !resultsDebounce.running
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveSmall.duration
                         easing.type: Easing.BezierSpline
@@ -507,6 +505,7 @@ Item {
                     visible: opacity > 0
                     opacity: root.showSkeletons ? 0.0 : 1.0
                     Behavior on opacity {
+                        enabled: !root.inNotchMode
                         NumberAnimation {
                             duration: Appearance.animation.elementMoveFast.duration
                             easing.type: Easing.BezierSpline
@@ -530,19 +529,22 @@ Item {
                             property color topFadeColor: {
                                 if (appResults.currentItem) {
                                     const visY = appResults.currentItem.y - appResults.contentY;
-                                    if (visY <= appResults.topMargin + 36) return "white";
+                                    if (visY <= appResults.topMargin + 36)
+                                        return "white";
                                 }
                                 return appResults.atYBeginning ? "white" : "transparent";
                             }
                             property color bottomFadeColor: {
                                 if (appResults.currentItem) {
                                     const visBottom = appResults.currentItem.y - appResults.contentY + appResults.currentItem.height;
-                                    if (visBottom >= appResults.height - appResults.bottomMargin - 36) return "white";
+                                    if (visBottom >= appResults.height - appResults.bottomMargin - 36)
+                                        return "white";
                                 }
                                 return appResults.atYEnd ? "white" : "transparent";
                             }
 
                             Behavior on topFadeColor {
+                                enabled: !root.inNotchMode
                                 ColorAnimation {
                                     duration: Appearance.animation.elementMoveFast.duration
                                     easing.type: Easing.BezierSpline
@@ -550,6 +552,7 @@ Item {
                                 }
                             }
                             Behavior on bottomFadeColor {
+                                enabled: !root.inNotchMode
                                 ColorAnimation {
                                     duration: Appearance.animation.elementMoveFast.duration
                                     easing.type: Easing.BezierSpline
@@ -661,7 +664,9 @@ Item {
                         for (var i = 0; i < resultModel.count; i++)
                             oldKeys.push(resultModel.get(i).key);
 
-                        var newKeys = newItems.map(function(x) { return x.key; });
+                        var newKeys = newItems.map(function (x) {
+                            return x.key;
+                        });
 
                         // 1. Remove items no longer in newKeys
                         var toRemove = [];
@@ -734,7 +739,8 @@ Item {
                         interval: 150
                         repeat: false
                         onTriggered: {
-                            if (!GlobalStates.overviewOpen) return;
+                            if (!GlobalStates.overviewOpen)
+                                return;
                             appResults.applyResultDiff(root.processResults(LauncherSearch.results));
                         }
                     }
@@ -744,13 +750,19 @@ Item {
                         function onResultsChanged() {
                             // Guard: don't populate while overview is closed/closing
                             // (stale LauncherSearch.results from previous session would cause ghost expansion)
-                            if (!GlobalStates.overviewOpen) return;
+                            if (!GlobalStates.overviewOpen)
+                                return;
                             root.loadedResultsCount = 50;
                             // Immediately show first 15 results for snappy visual feedback
                             const immediate = root.processResults(LauncherSearch.results);
                             const quickSlice = immediate.length > 15 ? immediate.slice(0, 15) : immediate;
                             appResults.applyResultDiff(quickSlice);
                             root.focusFirstItem();
+                            // When query is empty, skip debounce for instant collapse
+                            if (root.searchingText === "") {
+                                resultsDebounce.stop();
+                                return;
+                            }
                             // Schedule full result delivery after debounce
                             if (immediate.length > 15)
                                 resultsDebounce.restart();
@@ -848,7 +860,8 @@ Item {
                         ParallelAnimation {
                             NumberAnimation {
                                 property: "opacity"
-                                from: 0.0; to: 1.0
+                                from: 0.0
+                                to: 1.0
                                 duration: root.suppressItemTransitions ? 0 : 180
                                 easing.type: Easing.OutQuad
                             }
@@ -882,13 +895,14 @@ Item {
                     spacing: 8
                     visible: opacity > 0
                     opacity: root.showSkeletons ? 1.0 : 0.0
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: Appearance.animation.elementMoveFast.duration
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                        }
+                Behavior on opacity {
+                    enabled: !root.inNotchMode
+                    NumberAnimation {
+                        duration: Appearance.animation.elementMoveFast.duration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
                     }
+                }
 
                     Repeater {
                         model: 4
@@ -967,6 +981,7 @@ Item {
 
                 opacity: root.isClipboardMode ? 1.0 : 0.0
                 Behavior on opacity {
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
                         easing.type: Easing.BezierSpline
@@ -993,6 +1008,7 @@ Item {
 
                 opacity: root.isBluetoothMode ? 1.0 : 0.0
                 Behavior on opacity {
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
                         easing.type: Easing.BezierSpline
@@ -1019,6 +1035,7 @@ Item {
 
                 opacity: root.isTranslatorMode ? 1.0 : 0.0
                 Behavior on opacity {
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
                         easing.type: Easing.BezierSpline
@@ -1056,6 +1073,7 @@ Item {
 
                 opacity: root.isMediaDownloaderMode ? 1.0 : 0.0
                 Behavior on opacity {
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
                         easing.type: Easing.BezierSpline
@@ -1075,12 +1093,14 @@ Item {
                 id: materialSymbolsPanelLoader
                 active: root.isMaterialSymbolsMode || opacity > 0.01
                 visible: opacity > 0.01
-                Layout.fillWidth: true
+                Layout.preferredWidth: 380
+                Layout.alignment: Qt.AlignHCenter
                 source: "MaterialSymbolsPanel.qml"
                 Layout.row: root.overviewPosition == "bottom" ? 0 : 1
 
                 opacity: root.isMaterialSymbolsMode ? 1.0 : 0.0
                 Behavior on opacity {
+                    enabled: !root.inNotchMode
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
                         easing.type: Easing.BezierSpline

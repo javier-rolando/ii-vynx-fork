@@ -123,36 +123,16 @@ Scope {
                     }
                     color: "transparent"
 
-                    // ── Ultra-soft edge vignette (vertical) ───────────────────
-                    Rectangle {
+                    TransparentBarGlow {
                         z: -20
-                        visible: Config.options.bar.barBackgroundStyle === 0
+                        vertical: true
+                        isBottom: Config.options.bar.bottom
+                        targetScreen: barRoot.screen
                         anchors {
                             top: parent.top
                             bottom: parent.bottom
                             left: !Config.options.bar.bottom ? parent.left : undefined
                             right: Config.options.bar.bottom ? parent.right : undefined
-                        }
-                        readonly property real glowDepth: 220
-                        width: glowDepth
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-                            GradientStop {
-                                position: 0.0
-                                color: ColorUtils.applyAlpha(Appearance.colors.colLayer0Base, 0.07)
-                            }
-                            GradientStop {
-                                position: 0.25
-                                color: ColorUtils.applyAlpha(Appearance.colors.colLayer0Base, 0.03)
-                            }
-                            GradientStop {
-                                position: 0.60
-                                color: ColorUtils.applyAlpha(Appearance.colors.colLayer0Base, 0.01)
-                            }
-                            GradientStop {
-                                position: 1.0
-                                color: "transparent"
-                            }
                         }
                     }
 
@@ -196,10 +176,11 @@ Scope {
                         Item {
                             id: hoverMaskRegion
                             readonly property real shadowExtend: Config.options.bar.dropShadow ? 24 : 0
+                            readonly property real sideMaskExtend: Config.options.bar.autoHide.enable ? Math.max(Config.options.bar.autoHide.hoverRegionWidth, shadowExtend) : Config.options.bar.autoHide.hoverRegionWidth
                             anchors {
                                 fill: barContent
-                                leftMargin: -Math.max(Config.options.bar.autoHide.hoverRegionWidth, shadowExtend)
-                                rightMargin: -Math.max(Config.options.bar.autoHide.hoverRegionWidth, shadowExtend)
+                                leftMargin: -sideMaskExtend
+                                rightMargin: -sideMaskExtend
                             }
                         }
 

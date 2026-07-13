@@ -19,14 +19,20 @@ Scope {
     // Monitor for fullscreen windows
     readonly property HyprlandMonitor hMonitor: Hyprland.monitorFor(win.screen)
     readonly property int activeWsId: (hMonitor && hMonitor.activeWorkspace) ? hMonitor.activeWorkspace.id : -1
-    readonly property bool fullscreenActive: HyprlandData.windowList.some(w => {
-        var isFullscreen = w && w.fullscreen && w.fullscreen > 0;
-        var wsId = w && w.workspace ? w.workspace.id : -2;
-        return isFullscreen && wsId === activeWsId;
-    })
+    readonly property bool fullscreenActive: {
+        if (!win.screen)
+            return false;
+        const monitorData = HyprlandData.monitors.find(m => m.name === win.screen.name);
+        const specialWsName = monitorData?.specialWorkspace?.name;
+        const workspaces = Hyprland.workspaces.values.filter(w => w.monitor && w.monitor.name === win.screen.name);
+        return workspaces.some(workspace => {
+            const isWorkspaceActive = workspace.active || (specialWsName && specialWsName !== "" && (workspace.name === specialWsName || workspace.name === "special:" + specialWsName || (specialWsName === "special:special" && workspace.name === "special") || (specialWsName === "special" && workspace.name === "special:special")));
+            return isWorkspaceActive && workspace.toplevels.values.some(toplevel => toplevel.wayland && toplevel.wayland.fullscreen);
+        });
+    }
 
     // State bindings
-    readonly property bool searchActive: GlobalStates.overviewOpen && (win.screen ? win.screen.name === GlobalStates.activeSearchMonitor : false)
+    readonly property bool searchActive: GlobalStates.overviewOpen && GlobalStates.searchConnectActive && (win.screen ? win.screen.name === GlobalStates.activeSearchMonitor : false)
     readonly property bool osdActive: GlobalStates.osdVolumeOpen
     readonly property bool notificationActive: Notifications.popupList.length > 0
     readonly property bool recordingActive: (Persistent.states.screenRecord && Persistent.states.screenRecord.active) || false
@@ -45,7 +51,7 @@ Scope {
 
     readonly property bool isOverviewVisible: root.searchActive && LauncherSearch.query === "" && !GlobalStates.searchOnlyMode && !Config.options.search.alwaysListApps && (Config && Config.options && Config.options.overview && Config.options.overview.enable !== undefined ? Config.options.overview.enable : true)
     readonly property bool isScrollingLayout: Persistent.states.hyprland.layout === "scrolling"
-    readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3 && !(Config.options.bar.cornerStyle === 3 && !Config.options.bar.vertical)
+    readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3 && !(Config.options.bar.cornerStyle === 3 && !Config.options.bar.vertical) && (!Config.options.bar.onlyShowOnSingleMonitor || hasBarOnThisMonitor)
     readonly property bool hasBarOnThisMonitor: GlobalStates.isScreenAllowedForBar(win.screen)
     readonly property bool hasTopBar: GlobalStates.barOpen && !Config.options.bar.vertical && !Config.options.bar.bottom && hasBarOnThisMonitor
 
@@ -370,7 +376,7 @@ Scope {
                 source: "widgets/FloatingNotchCalendar.qml",
                 contractedH: Config.options.bar.floatingNotch.heightCalendar ?? 48,
                 expandedH: 140,
-                contractedW: 220,
+                contractedW: 260,
                 expandedW: 340
             };
         }
@@ -578,6 +584,9 @@ Scope {
         onTriggered: showOnTopHover = false
     }
 
+    // Check if the notch is currently showing the fallback home or contracted calendar display
+    readonly property bool isIdle: mode === "home"
+
     // Determine if the island should be physically hidden (slid up out of bounds)
     readonly property bool idleHidden: {
         if (searchActive)
@@ -586,6 +595,18 @@ Scope {
             return true;
         if (rightClickHidden)
             return true;
+
+        // Never hide while a file drag is hovering the drop area — the user
+        // needs to see the drop target to complete the transfer. Without this
+        // the container stays off-screen when dragging from a file manager
+        // (HoverHandler doesn't fire during DnD, so showOnTopHover stays false).
+        if (root.isDragOverNotch)
+            return false;
+
+        // Hide if we are idle and the user is not hovering either the top trigger or the container itself
+        if (isIdle) {
+            return !showOnTopHover && !hoverActive;
+        }
 
         // Hide if auto-hide is enabled AND user is not hovering either the top trigger or the container itself
         if (Config.options.bar.floatingNotch.autoHide) {
@@ -667,6 +688,12 @@ Scope {
     PanelWindow {
         id: win
         screen: {
+            if (Config.options.bar.floatingNotch.onlyShowOnSingleMonitor) {
+                var targetName = Config.options.bar.floatingNotch.singleMonitorName;
+                var foundTarget = Quickshell.screens.find(s => s.name === targetName);
+                if (foundTarget)
+                    return foundTarget;
+            }
             var name = (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "");
             var found = Quickshell.screens.find(s => s.name === name);
             if (found)
@@ -785,7 +812,7 @@ Scope {
 
             Behavior on width {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMove.duration
+                    duration: 500
                     easing.type: Easing.OutBack
                     easing.overshoot: 0.9
                 }
@@ -793,7 +820,7 @@ Scope {
 
             Behavior on height {
                 NumberAnimation {
-                    duration: root.mode === "search" ? Appearance.animation.elementMoveSmall.duration : Appearance.animation.elementMove.duration
+                    duration: 500
                     easing.type: Easing.OutBack
                     easing.overshoot: 0.5
                 }
@@ -810,11 +837,13 @@ Scope {
                 return 0;
             }
 
+            // Bounce with reduced overshoot when appearing to prevent top gap
+            // Disappearing uses full overshoot (goes off-screen, invisible)
             Behavior on y {
                 NumberAnimation {
-                    duration: 380
+                    duration: 330
                     easing.type: Easing.OutBack
-                    easing.overshoot: 0.9
+                    easing.overshoot: root.idleHidden ? 0.9 : 0.3
                 }
             }
 
@@ -867,42 +896,59 @@ Scope {
                 // Search Widget Loader
                 Loader {
                     id: searchWidgetLoader
+                    anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    // Leave room at the bottom for the persistent widgets strip
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.searchPersistentStripHeight
+                    width: root.mode === "search" && searchWidgetLoader.item ? searchWidgetLoader.item.implicitWidth : parent.width
                     readonly property bool shown: root.mode === "search"
                     active: Config.ready
                     visible: opacity > 0.01
                     opacity: shown ? 1.0 : 0.0
                     scale: shown ? 1.0 : 0.95
-                    Behavior on opacity {
+                    Behavior on width {
                         NumberAnimation {
-                            duration: 350
+                            duration: 200
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 0.5
+                        }
+                    }
+                    Behavior on opacity {
+                        enabled: !root.searchActive
+                        NumberAnimation {
+                            duration: 280
                             easing.type: Easing.InOutQuad
                         }
                     }
                     Behavior on scale {
+                        enabled: !root.searchActive
                         NumberAnimation {
-                            duration: 450
+                            duration: 350
                             easing.type: Easing.OutBack
                             easing.overshoot: 0.5
                         }
                     }
 
-                    onVisibleChanged: {
-                        if (visible && item) {
-                            if (GlobalStates.activeSearchQuery) {
-                                item.setSearchingText(GlobalStates.activeSearchQuery);
-                                GlobalStates.activeSearchQuery = "";
-                            } else {
-                                item.cancelSearch();
-                            }
-                            Qt.callLater(() => item.focusSearchInput());
+                Connections {
+                    target: root
+                    function onModeChanged() {
+                        if (root.mode !== "search" && searchWidgetLoader.item) {
+                            searchWidgetLoader.item.cancelSearch();
                         }
                     }
+                }
+
+                onVisibleChanged: {
+                    if (visible && item) {
+                        if (GlobalStates.activeSearchQuery) {
+                            item.setSearchingText(GlobalStates.activeSearchQuery);
+                            GlobalStates.activeSearchQuery = "";
+                        } else {
+                            item.cancelSearch();
+                        }
+                        Qt.callLater(() => item.focusSearchInput());
+                    }
+                }
 
                     sourceComponent: Component {
                         SearchWidget {
@@ -1242,6 +1288,61 @@ Scope {
 
             HoverHandler {
                 id: topSensorHandler
+            }
+        }
+
+        // Top-edge drop zone: reveals the hidden container during file drag-and-drop.
+        // HoverHandler in topSensor doesn't fire during DnD, so this DropArea bridges the gap.
+        DropArea {
+            id: topDropZone
+            width: 320
+            height: 40
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            keys: ["text/uri-list"]
+            enabled: root.idleHidden
+                && Config.options.bar.floatingNotch.enable
+                && !Config.options.bar.floatingNotch.disableLocalSend
+                && LocalSend.available
+            onEntered: drag => {
+                drag.accept(Qt.CopyAction);
+                topHoverCollapseTimer.stop();
+                root.showOnTopHover = true;
+                root.rightClickHidden = false;
+            }
+            onExited: {
+                topHoverCollapseTimer.restart();
+            }
+            onDropped: drop => {
+                if (!drop.hasUrls)
+                    return;
+                const kdeReady = !Config.options.bar.floatingNotch.disableKdeConnectInLocalSend
+                    && typeof KdeConnectService !== "undefined"
+                    && KdeConnectService.available
+                    && KdeConnectService.activeReachable
+                    && KdeConnectService.activeDevice;
+                const useKde = kdeReady && drop.x >= width / 2;
+                const cleanPaths = drop.urls.map(function (u) {
+                    return u.toString().replace(/^file:\/\//, "");
+                });
+                root._lsServiceChoice = useKde ? 2 : 1;
+                root._lsQueueFiles = cleanPaths;
+                const lsWidget = root._localSendWidget;
+                if (lsWidget) {
+                    lsWidget.serviceChoice = useKde ? 2 : 1;
+                    lsWidget.queueFiles = cleanPaths;
+                    lsWidget.leftHover = false;
+                    lsWidget.rightHover = false;
+                }
+                if (!useKde) {
+                    for (let i = 0; i < drop.urls.length; i++) {
+                        LocalSend.addDroppedFile(drop.urls[i]);
+                    }
+                    if (LocalSend.available)
+                        LocalSend.startScanning();
+                }
+                drop.accept(Qt.CopyAction);
+                topHoverCollapseTimer.restart();
             }
         }
 

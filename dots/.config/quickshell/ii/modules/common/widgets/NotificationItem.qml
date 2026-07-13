@@ -14,8 +14,9 @@ Item { // Notification item area
     property var notificationObject
     property bool expanded: false
     property bool onlyNotification: false
-    property real fontSize: Appearance.font.pixelSize.small
-    property real padding: onlyNotification ? 0 : 8
+    property real zoom: 1.0
+    property real fontSize: Appearance.font.pixelSize.small * zoom
+    property real padding: onlyNotification ? 0 : 8 * zoom
     property real summaryElideRatio: 0.85
 
     property real dragConfirmThreshold: 70 // Drag further to discard notification
@@ -134,6 +135,7 @@ Item { // Notification item area
 
     NotificationAppIcon { // App icon
         id: notificationIcon
+        implicitSize: 38 * root.zoom
         opacity: (!onlyNotification && notificationObject.image != "" && expanded) ? 1 : 0
         visible: opacity > 0
 
@@ -152,7 +154,7 @@ Item { // Notification item area
         id: background
         width: parent.width
         anchors.left: parent.left
-        radius: Appearance.rounding.small
+        radius: Appearance.rounding.small * root.zoom
         anchors.leftMargin: root.xOffset
 
         opacity: {
@@ -268,7 +270,7 @@ Item { // Notification item area
                         maskSource: Rectangle {
                             width: actionsFlickable.width
                             height: actionsFlickable.height
-                            radius: Appearance.rounding.small
+                            radius: Appearance.rounding.small * root.zoom
                         }
                     }
 
@@ -301,6 +303,10 @@ Item { // Notification item area
                                 Layout.fillWidth: true
                                 buttonText: Translation.tr("Close")
                                 urgency: notificationObject.urgency
+                                implicitHeight: 34 * root.zoom
+                                leftPadding: 15 * root.zoom
+                                rightPadding: 15 * root.zoom
+                                buttonRadius: Appearance.rounding.small * root.zoom
                                 implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
 
                                 onClicked: {
@@ -308,7 +314,7 @@ Item { // Notification item area
                                 }
 
                                 contentItem: MaterialSymbol {
-                                    iconSize: Appearance.font.pixelSize.larger
+                                    iconSize: Appearance.font.pixelSize.larger * root.zoom
                                     horizontalAlignment: Text.AlignHCenter
                                     color: (notificationObject.urgency == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "close"
@@ -324,6 +330,10 @@ Item { // Notification item area
                                     Layout.fillWidth: true
                                     buttonText: (modelData.identifier === "default" && (isTwitchNotification || isKickNotification)) ? "View" : modelData.text
                                     urgency: notificationObject.urgency
+                                    implicitHeight: 34 * root.zoom
+                                    leftPadding: 15 * root.zoom
+                                    rightPadding: 15 * root.zoom
+                                    buttonRadius: Appearance.rounding.small * root.zoom
                                     onClicked: {
                                       if (modelData.identifier === "default") {
                                         if (isTwitchNotification) {
@@ -349,6 +359,10 @@ Item { // Notification item area
                             NotificationActionButton {
                                 Layout.fillWidth: true
                                 urgency: notificationObject.urgency
+                                implicitHeight: 34 * root.zoom
+                                leftPadding: 15 * root.zoom
+                                rightPadding: 15 * root.zoom
+                                buttonRadius: Appearance.rounding.small * root.zoom
                                 implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
 
                                 onClicked: {
@@ -377,7 +391,7 @@ Item { // Notification item area
 
                                 contentItem: MaterialSymbol {
                                     id: copyIcon
-                                    iconSize: Appearance.font.pixelSize.larger
+                                    iconSize: Appearance.font.pixelSize.larger * root.zoom
                                     horizontalAlignment: Text.AlignHCenter
                                     color: (notificationObject.urgency == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "content_copy"

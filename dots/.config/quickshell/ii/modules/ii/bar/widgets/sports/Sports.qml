@@ -54,6 +54,7 @@ MouseArea {
             verticalOffset = vertical ? 0 : 10;
             horizontalOffset = vertical ? 10 : 0;
         }
+        Qt.callLater(() => { root.isReady = true; });
     }
 
     // Handle game switches (next game)
@@ -246,7 +247,11 @@ MouseArea {
         ColumnLayout {
             id: sportsLayoutVert
             visible: root.vertical
-            anchors.centerIn: parent
+            anchors {
+                top: parent.top
+                topMargin: 4
+                horizontalCenter: parent.horizontalCenter
+            }
             spacing: 6
             
             // Translate allows animating Y even when anchors.centerIn is active
@@ -343,7 +348,10 @@ MouseArea {
         }
     }
 
+    property bool isReady: false
+
     Behavior on implicitWidth {
+        enabled: root.isReady
         NumberAnimation {
             duration: Appearance.animation.elementMoveFast.duration
             easing.type: Appearance.animation.elementMoveFast.type
@@ -351,6 +359,7 @@ MouseArea {
     }
 
     Behavior on implicitHeight {
+        enabled: root.isReady
         NumberAnimation {
             duration: Appearance.animation.elementMoveFast.duration
             easing.type: Appearance.animation.elementMoveFast.type

@@ -12,6 +12,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.models
 
 Item {
     id: root
@@ -74,8 +75,30 @@ Item {
 
     property real artVignetteBlur: root.playing ? 50 : 90
 
-    readonly property color artTextColor: root.artSource !== "" ? Appearance.colors.colOnSurfaceVariant : Appearance.colors.colOnSurface
-    readonly property color artSubtextColor: Appearance.colors.colOnSurfaceVariant
+    readonly property bool useDynamicColors: Config.options.media.dynamicAlbumColors && root.artSource !== ""
+
+    ColorQuantizer {
+        id: colorQuantizer
+        source: root.artSource
+        depth: 0
+        rescaleSize: 1
+    }
+
+    property color artDominantColor: ColorUtils.mix(
+        (colorQuantizer?.colors[0] ?? Appearance.colors.colPrimary),
+        Appearance.colors.colPrimaryContainer, 0.8
+    ) || Appearance.m3colors.m3secondaryContainer
+
+    property QtObject blendedColors: AdaptedMaterialScheme {
+        color: root.artDominantColor
+    }
+
+    readonly property color artTextColor: root.useDynamicColors
+        ? root.blendedColors.colOnPrimary
+        : (root.artSource !== "" ? Appearance.colors.colOnSurfaceVariant : Appearance.colors.colOnSurface)
+    readonly property color artSubtextColor: root.useDynamicColors
+        ? root.blendedColors.colOnPrimary
+        : Appearance.colors.colOnSurfaceVariant
 
     Behavior on artVignetteBlur {
         NumberAnimation {
@@ -228,9 +251,7 @@ Item {
 
                 Image {
                     id: artExpanded
-                    anchors.centerIn: parent
-                    width: parent.width * 1.0
-                    height: parent.height * 1.0
+                    anchors.fill: parent
                     source: root.artSource
                     fillMode: Image.PreserveAspectCrop
                     opacity: 0.85
@@ -253,22 +274,10 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.45) }
-                    GradientStop { position: 0.2; color: Qt.rgba(0, 0, 0, 0.1) }
-                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.1) }
+                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
+                    GradientStop { position: 0.5; color: Qt.rgba(0, 0, 0, 0.05) }
+                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.25) }
                     GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.45) }
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.35) }
-                    GradientStop { position: 0.2; color: Qt.rgba(0, 0, 0, 0.08) }
-                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.08) }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.35) }
                 }
             }
 
@@ -322,7 +331,7 @@ Item {
                             anchors.centerIn: parent
                             text: "music_note"
                             iconSize: Appearance.font.pixelSize.smallest
-                            color: "#FFFFFF"
+                            color: root.useDynamicColors ? root.blendedColors.colOnLayer0 : "#FFFFFF"
                         }
                     }
                 }
@@ -344,7 +353,9 @@ Item {
                         text: "keep"
                         iconSize: 18
                         fill: GlobalStates.mediaControlsPinned ? 1 : 0
-                        color: GlobalStates.mediaControlsPinned ? Appearance.colors.colPrimary : "#B0B0B0"
+                        color: GlobalStates.mediaControlsPinned
+                            ? (root.useDynamicColors ? root.blendedColors.colPrimary : Appearance.colors.colPrimary)
+                            : (root.useDynamicColors ? root.blendedColors.colSubtext : "#B0B0B0")
                         horizontalAlignment: Text.AlignHCenter
                     }
                     onClicked: GlobalStates.mediaControlsPinned = !GlobalStates.mediaControlsPinned
@@ -356,9 +367,9 @@ Item {
                     leftPadding: 8
                     rightPadding: 8
                     Layout.alignment: Qt.AlignTop
-                    colBackground: Appearance.colors.colPrimaryContainer
-                    colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                    colRipple: Appearance.colors.colOnPrimaryContainer
+                    colBackground: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
+                    colBackgroundHover: root.useDynamicColors ? root.blendedColors.colPrimaryContainerHover : Appearance.colors.colPrimaryContainerHover
+                    colRipple: root.useDynamicColors ? root.blendedColors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
                     buttonRadius: Appearance.rounding.full
 
                     readonly property string activeAudioDeviceName: Audio.sink ? (Audio.sink.description || "") : ""
@@ -384,14 +395,14 @@ Item {
                         MaterialSymbol {
                             text: audioPill.audioDeviceIcon
                             iconSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colOnPrimaryContainer
+                            color: root.useDynamicColors ? root.blendedColors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
                         }
 
                         StyledText {
                             text: audioPill.activeAudioDeviceName !== "" ? audioPill.activeAudioDeviceName : Translation.tr("Audio")
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.bold: true
-                            color: Appearance.colors.colOnPrimaryContainer
+                            color: root.useDynamicColors ? root.blendedColors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
                             Layout.maximumWidth: 100
                             elide: Text.ElideRight
                         }
@@ -532,9 +543,9 @@ Item {
                     implicitWidth: 52
                     implicitHeight: 52
                     buttonRadius: 18
-                    colBackground: Appearance.colors.colPrimaryContainer
-                    colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                    colRipple: Appearance.colors.colPrimaryContainerActive
+                    colBackground: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
+                    colBackgroundHover: root.useDynamicColors ? root.blendedColors.colPrimaryContainerHover : Appearance.colors.colPrimaryContainerHover
+                    colRipple: root.useDynamicColors ? root.blendedColors.colPrimaryContainerActive : Appearance.colors.colPrimaryContainerActive
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
                     onClicked: {
@@ -553,7 +564,7 @@ Item {
                             anchors.centerIn: parent
                             text: root.playing ? "pause" : "play_arrow"
                             iconSize: Appearance.font.pixelSize.hugeass
-                            color: Appearance.colors.colOnPrimaryContainer
+                            color: root.useDynamicColors ? root.blendedColors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
                             fill: 1
                         }
                     }
@@ -573,7 +584,7 @@ Item {
                     buttonRadius: 12
                     colBackground: "transparent"
                     colBackgroundHover: Qt.rgba(1, 1, 1, 0.1)
-                    colRipple: Appearance.colors.colPrimaryContainer
+                    colRipple: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
 
                     onClicked: {
                         if (root.player)
@@ -588,7 +599,12 @@ Item {
                             text: "skip_previous"
                             iconSize: Appearance.font.pixelSize.normal
                             fill: 1
-                            color: root.player && root.player.canGoPrevious ? "#E0E0E0" : "#666666"
+                            color: {
+                                if (!root.player || !root.player.canGoPrevious) {
+                                    return root.useDynamicColors ? root.blendedColors.colSubtext : "#666666";
+                                }
+                                return root.useDynamicColors ? root.blendedColors.colSubtext : "#E0E0E0";
+                            }
                             opacity: root.player && root.player.canGoPrevious ? 1.0 : 0.4
                         }
                     }
@@ -606,9 +622,9 @@ Item {
                         active: root.player ? (root.player.canSeek ?? false) : false
                         sourceComponent: StyledSlider {
                             configuration: StyledSlider.Configuration.Wavy
-                            highlightColor: Appearance.colors.colPrimaryContainer
+                            highlightColor: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
                             trackColor: Qt.rgba(1, 1, 1, 0.2)
-                            handleColor: Appearance.colors.colPrimaryContainer
+                            handleColor: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
                             value: (root.player && root.player.length > 0) ? (root.player.position / root.player.length) : 0
                             onMoved: if (root.player)
                                 root.player.position = value * root.player.length
@@ -625,7 +641,7 @@ Item {
                         active: root.player ? !(root.player.canSeek ?? false) : false
                         sourceComponent: StyledProgressBar {
                             wavy: root.player ? root.playing : false
-                            highlightColor: Appearance.colors.colPrimaryContainer
+                            highlightColor: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
                             trackColor: Qt.rgba(1, 1, 1, 0.2)
                             value: (root.player && root.player.length > 0) ? (root.player.position / root.player.length) : 0
                         }
@@ -639,7 +655,7 @@ Item {
                     buttonRadius: 12
                     colBackground: "transparent"
                     colBackgroundHover: Qt.rgba(1, 1, 1, 0.1)
-                    colRipple: Appearance.colors.colPrimaryContainer
+                    colRipple: root.useDynamicColors ? root.blendedColors.colPrimaryContainer : Appearance.colors.colPrimaryContainer
 
                     onClicked: {
                         if (root.player)
@@ -654,7 +670,12 @@ Item {
                             text: "skip_next"
                             iconSize: Appearance.font.pixelSize.normal
                             fill: 1
-                            color: root.player && root.player.canGoNext ? "#E0E0E0" : "#666666"
+                            color: {
+                                if (!root.player || !root.player.canGoNext) {
+                                    return root.useDynamicColors ? root.blendedColors.colSubtext : "#666666";
+                                }
+                                return root.useDynamicColors ? root.blendedColors.colSubtext : "#E0E0E0";
+                            }
                             opacity: root.player && root.player.canGoNext ? 1.0 : 0.4
                         }
                     }
