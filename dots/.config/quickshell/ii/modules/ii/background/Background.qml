@@ -425,14 +425,14 @@ Scope {
 
             property bool mediaModeOpen: mediaModeLoader.active && MprisController.activePlayer
             onMediaModeOpenChanged: {
-                if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme")) {
+                if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme") && !Config.options.background.useWallpaperEngine) {
                     Wallpapers.apply(Config.options.background.wallpaperPath);
                     LyricsService.shellColorChanged = false;
                 }
             }
 
             Component.onCompleted: {
-                if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme")) {
+                if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme") && !Config.options.background.useWallpaperEngine) {
                     Wallpapers.apply(Config.options.background.wallpaperPath);
                 }
             }
@@ -724,8 +724,8 @@ Scope {
                                 width: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperW : parent.width
                                 height: Config.options.background.zoomOutStyle !== 1 ? wallpaperPlanes.wallpaperH : parent.height
 
-                                visible: opacity > 0 && !bgRoot.wallpaperIsVideo
-                                opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
+                                visible: opacity > 0 && !bgRoot.wallpaperIsVideo && !Config.options.background.useWallpaperEngine
+                                opacity: (wallpaper.status === Image.Ready && !bgRoot.wallpaperIsVideo && !Config.options.background.useWallpaperEngine) ? 1 : 0
                                 sourceSize: Config.options.background.scaleLargeWallpapers ? Qt.size(bgRoot.screen.width > 0 ? Math.round(bgRoot.screen.width * bgRoot.preferredWallpaperScale) : 1920, bgRoot.screen.height > 0 ? Math.round(bgRoot.screen.height * bgRoot.preferredWallpaperScale) : 1080) : Qt.size(-1, -1)
 
                                 property int chunkSize: bgRoot.chunkSize
