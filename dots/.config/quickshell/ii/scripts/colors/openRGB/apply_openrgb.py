@@ -75,36 +75,46 @@ color_file = os.path.join(state_dir, "user", "generated", "color.txt")
 with open(color_file, "r") as f:
     new_color = hexToRGB(f.read())
 
-
 if args.color != None:
     new_color = hexToRGB(args.color)
 
+# Build name→index map for name-based lookup
+name_to_idx = {d.name: i for i, d in enumerate(client.devices)}
 
+resolved = []
 for dev in devices:
-    if dev["enabled"]:
-        if client.devices[dev["id"]].active_mode == 1:  # 1 = Off
-            old_color = [0, 0, 0]
+    if not dev["enabled"]:
+        continue
+    name = dev.get("name")
+    if name:
+        idx = name_to_idx.get(name)
+        if idx is None:
+            print(f"Warning: device '{name}' not found, skipping")
+            continue
+    else:
+        idx = dev["id"]
+        if idx >= len(client.devices):
+            print(f"Warning: device id {idx} out of range, skipping")
+            continue
+    resolved.append((dev, idx))
 
-        else:
-            # is not per-led but as long as the device only had a single color
-            # the transistion should be smooth. Otherwise all LEDs would change to the color
-            # of the first one and then transition.
-            old_color = [
-                client.devices[dev["id"]].leds[0].colors[0].red,
-                client.devices[dev["id"]].leds[0].colors[0].green,
-                client.devices[dev["id"]].leds[0].colors[0].blue,
-            ]  
-
-        dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
+for dev, idx in resolved:
+    if client.devices[idx].active_mode == 1:  # 1 = Off
+        old_color = [0, 0, 0]
+    else:
+        old_color = [
+            client.devices[idx].leds[0].colors[0].red,
+            client.devices[idx].leds[0].colors[0].green,
+            client.devices[idx].leds[0].colors[0].blue,
+        ]
+    dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
+    dev["_idx"] = idx
 
 for i in range(INTERPOLATION_STEPS):
     t = i / (INTERPOLATION_STEPS - 1)
-
-    for dev in devices:
-        if dev["enabled"]:
-            interp_color = [int(i) for i in dev["interpolation"](t)]
-            client.devices[dev["id"]].set_color(RGBColor(*interp_color), True)
-            if client.devices[dev["id"]].active_mode != 0:
-                client.devices[dev["id"]].set_mode(mode=0)
-
+    for dev, idx in resolved:
+        interp_color = [int(c) for c in dev["interpolation"](t)]
+        client.devices[idx].set_color(RGBColor(*interp_color), True)
+        if client.devices[idx].active_mode != 0:
+            client.devices[idx].set_mode(mode=0)
     sleep(TRANSITION_DURATION/INTERPOLATION_STEPS)
