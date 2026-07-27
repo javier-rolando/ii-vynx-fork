@@ -176,8 +176,45 @@ for i = 1, 6 do
     hl.bind(keycombos[i], hl.dsp.window.move({ workspace = prefix[i] .. "1" })) -- # [hidden]
 end
 
-hl.bind("SUPER + ALT + S",
-    hl.dsp.window.move({ workspace = "special:special", follow = false }), {description = "Window: Send to scratchpad"})
+--#/# bind = CTRL+SUPER, C,, -- Compact workspaces into 1..N (remove empty gaps)
+hl.bind("CTRL + SUPER + C", hl.dsp.exec_cmd(qsScripts .. "/hyprland/workspace_compactor"),
+    { description = "Workspaces: Compact into 1..N (remove empty gaps)" })
+
+hl.bind("SUPER + ALT + S", function()
+    local ok, err = pcall(function()
+        local w = hl.get_active_window()
+        if not w then return end
+        
+        local is_special = false
+        if w.workspace and w.workspace.name then
+            if w.workspace.name:sub(1, 7) == "special" then
+                is_special = true
+            end
+        end
+        
+        if is_special then
+            local active_mon = hl.get_active_monitor()
+            local target_ws = nil
+            if active_mon and active_mon.activeWorkspace and active_mon.activeWorkspace.name then
+                target_ws = active_mon.activeWorkspace.name
+            else
+                local active_ws = hl.get_active_workspace()
+                if active_ws and active_ws.name and active_ws.name:sub(1, 7) ~= "special" then
+                    target_ws = active_ws.name
+                end
+            end
+            
+            if target_ws then
+                hl.dispatch(hl.dsp.window.move({ workspace = target_ws, silent = false }))
+            end
+        else
+            hl.dispatch(hl.dsp.window.move({ workspace = "special:special", silent = true }))
+        end
+    end)
+    if not ok then
+        os.execute("notify-send 'Scratchpad Error' '" .. tostring(err):gsub("'", "\\'") .. "'")
+    end
+end, {description = "Window: Toggle scratchpad"})
 hl.bind("CTRL + SUPER + S", hl.dsp.workspace.toggle_special("special"))
 
 --##! Workspace
@@ -287,6 +324,10 @@ hl.bind("SUPER + Equal", function() zoomfunction(0.3) end, { repeating = true, d
 hl.bind("SUPER + code:82", function() zoomfunction(-0.3) end, { repeating = true })
 hl.bind("SUPER + code:86", function() zoomfunction(0.3) end, { repeating = true })
 
+-- Toggle OLED saver (blackout overlay on the focused monitor)
+hl.bind("SUPER + R", hl.dsp.global("quickshell:oledSaverToggle"),
+    { locked = true, description = "Utilities: Toggle OLED saver (blackout)" })
+
 --##! Media
 local mediaNextCommand =
 "playerctl next || playerctl position `bc <<< \"100 * $(playerctl metadata mpris:length) / 1000000 / 100\"`"
@@ -307,6 +348,8 @@ hl.bind("ALT + XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ 
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ toggle"), { locked = true })
 hl.bind("SUPER + ALT + M", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ toggle"),
     { locked = true, description = "Misc: Toggle mic" })
+hl.bind("SUPER + Z", hl.dsp.global("quickshell:mediaModeToggle"), { locked = true, description = "Shell: Toggle media mode" })
+
 --##! Apps
 hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal), { description = "App: Terminal" })
 hl.bind("SUPER + T", hl.dsp.exec_cmd(terminal))
