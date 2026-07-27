@@ -307,14 +307,14 @@ PanelWindow {
     }
 
     onMediaModeOpenChanged: {
-        if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme")) {
+        if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme") && !Config.options.background.useWallpaperEngine) {
             bgRoot.applyCurrentWallpaper();
             LyricsService.shellColorChanged = false;
         }
     }
 
     Component.onCompleted: {
-        if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme")) {
+        if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme") && !Config.options.background.useWallpaperEngine) {
             bgRoot.applyCurrentWallpaper();
         }
     }

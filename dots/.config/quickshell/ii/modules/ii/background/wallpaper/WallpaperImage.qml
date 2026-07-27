@@ -279,8 +279,8 @@ Item {
                         id: wallpaper
                         anchors.fill: parent
 
-                        visible: opacity > 0 && !wallpaperIsVideo
-                        opacity: (wallpaper.status === Image.Ready && !wallpaperIsVideo) ? 1 : 0
+                        visible: opacity > 0 && !wallpaperIsVideo && !Config.options.background.useWallpaperEngine
+                        opacity: (wallpaper.status === Image.Ready && !wallpaperIsVideo && !Config.options.background.useWallpaperEngine) ? 1 : 0
                         // GPU: cap sourceSize to screen resolution — loading > native res wastes VRAM with no visual gain.
                         // Clamp to max 110% of screen (enough for parallax headroom).
                         sourceSize: Config.options.background.scaleLargeWallpapers ? Qt.size(
