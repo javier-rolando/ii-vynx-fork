@@ -88,6 +88,15 @@ MaterialShape { // App icon
                 cache: true
                 antialiasing: true
                 asynchronous: true
+
+                layer.enabled: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: notifImage.size
+                        height: notifImage.size
+                        radius: Appearance.rounding.full
+                    }
+                }
             }
             Loader {
                 id: notifImageAppIconLoader

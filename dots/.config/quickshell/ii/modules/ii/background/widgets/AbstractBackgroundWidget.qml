@@ -213,12 +213,6 @@ AbstractWidget {
         }
     }
 
-    Item {
-        id: dragProxy
-        x: root.x
-        y: root.y
-    }
-
     readonly property bool isDragging: drag.active
     onIsDraggingChanged: {
         let canvas = findCanvas(root.parent);
@@ -226,28 +220,11 @@ AbstractWidget {
             canvas.draggingActive = isDragging;
         }
         if (!isDragging) {
-            dragProxy.x = root.x;
-            dragProxy.y = root.y;
             if (canvas) {
                 canvas.snapLineX = -1;
                 canvas.snapLineY = -1;
             }
         }
-    }
-
-    Binding {
-        target: root
-        property: "x"
-        value: applyGridAndSnapX(dragProxy.x)
-        when: isDragging && !root.isPreview
-        restoreMode: Binding.RestoreNone
-    }
-    Binding {
-        target: root
-        property: "y"
-        value: applyGridAndSnapY(dragProxy.y)
-        when: isDragging && !root.isPreview
-        restoreMode: Binding.RestoreNone
     }
 
     onPressedChanged: {
@@ -414,7 +391,7 @@ AbstractWidget {
     }
 
     draggable: !isPreview && !(Config.options.background.widgets.lockWidgetPositions ?? false) && (placementStrategy === "free" || placementStrategy === "draggable")
-    drag.target: draggable ? dragProxy : undefined
+    drag.target: draggable ? root : undefined
     drag.minimumX: 0
     drag.maximumX: scaledScreenWidth - width
     drag.minimumY: 0
@@ -424,18 +401,22 @@ AbstractWidget {
     animateYPos: !isDragging && !isDraggingOrSettling && (visibleWhenLocked || !GlobalStates.screenLocked)
     onXChanged: {
         if (isDragging) {
-            if (widgetInstance === null && configEntry) configEntry.x = x;
+            let finalX = applyGridAndSnapX(x);
+            if (x !== finalX) x = finalX;
+            if (widgetInstance === null && configEntry) configEntry.x = finalX;
         }
     }
     onYChanged: {
         if (isDragging) {
-            if (widgetInstance === null && configEntry) configEntry.y = y;
+            let finalY = applyGridAndSnapY(y);
+            if (y !== finalY) y = finalY;
+            if (widgetInstance === null && configEntry) configEntry.y = finalY;
         }
     }
     onReleased: {
         if (isPreview) return;
-        let finalX = applyGridAndSnapX(dragProxy.x);
-        let finalY = applyGridAndSnapY(dragProxy.y);
+        let finalX = applyGridAndSnapX(root.x);
+        let finalY = applyGridAndSnapY(root.y);
         root.x = finalX;
         root.y = finalY;
         
