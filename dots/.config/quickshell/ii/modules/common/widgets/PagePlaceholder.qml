@@ -225,8 +225,6 @@ Item {
                 anchors.centerIn: parent
                 padding: 12
                 iconSize: 56
-                rotation: -30 * (1 - root.opacity)
-                
                 FastBlur {
                     id: iconBlur
                     radius: 0
