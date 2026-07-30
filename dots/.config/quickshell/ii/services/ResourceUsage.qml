@@ -237,10 +237,8 @@ Singleton {
             "    case \"$(basename \"$card\")\" in card*-*) continue ;; esac; " +
             "    if [ -f \"$card/gpu_busy_percent\" ] || grep -q \"DRIVER=amdgpu\" \"$card/uevent\" 2>/dev/null; then " +
             "      pci_slot=$(basename \"$(readlink \"$card\")\" 2>/dev/null); " +
-            "      model=$(lspci -s \"$pci_slot\" 2>/dev/null | sed 's/.*: //'); " +
-            "      if [ -z \"$model\" ]; then " +
-            "        model=$(cat \"$card/uevent\" 2>/dev/null | grep '^PCI_ID=' | cut -d= -f2); " +
-            "      fi; " +
+            "      model=$(lspci -v -s \"$pci_slot\" 2>/dev/null | grep -i 'subsystem:' | grep -o 'Radeon[^]]*' | head -1); " +
+            "      if [ -z \"$model\" ]; then model=$(lspci -s \"$pci_slot\" 2>/dev/null | sed 's/.*: //'); fi; " +
             "      [ -z \"$model\" ] && model='AMD GPU'; " +
             "      echo \"AMD|$model\"; return 0; " +
             "    fi; " +
