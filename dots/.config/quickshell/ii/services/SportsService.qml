@@ -235,11 +235,19 @@ Item {
                         if (matchesFilter) break;
                     }
                 } else {
-                    const homeTeamName = (comp.competitors[0] && comp.competitors[0].team ? (comp.competitors[0].team.shortDisplayName || comp.competitors[0].team.name || "") : "").toLowerCase();
-                    const awayTeamName = (comp.competitors[1] && comp.competitors[1].team ? (comp.competitors[1].team.shortDisplayName || comp.competitors[1].team.name || "") : "").toLowerCase();
+                    const homeNames = [
+                        comp.competitors[0]?.team?.shortDisplayName,
+                        comp.competitors[0]?.team?.displayName,
+                        comp.competitors[0]?.team?.name
+                    ].filter(Boolean).map(n => n.toLowerCase());
+                    const awayNames = [
+                        comp.competitors[1]?.team?.shortDisplayName,
+                        comp.competitors[1]?.team?.displayName,
+                        comp.competitors[1]?.team?.name
+                    ].filter(Boolean).map(n => n.toLowerCase());
                     for (let j = 0; j < teamsToMatch.length; j++) {
                         const t = teamsToMatch[j];
-                        if (homeTeamName.includes(t) || awayTeamName.includes(t)) {
+                        if (homeNames.some(n => n === t) || awayNames.some(n => n === t)) {
                             matchesFilter = true;
                             break;
                         }
