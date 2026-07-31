@@ -28,6 +28,16 @@ CONFIG_JSON = os.path.expanduser("~/.config/illogical-impulse/config.json")
 COLORS_JSON = os.path.expanduser("~/.local/state/quickshell/user/generated/colors.json")
 TARGET_THEME_PATH = os.path.expanduser("~/.local/share/icons/DynamicTheme")
 
+# assets/dock/*.svg shipped by this repo (e.g. ChatGPT.svg, gemini.svg — used for
+# Chrome PWA windows that have no resolvable icon theme name of their own).
+# AppSearch.qml references these by direct file path, bypassing icon-theme lookup
+# entirely, so they never get recolored unless we do it explicitly here.
+DOCK_ASSETS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "dock"))
+DOCK_ASSET_ICON_NAMES = {
+    "ChatGPT.svg": "vynx-dock-chatgpt",
+    "gemini.svg": "vynx-dock-gemini",
+}
+
 def _xdg_data_dirs():
     dirs = [os.path.expanduser("~/.local/share")]
     for d in os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":"):
@@ -275,23 +285,29 @@ def _find_icon_exact(icon_name, theme_dirs):
                     candidate = os.path.join(apps_dir, icon_name + ext)
                     if os.path.isfile(candidate):
                         return candidate
-    # Also check hicolor and pixmaps
-    for fallback in ["/usr/share/pixmaps", "/usr/share/icons/hicolor"]:
+    # Also check pixmaps and hicolor across every XDG data dir, not just /usr/share
+    # (NixOS packages commonly ship their icon under
+    # $out/share/pixmaps/<name>.png, e.g. /nix/store/.../yazi-*/share/pixmaps/yazi.png,
+    # which never lives under /usr/share).
+    pixmaps_dirs = [os.path.join(d, "pixmaps") for d in _xdg_data_dirs()] + ["/usr/share/pixmaps"]
+    for fallback in pixmaps_dirs:
         if os.path.isdir(fallback):
-            if fallback.endswith("pixmaps"):
-                for ext in [".svg", ".png", ".xpm", ""]:
-                    candidate = os.path.join(fallback, icon_name + ext)
+            for ext in [".svg", ".png", ".xpm", ""]:
+                candidate = os.path.join(fallback, icon_name + ext)
+                if os.path.isfile(candidate):
+                    return candidate
+
+    hicolor_dirs = [os.path.join(d, "icons", "hicolor") for d in _xdg_data_dirs()] + ["/usr/share/icons/hicolor"]
+    for fallback in hicolor_dirs:
+        if os.path.isdir(fallback):
+            for size_dir in ICON_SIZE_DIRS:
+                apps_dir = os.path.join(fallback, size_dir)
+                if not os.path.isdir(apps_dir):
+                    continue
+                for ext in [".svg", ".png", ".xpm"]:
+                    candidate = os.path.join(apps_dir, icon_name + ext)
                     if os.path.isfile(candidate):
                         return candidate
-            else:
-                for size_dir in ICON_SIZE_DIRS:
-                    apps_dir = os.path.join(fallback, size_dir)
-                    if not os.path.isdir(apps_dir):
-                        continue
-                    for ext in [".svg", ".png", ".xpm"]:
-                        candidate = os.path.join(apps_dir, icon_name + ext)
-                        if os.path.isfile(candidate):
-                            return candidate
     return None
 
 
@@ -532,7 +548,11 @@ def patch_desktop_file(original_df_path, new_icon_name):
     if os.path.abspath(original_df_path) != os.path.abspath(dest_df_path):
         try:
             os.makedirs(user_apps_dir, exist_ok=True)
+            _make_writable(dest_df_path)
             shutil.copy2(original_df_path, dest_df_path)
+            # copy2 preserves source permissions, which may be read-only
+            # (e.g. Nix store originals) — ensure we can patch it below.
+            os.chmod(dest_df_path, 0o644)
             print(f"  Copied system desktop file {filename} to user directory")
         except Exception as e:
             print(f"  Failed to copy {original_df_path} to {dest_df_path}: {e}")
@@ -571,6 +591,90 @@ def patch_desktop_file(original_df_path, new_icon_name):
     return False
 
 
+def _make_writable(path):
+    """
+    Remove path if it's a symlink (e.g. into /nix/store) or a read-only regular
+    file, so it can be freely rewritten/replaced. NixOS/home-manager frequently
+    manages dotfiles this way, which breaks tools that expect plain mutable files.
+    """
+    if os.path.islink(path) or (os.path.isfile(path) and not os.access(path, os.W_OK)):
+        try:
+            os.unlink(path)
+        except Exception:
+            pass
+
+
+def set_kde_icon_theme(theme_name):
+    """
+    Write [Icons] Theme= into ~/.config/kdeglobals.
+    Quickshell is a Qt/QML app: when QT_QPA_PLATFORMTHEME=kde (common whenever
+    Plasma integration / kde platform theme plugin is present, independent of
+    whether the user actually runs Plasma), Qt resolves the icon theme from
+    kdeglobals, not from GTK settings or gsettings. This is the actual
+    mechanism that controls what the shell itself renders.
+    """
+    ini_path = os.path.expanduser("~/.config/kdeglobals")
+    try:
+        lines = []
+        if os.path.isfile(ini_path):
+            with open(ini_path, "r") as f:
+                lines = f.readlines()
+
+        new_lines = []
+        in_icons = False
+        found = False
+        has_icons_section = any(l.strip() == "[Icons]" for l in lines)
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                in_icons = (stripped == "[Icons]")
+            if in_icons and stripped.startswith("Theme="):
+                new_lines.append(f"Theme={theme_name}\n")
+                found = True
+            else:
+                new_lines.append(line)
+
+        if not found:
+            if not has_icons_section:
+                new_lines.append("[Icons]\n")
+                new_lines.append(f"Theme={theme_name}\n")
+            else:
+                # [Icons] section exists but has no Theme= key: insert right after the header
+                out = []
+                for line in new_lines:
+                    out.append(line)
+                    if line.strip() == "[Icons]":
+                        out.append(f"Theme={theme_name}\n")
+                new_lines = out
+
+        with open(ini_path, "w") as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        print(f"  Failed to update {ini_path}: {e}")
+
+
+def recolor_dock_assets(colors):
+    """
+    Recolor the repo's own assets/dock/*.svg (ChatGPT, Gemini PWA icons) into
+    DynamicTheme under stable vynx-dock-* names, so AppSearch.qml can point at
+    a themed version instead of the always-original bundled asset.
+    """
+    for filename, icon_name in DOCK_ASSET_ICON_NAMES.items():
+        src_file = os.path.join(DOCK_ASSETS_DIR, filename)
+        if not os.path.isfile(src_file):
+            continue
+        try:
+            with open(src_file, 'r', errors='ignore') as f:
+                content = f.read()
+            new_content = recolor_svg(content, colors)
+            dest_dir = os.path.join(TARGET_THEME_PATH, "scalable/apps")
+            os.makedirs(dest_dir, exist_ok=True)
+            with open(os.path.join(dest_dir, icon_name + ".svg"), 'w') as f:
+                f.write(new_content)
+        except Exception as e:
+            print(f"  Failed to recolor dock asset {filename}: {e}")
+
+
 def create_lowercase_symlinks(theme_path):
     """
     Scans the theme path and creates lowercase symlinks for all files containing
@@ -606,24 +710,42 @@ def generate():
     icon_theme_name = config.get("appearance", {}).get("iconTheme", "Papirus-Base")
     print(f"Configured icon theme: {icon_theme_name}")
 
-    # Locate base theme
+    # Locate base theme. Require an index.theme so we don't pick up incomplete
+    # directories that merely happen to share the theme's name (e.g. home-manager
+    # `home.file` entries that graft a handful of extra icons into a path like
+    # ~/.local/share/icons/Papirus/... without shipping the actual theme there).
+    def _is_real_theme_dir(p):
+        return os.path.isfile(os.path.join(p, "index.theme"))
+
     base_theme_path = ""
+    incomplete_fallback = ""
     for d in ICON_SEARCH_DIRS:
         p = os.path.join(d, icon_theme_name)
-        if os.path.exists(p):
-            base_theme_path = p
-            break
+        if os.path.isdir(p):
+            if _is_real_theme_dir(p):
+                base_theme_path = p
+                break
+            elif not incomplete_fallback:
+                incomplete_fallback = p
+
+    if not base_theme_path and incomplete_fallback:
+        print(f"Warning: '{incomplete_fallback}' has no index.theme (looks like a partial/grafted "
+              f"directory, not the real theme) — searching other locations instead.")
 
     if not base_theme_path:
         print(f"Icon theme '{icon_theme_name}' not found. Falling back...")
         for fallback_name in ["Papirus-Base", "Papirus", "breeze", "Adwaita"]:
             for d in ICON_SEARCH_DIRS:
                 p = os.path.join(d, fallback_name)
-                if os.path.exists(p):
+                if os.path.isdir(p) and _is_real_theme_dir(p):
                     base_theme_path = p
                     icon_theme_name = fallback_name
                     break
             if base_theme_path: break
+
+    # Last resort: use the incomplete directory anyway rather than failing outright.
+    if not base_theme_path and incomplete_fallback:
+        base_theme_path = incomplete_fallback
 
     if not base_theme_path:
         print("No suitable base theme found.")
@@ -708,6 +830,8 @@ def generate():
     base_count = sum(1 for r in results if r)
     print(f"[Phase 1] Done! {base_count} base icons recolored.")
 
+    recolor_dock_assets(colors)
+
     # ── Phase 2: Scavenge & recolor missing icons ────────────────────────
     print("[Phase 2] Scavenging missing icons from .desktop files...")
     existing = get_existing_tema_icons()
@@ -769,6 +893,7 @@ def generate():
 
     # Notify system
     subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", "DynamicTheme"], capture_output=True)
+    set_kde_icon_theme("DynamicTheme")
 
     total = base_count + svg_count + raster_count
     print(f"Generation complete. {total} total icons in DynamicTheme.")

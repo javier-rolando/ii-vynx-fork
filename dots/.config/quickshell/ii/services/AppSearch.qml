@@ -27,8 +27,10 @@ Singleton {
         "org.gnome.texteditor": "org.gnome.TextEditor",
         "org.kde.kdeconnect.app": "kdeconnect",
         "opentabletdriver.ux": "otd",
-        "chrome-chat.openai.com__-default": Quickshell.shellPath("assets/dock/ChatGPT.svg"),
-        "chrome-gemini.google.com__app-default": Quickshell.shellPath("assets/dock/gemini.svg"),
+        "chrome-chat.openai.com__-default": Config.options?.appearance.icons.enableThemed
+            ? "vynx-dock-chatgpt" : Quickshell.shellPath("assets/dock/ChatGPT.svg"),
+        "chrome-gemini.google.com__app-default": Config.options?.appearance.icons.enableThemed
+            ? "vynx-dock-gemini" : Quickshell.shellPath("assets/dock/gemini.svg"),
         "chrome-translate.google.com__-default": "google-translate",
         "kitty-yazi": "yazi",
         "kitty-btop": "btop"
