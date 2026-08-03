@@ -335,7 +335,12 @@ Item { // Notification item area
                                     rightPadding: 15 * root.zoom
                                     buttonRadius: Appearance.rounding.small * root.zoom
                                     onClicked: {
-                                      if (modelData.identifier === "default") {
+                                      if (modelData.identifier.startsWith("__qs_")) {
+                                          Notifications.executeShellAction(notificationObject, modelData.identifier);
+                                          root.destroyWithAnimation();
+                                          Notifications.executeShellAction(notificationObject, modelData.identifier);
+                                          root.destroyWithAnimation();
+                                      } else if (modelData.identifier === "default") {
                                         if (isTwitchNotification) {
                                           const channel = extractStreamer(notificationObject.body);
                                           // Qt.openUrlExternally("https://www.twitch.tv/" + (streamerMap[channel] || channel || ""));
