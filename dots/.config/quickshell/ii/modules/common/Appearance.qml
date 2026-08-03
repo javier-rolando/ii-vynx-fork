@@ -347,7 +347,7 @@ Singleton {
         }
 
         let wsStyle = (Config.options.background?.parallax?.vertical ?? false) ? "slidevert" : "slide";
-        Quickshell.execDetached(["hyprctl", "eval", "hl.animation({ leaf = 'workspaces', enabled = true, speed = 7, bezier = 'menu_decel', style = '" + wsStyle + "' })"]);
+        Quickshell.execDetached(["hyprctl", "eval", "hl.animation({ leaf = 'workspaces', enabled = true, speed = 3.5, bezier = 'menu_decel', style = '" + wsStyle + "' })"]);
     }
 
     Connections {
