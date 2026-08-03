@@ -320,14 +320,28 @@ PanelWindow {
                     && bgRoot.isMonitorFocused) {
                 Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", Appearance.m3colors.darkmode ? "dark" : "light"]);
             }
-
-            // Force widgets window to re-stack after our layer transition from
-            // WlrLayer.Overlay → WlrLayer.Bottom. Without this, the compositor
-            // re-stacks us at the top of the Bottom layer, covering the widgets
-            // PanelWindow with the wallpaper image.
+        }
+        // Force widgets window to re-stack after our layer transition from
+        // WlrLayer.Overlay → WlrLayer.Bottom. Without this, the compositor
+        // re-stacks us at the top of the Bottom layer, covering the widgets
+        // PanelWindow with the wallpaper image.
+        // Must fire unconditionally (not guarded by WPE/palette checks) since the
+        // layer transition happens regardless of wallpaper engine or color scheme.
+        if (!mediaModeOpen) {
             Qt.callLater(function() {
                 GlobalStates.widgetReStackTrigger++;
             });
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onScreenLockedChanged() {
+            if (GlobalStates.screenLocked) {
+                Qt.callLater(function() {
+                    GlobalStates.widgetReStackTrigger++;
+                });
+            }
         }
     }
 
