@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.modules.common
 
 Item {
@@ -121,53 +122,63 @@ Item {
         let datesToFetch = [];
         for (let d = -1; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
 
-        let requests = [];
+        let urlItems = [];
         for (let i = 0; i < leaguesToFetch.length; i++) {
             const entry = leaguesToFetch[i];
             for (let j = 0; j < datesToFetch.length; j++) {
-                requests.push({ entry: entry, date: datesToFetch[j] });
+                urlItems.push({
+                    url: `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard?dates=${datesToFetch[j]}`,
+                    name: entry.name,
+                    sport: entry.sport
+                });
             }
         }
 
-        let pendingRequests = requests.length;
-        let collectedEvents = [];
-        let seenEventIds = {};
+        fetchProc.exec(["python3", "-c",
+`import sys,json,urllib.request as ur,concurrent.futures as cf
+items=json.loads(sys.argv[1])
+res=[]
+seen=set()
+def fetch(i):
+    try:
+        with ur.urlopen(ur.Request(i['url']),timeout=10) as r:
+            d=json.load(r)
+            ll=d.get('leagues',[{}])[0].get('logos',[])
+            logo=ll[0].get('href','') if ll else ''
+            return [(e,i['name'],i['sport'],logo) for e in d.get('events',[])]
+    except:
+        return []
+with cf.ThreadPoolExecutor(max_workers=6) as ex:
+    for evts in ex.map(fetch,items):
+        for e,name,sport,logo in evts:
+            if e['id'] not in seen:
+                seen.add(e['id'])
+                e['leagueName']=name
+                e['sportCategory']=sport
+                e['leagueLogo']=logo
+                res.append(e)
+print(json.dumps(res))`,
+            JSON.stringify(urlItems)]);
+    }
 
-        for (let i = 0; i < requests.length; i++) {
-            const entry = requests[i].entry;
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard?dates=${requests[i].date}`;
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", url);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    pendingRequests--;
-                    if (xhr.status === 200) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            let leagueLogo = "";
-                            if (response.leagues && response.leagues[0] && response.leagues[0].logos && response.leagues[0].logos[0]) {
-                                leagueLogo = response.leagues[0].logos[0].href;
-                            }
-                            (response.events || []).forEach(e => {
-                                if (!seenEventIds[e.id]) {
-                                    seenEventIds[e.id] = true;
-                                    e.leagueName = entry.name;
-                                    e.sportCategory = entry.sport;
-                                    e.leagueLogo = leagueLogo;
-                                    collectedEvents.push(e);
-                                }
-                            });
-                        } catch (e) {
-                            error = "Parse error";
-                        }
-                    }
-                    if (pendingRequests === 0) {
-                        loading = false;
-                        processGames(collectedEvents);
-                    }
+    Process {
+        id: fetchProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                loading = false;
+                try {
+                    const events = JSON.parse(text);
+                    processGames(events);
+                } catch(e) {
+                    error = "Parse error";
                 }
-            };
-            xhr.send();
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                loading = false;
+                error = "Fetch error";
+            }
         }
     }
 
