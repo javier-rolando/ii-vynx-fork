@@ -25,6 +25,7 @@ hl.config({
 		slave_count_for_center_master = 0,
 		special_scale_factor = 0.80,
 		smart_resizing = false,
+		focus_master_on_close = true,
 	},
 	scrolling = {
 		fullscreen_on_one_column = false,
