@@ -66,6 +66,8 @@ end
 -- State
 local ws_layouts = {} -- tracks per-workspace layout overrides
 local AUTO_SWITCH_THRESHOLD = 4
+local last_special = nil -- bare name of the special workspace last closed via ALT+Tab
+local last_special_ws_id = nil -- id of the regular workspace it was closed from
 
 -- Dispatch
 local function warp_dispatch(dispatch_fn)
@@ -171,6 +173,36 @@ local function toggle_float_center()
 	end
 end
 
+-- ALT+Tab:
+--  * If a special workspace is showing on the focused monitor, close it
+--    (like minimizing) instead of following "workspace previous", which
+--    otherwise jumps past the underlying regular workspace to whatever was
+--    active before it.
+--  * If we just closed a special that way and haven't left its underlying
+--    workspace since, pressing ALT+Tab again reopens it (a 2-way toggle).
+--  * Otherwise, fall back to normal "workspace previous" behavior.
+local function alt_tab_focus()
+	local sw = hl.get_active_special_workspace()
+	if sw then
+		last_special = (sw.name:gsub("^special:", ""))
+		last_special_ws_id = hl.get_active_workspace().id
+		hl.dispatch(hl.dsp.workspace.toggle_special(last_special))
+		return
+	end
+
+	if last_special and hl.get_active_workspace().id == last_special_ws_id then
+		local name = last_special
+		last_special = nil
+		last_special_ws_id = nil
+		hl.dispatch(hl.dsp.workspace.toggle_special(name))
+		return
+	end
+
+	last_special = nil
+	last_special_ws_id = nil
+	warp_dispatch(hl.dsp.focus({ workspace = "previous" }))
+end
+
 -- Shell config / keybinds
 hl.bind(
 	"CTRL + SUPER + Slash",
@@ -201,9 +233,7 @@ hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen_state({ internal = 0, clie
 hl.bind("SUPER + P", hl.dsp.window.pseudo({ action = "toggle" }))
 hl.bind("SUPER + SHIFT + P", hl.dsp.window.pin())
 hl.bind("SUPER + R", toggle_float_center)
-hl.bind("ALT + Tab", function()
-	warp_dispatch(hl.dsp.focus({ workspace = "previous" }))
-end)
+hl.bind("ALT + Tab", alt_tab_focus)
 hl.bind("SUPER + SHIFT + Tab", hl.dsp.window.cycle_next({ visible = true, hist = true }))
 
 -- Master layout
