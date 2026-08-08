@@ -52,6 +52,7 @@ for _, bind in ipairs({
 	"XF86AudioPlay",
 	"XF86AudioPause",
 	"CTRL + SUPER + R",
+	"SUPER + Z",
 }) do
 	hl.unbind(bind)
 end
