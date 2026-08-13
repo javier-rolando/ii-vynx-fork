@@ -104,4 +104,4 @@ output_path = "~/starship-test.toml"
 [templates.cursor]
 input_path = "~/.config/matugen/templates/cursors.json"
 output_path = "~/.config/colors.json"
-post_hook = "~/.config/matugen/post-hook-scripts/cursor_matugen.sh"
+post_hook = "~/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh"
