@@ -95,18 +95,29 @@ if command -v gsettings >/dev/null 2>&1; then
 fi
 
 # B. Hyprland compositor
-if command -v hyprctl >/dev/null 2>&1 && pgrep -x Hyprland >/dev/null 2>&1; then
+# NixOS wraps the Hyprland binary, so its /proc comm is truncated to
+# something like ".Hyprland-wrapp" — `pgrep -x Hyprland` never matches
+# there. HYPRLAND_INSTANCE_SIGNATURE is what hyprctl itself uses to find
+# the running instance, so check that instead of the process name.
+if command -v hyprctl >/dev/null 2>&1 && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     hyprctl setcursor "$THEME_NAME" 24 >/dev/null 2>&1 \
         && echo "✓ Set hyprctl cursor: $THEME_NAME" \
         || echo "Warning: hyprctl setcursor failed" >&2
 fi
 
-# C. XCursor fallback (Ensures legacy X11 & Wayland apps show the cursor under Hyprland)
-mkdir -p "$HOME/.icons/default"
-cat <<EOF > "$HOME/.icons/default/index.theme"
+# C. XCursor fallback (ensures legacy X11 & Wayland apps show the cursor
+# under Hyprland). Best-effort: on setups where ~/.icons/default is a
+# read-only symlink managed elsewhere (e.g. home-manager's
+# home.pointerCursor), this write fails — don't let that abort the hook
+# after gsettings/hyprctl already applied the theme above.
+if mkdir -p "$HOME/.icons/default" 2>/dev/null && cat <<EOF > "$HOME/.icons/default/index.theme" 2>/dev/null
 [Icon Theme]
 Name=Default
 Comment=Default Cursor Theme
 Inherits=$THEME_NAME
 EOF
-echo "✓ Updated ~/.icons/default/index.theme"
+then
+    echo "✓ Updated ~/.icons/default/index.theme"
+else
+    echo "Warning: could not update ~/.icons/default/index.theme (read-only? managed elsewhere)" >&2
+fi
