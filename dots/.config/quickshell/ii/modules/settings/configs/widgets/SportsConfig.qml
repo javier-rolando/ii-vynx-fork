@@ -24,7 +24,7 @@ ContentPage {
         "racing": ["f1", "irl", "nascar-secondary", "nhra", "nascar-premier", "nascar-truck"],
         "rugby": ["268565", "289234", "164205", "180659", "244293", "271937", "272073", "267979", "270559", "270557", "242041", "289271", "289272", "289277", "289279", "270561", "270555", "270563", "236461", "264129", "282877", "262827", "256447", "268561", "283371"],
         "rugby-league": ["3"],
-        "soccer": ["concacaf.gold", "uefa.euro", "conmebol.america", "fifa.friendly", "fifa.world", "fifa.wwc", "usa.1", "usa.nwsl", "mex.1", "uefa.champions_qual", "uefa.champions", "uefa.europa", "eng.1", "ita.1", "ger.1", "esp.1", "fra.1", "eng.2", "eng.league_cup", "eng.fa", "esp.copa_del_rey", "ita.coppa_italia", "ger.dfb_pokal", "fra.coupe_de_france", "mex.copa_mx", "concacaf.champions", "ned.1"],
+        "soccer": ["concacaf.gold", "uefa.euro", "conmebol.america", "fifa.friendly", "fifa.world", "fifa.wwc", "usa.1", "usa.nwsl", "mex.1", "uefa.champions_qual", "uefa.champions", "uefa.europa", "eng.1", "ita.1", "ger.1", "esp.1", "fra.1", "eng.2", "eng.league_cup", "eng.fa", "esp.copa_del_rey", "ita.coppa_italia", "ger.dfb_pokal", "fra.coupe_de_france", "mex.copa_mx", "concacaf.champions", "ned.1", "arg.1", "arg.copa_argentina", "conmebol.libertadores", "conmebol.sudamericana"],
         "volleyball": ["mens-college-volleyball", "womens-college-volleyball"],
         "australian-football": ["afl"],
         "tennis": ["atp", "wta"],
