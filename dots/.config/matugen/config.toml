@@ -100,3 +100,8 @@ output_path = "~/.local/state/quickshell/user/generated/kitty/kitty-colors.conf"
 [templates.starship]
 input_path = "~/.config/matugen/templates/apps/starship.toml"
 output_path = "~/starship-test.toml"
+
+[templates.cursor]
+input_path = "~/.config/matugen/templates/cursors.json"
+output_path = "~/.config/colors.json"
+post_hook = "~/.config/matugen/post-hook-scripts/cursor_matugen.sh"
