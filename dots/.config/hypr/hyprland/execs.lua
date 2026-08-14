@@ -21,5 +21,9 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("wl-paste --type image --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
 
     -- Cursor
-    hl.exec_cmd("hyprctl setcursor Bibata-Modern-Classic 24")
+    -- Bibata-Material-Current: el symlink persiste en disco entre reboots
+    -- (a diferencia de Xresources), así que esto ya arranca mostrando el
+    -- último tema matcheado en vez de volver al Bibata estático hasta el
+    -- primer cambio de wallpaper de la sesión.
+    hl.exec_cmd("hyprctl setcursor Bibata-Material-Current 24")
 end)
