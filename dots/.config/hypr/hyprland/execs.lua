@@ -37,5 +37,5 @@ hl.on("hyprland.start", function ()
     -- termina después de esta primera pasada — sin esto, Steam (que carga
     -- su UI recién varios segundos después de arrancar) hereda ese reset
     -- en vez del tema real.
-    hl.exec_cmd("sleep 8 && $HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
+    hl.exec_cmd("sleep 15 && $HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
 end)
