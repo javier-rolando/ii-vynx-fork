@@ -30,12 +30,16 @@ hl.on("hyprland.start", function ()
     -- inicio) agarra un tema viejo/default en vez del último matcheado.
     -- Corre antes que "steam" en custom/execs.lua (hyprland.execs se
     -- importa primero en hyprland.lua) para llegar a tiempo.
-    hl.exec_cmd("$HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
-
-    -- Segunda pasada, más tarde: XWayland resetea Xresources (Xcursor.theme
-    -- vuelve a "default") en algún punto de su propia inicialización, que
-    -- termina después de esta primera pasada — sin esto, Steam (que carga
-    -- su UI recién varios segundos después de arrancar) hereda ese reset
-    -- en vez del tema real.
-    hl.exec_cmd("sleep 15 && $HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
+    --
+    -- XWayland resetea Xresources (Xcursor.theme vuelve a "default") en
+    -- algún punto de su propia inicialización, en un momento variable que
+    -- no podemos predecir con un sleep fijo (probado con 8s y 15s, falla
+    -- en algunos boots). En vez de adivinar el momento exacto, reaplicamos
+    -- el hook cada 2s durante 1 minuto — así, sea cuando sea que XWayland
+    -- haga el reset, la próxima pasada (a los 2s como mucho) lo corrige.
+    hl.exec_cmd(
+        "bash -c 'for i in $(seq 1 30); do " ..
+        "$HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh >/dev/null 2>&1; " ..
+        "sleep 2; done'"
+    )
 end)
