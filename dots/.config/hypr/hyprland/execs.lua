@@ -31,4 +31,11 @@ hl.on("hyprland.start", function ()
     -- Corre antes que "steam" en custom/execs.lua (hyprland.execs se
     -- importa primero en hyprland.lua) para llegar a tiempo.
     hl.exec_cmd("$HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
+
+    -- Segunda pasada, más tarde: XWayland resetea Xresources (Xcursor.theme
+    -- vuelve a "default") en algún punto de su propia inicialización, que
+    -- termina después de esta primera pasada — sin esto, Steam (que carga
+    -- su UI recién varios segundos después de arrancar) hereda ese reset
+    -- en vez del tema real.
+    hl.exec_cmd("sleep 8 && $HOME/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh")
 end)
