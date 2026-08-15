@@ -87,10 +87,8 @@ hl.bind("SUPER + SHIFT + X", hl.dsp.exec_cmd(
     " || pidof slurp || grim -g \"$(slurp $SLURP_ARGS)\" \"/tmp/ocr_image.png\" && tesseract \"/tmp/ocr_image.png\" stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\\\n' '+' | sed 's/\\\\+$/\\\\n/') | wl-copy && rm \"/tmp/ocr_image.png\""
 ))
 --# Color picker
-hl.bind("SUPER + SHIFT + C", hl.dsp.global("quickshell:colorPickerLaunch"),
+hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"),
     { description = "Utilities: Pick color #RRGGBB >> clipboard" })
-hl.bind("SUPER + SHIFT + C",
-    hl.dsp.exec_cmd(qsIpcCall .. " colorPickerLaunch trigger || hyprpicker -a"))
 --# Recording stuff
 hl.bind("SUPER + SHIFT + R", hl.dsp.global("quickshell:regionRecord"),
     { locked = true, description = "Utilities: Record region (no sound)" })
@@ -176,29 +174,15 @@ hl.bind("SUPER + P", hl.dsp.window.pin(), { description = "Window: Pin" })
 --# We use raw keycodes because some keyboard layouts register number keys as different chars. The codes can be verified with `wev`
 for i = 1, 10 do
     local numberkey = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }
-
     hl.bind("SUPER + ALT + code:" .. numberkey[i], function()
-        hl.dispatch(
-            hl.dsp.window.move({
-                workspace = workspace_in_group(i),
-                follow = false,
-                silent = true
-            })
-        )
+        hl.dispatch(hl.dsp.window.move({ workspace = workspace_in_group(i), follow = false }))
     end)
 end
 --# keypad numbers
 for i = 1, 10 do
     local numpadkey = { 87, 88, 89, 83, 84, 85, 79, 80, 81, 90 }
-
     hl.bind("SUPER + ALT + code:" .. numpadkey[i], function()
-        hl.dispatch(
-            hl.dsp.window.move({
-                workspace = workspace_in_group(i),
-                follow = false,
-                silent = true
-            })
-        )
+        hl.dispatch(hl.dsp.window.move({ workspace = workspace_in_group(i), follow = false }))
     end)
 end
 
@@ -215,7 +199,7 @@ for i = 1, 6 do
     local key = { "SUPER + ALT + Page_", "SUPER + SHIFT + Page_", "CTRL + SUPER + SHIFT + " }
     local keycombos = { key[1] .. "down", key[1] .. "up", key[2] .. "down", key[2] .. "up", key[3] .. "Right", key[3] ..
     "Left" }
-    local prefix = { "+", "-", "+", "-", "+", "-" }
+    local prefix = { "+", "-", "r+", "r-", "r+", "r-" }
     hl.bind(keycombos[i], hl.dsp.window.move({ workspace = prefix[i] .. "1" })) -- # [hidden]
 end
 
@@ -259,7 +243,6 @@ hl.bind("SUPER + ALT + S", function()
 end, {description = "Window: Toggle scratchpad"})
 hl.bind("CTRL + SUPER + S", hl.dsp.workspace.toggle_special("special"))
 
-
 --##! Workspace
 --# Switching
 --#/# bind = SUPER, Hash,, # Focus workspace (1, 2, 3,...)
@@ -283,14 +266,14 @@ end
 for i = 1, 4 do
     local key = { "CTRL + SUPER + ", "CTRL + SUPER + ALT + " }
     local keycombos = { key[1] .. "Right", key[1] .. "Left", key[2] .. "Right", key[2] .. "Left" }
-    local prefix = { "+", "-", "m+", "m-" }
+    local prefix = { "r+", "r-", "m+", "m-" }
     hl.bind(keycombos[i], hl.dsp.focus({ workspace = prefix[i] .. "1" }))
 end
 --#/# bind = SUPER, Page_↑/↓,, # Focus left/right
 for i = 1, 4 do
     local key = { "SUPER + Page_Down", "SUPER + Page_Up" }
     local keycombos = { key[1], key[2], "CTRL + " .. key[1], "CTRL + " .. key[2] }
-    local prefix = { "+", "-", "r+", "r-" }
+    local prefix = { "r+", "r-", "r+", "r-" }
     hl.bind(keycombos[i], hl.dsp.focus({ workspace = prefix[i] .. "1" }))
 end
 --#/# bind = SUPER, Scroll ↑/↓,, # Focus left/right
@@ -305,7 +288,7 @@ hl.bind("SUPER + S", hl.dsp.workspace.toggle_special("special"), { description =
 hl.bind("SUPER + mouse:275", hl.dsp.workspace.toggle_special("special"))
 for i = 1, 4 do
     local key = { "BracketLeft", "BracketRight", "Up", "Down" }
-    local prefix = { "-1", "+1", "r-" .. tostring(workspaceGroupSize), "r+" .. tostring(workspaceGroupSize) }
+    local prefix = { "-1", "+1", "r-5", "r+5" }
     hl.bind("CTRL + SUPER + " .. key[i], hl.dsp.focus({ workspace = prefix[i] }))
 end
 
@@ -340,7 +323,7 @@ hl.bind("SUPER + ALT + Equal",
     hl.dsp.exec_cmd("notify-send 'Urgent notification' 'Ah hell no' -u critical -a 'Hyprland keybind'"))                             -- # [hidden]
 
 --##! Session
-hl.bind("SUPER + L", hl.dsp.exec_cmd(qsIpcCall .. " lock activate; loginctl lock-session"), { description = "Misc: Lock" })
+hl.bind("SUPER + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Misc: Lock" })
 hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"),
     { locked = true, description = "Misc: Suspend system" })                                                                                   -- Sleep
 -- hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"), {locked = true} ) -- # [hidden] Suspend when laptop lid is closed, uncomment if for whatever reason it's not the default behavior

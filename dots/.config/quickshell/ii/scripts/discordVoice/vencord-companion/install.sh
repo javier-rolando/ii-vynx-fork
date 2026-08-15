@@ -112,9 +112,9 @@ case "$DETECTED" in
         CLIENT_NAME="Vesktop"
         REPO_URL="https://github.com/Vendicated/Vencord.git"
         BUILD_DIR="${HOME}/.local/share/quickshell-ii/Vencord"
-        STATE_FILE="${HOME}/.config/vesktop/settings.json"
+        STATE_FILE="${HOME}/.config/vesktop/state.json"
         VENCORD_SETTINGS="${HOME}/.config/vesktop/settings/settings.json"
-        CONFIG_KEY="vencordLocation"
+        CONFIG_KEY="vencordDir"
         ;;
     equibop)
         CLIENT_NAME="Equibop"

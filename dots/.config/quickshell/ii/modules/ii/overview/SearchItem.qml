@@ -86,6 +86,13 @@ RippleButton {
     }
 
     property bool actionPanelOpen: false
+    Connections {
+        target: GlobalStates
+        function onOverviewOpenChanged() {
+            if (!GlobalStates.overviewOpen)
+                root.actionPanelOpen = false;
+        }
+    }
     readonly property bool isNowPlaying: root.itemType === Translation.tr("Now Playing")
     readonly property bool isBuiltinItem: (root.entry?.key?.startsWith("mock:") || root.entry?.key?.startsWith("shortcut:")) || !!root.entry?.isBuiltin
     readonly property var entryActions: entry?.actions ?? []

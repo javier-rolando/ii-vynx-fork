@@ -28,6 +28,20 @@ Item { // Notification item area
 
     implicitHeight: background.implicitHeight
 
+    property bool isTwitchNotification: (notificationObject.body || "").toLowerCase().includes("from twitch")
+    property bool isKickNotification: (notificationObject.body || "").toLowerCase().includes("from kick")
+
+    readonly property var streamerMap: {
+      "夜巡ハナ": "hanayomeguri",
+      "魔ノむえる": "manomueru",
+      "あるばいとしまむら": "shimamur4",
+      "ひなちょまる": "hina_chomaru"
+    }
+
+    function extractStreamer(body) {
+      return body.split(" ")[0].toLowerCase();
+    }
+
     function destroyWithAnimation(left = undefined) {
         if (left === undefined) {
             const pos = Config?.options.notifications.position ?? "top_right";
@@ -123,6 +137,7 @@ Item { // Notification item area
         }
 
         image: notificationObject.image
+        body: notificationObject.body
         anchors.right: background.left
         anchors.top: background.top
         anchors.rightMargin: 10
@@ -304,19 +319,35 @@ Item { // Notification item area
                                     id: notifAction
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    buttonText: modelData.text
+                                    buttonText: (modelData.identifier === "default" && (isTwitchNotification || isKickNotification)) ? "View" : modelData.text
                                     urgency: notificationObject.urgency
                                     implicitHeight: 34 * root.zoom
                                     leftPadding: 15 * root.zoom
                                     rightPadding: 15 * root.zoom
                                     buttonRadius: Appearance.rounding.small * root.zoom
                                     onClicked: {
-                                        if (modelData.identifier.startsWith("__qs_")) {
-                                            Notifications.executeShellAction(notificationObject, modelData.identifier);
-                                            root.destroyWithAnimation();
+                                      if (modelData.identifier.startsWith("__qs_")) {
+                                          Notifications.executeShellAction(notificationObject, modelData.identifier);
+                                          root.destroyWithAnimation();
+                                          Notifications.executeShellAction(notificationObject, modelData.identifier);
+                                          root.destroyWithAnimation();
+                                      } else if (modelData.identifier === "default") {
+                                        if (isTwitchNotification) {
+                                          const channel = extractStreamer(notificationObject.body);
+                                          // Qt.openUrlExternally("https://www.twitch.tv/" + (streamerMap[channel] || channel || ""));
+                                          Quickshell.execDetached(["zen", "--profile=/home/javier/.zen/cwbhpa62.Default Profile", "https://www.twitch.tv/" + (streamerMap[channel] || channel || "")]);
+                                          Notifications.discardNotification(notificationObject.notificationId);
+                                        } else if (isKickNotification) {
+                                          const channel = extractStreamer(notificationObject.body);
+                                          // Qt.openUrlExternally("https://kick.com/" + (channel || ""));
+                                          Quickshell.execDetached(["zen", "--profile=/home/javier/.zen/cwbhpa62.Default Profile", "https://kick.com/" + (channel || "")]);
+                                          Notifications.discardNotification(notificationObject.notificationId);
                                         } else {
-                                            Notifications.attemptInvokeAction(notificationObject.notificationId, modelData.identifier);
+                                          Notifications.attemptInvokeAction(notificationObject.notificationId, modelData.identifier);
                                         }
+                                      } else {
+                                        Notifications.attemptInvokeAction(notificationObject.notificationId, modelData.identifier);
+                                      }
                                     }
                                 }
                             }
@@ -331,9 +362,18 @@ Item { // Notification item area
                                 implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
 
                                 onClicked: {
-                                    Quickshell.clipboardText = notificationObject.body;
-                                    copyIcon.text = "inventory";
-                                    copyIconTimer.restart();
+                                    if (isTwitchNotification) {
+                                        const channel = extractStreamer(notificationObject.body);
+                                        Quickshell.clipboardText = "https://www.twitch.tv/" + (streamerMap[channel] || channel || "")
+                                    } else if (isKickNotification) {
+                                        const channel = extractStreamer(notificationObject.body)
+                                        Quickshell.clipboardText = "https://kick.com/" + (channel || "")
+                                    } else {
+                                        Quickshell.clipboardText = notificationObject.body
+                                    }
+
+                                    copyIcon.text = "inventory"
+                                    copyIconTimer.restart()
                                 }
 
                                 Timer {

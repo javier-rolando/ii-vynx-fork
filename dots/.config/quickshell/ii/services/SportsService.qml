@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.modules.common
 
 Item {
@@ -33,6 +34,7 @@ Item {
 
     property bool loading: false
     property string error: ""
+    property var previousScores: ({})
 
     function nextGame() {
         if (allGames.length > 1) {
@@ -128,42 +130,72 @@ Item {
             return;
         }
 
-        let pendingRequests = leaguesToFetch.length;
-        let collectedEvents = [];
+        function utcDateString(daysOffset) {
+            const d = new Date();
+            d.setUTCDate(d.getUTCDate() + daysOffset);
+            return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
+        }
+        const daysNeeded = Math.ceil(Config.options.bar.sports.showBeforeHours / 24) + 1;
+        let datesToFetch = [];
+        for (let d = -1; d < daysNeeded; d++) datesToFetch.push(utcDateString(d));
 
+        let urlItems = [];
         for (let i = 0; i < leaguesToFetch.length; i++) {
             const entry = leaguesToFetch[i];
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard`;
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", url);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    pendingRequests--;
-                    if (xhr.status === 200) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            let leagueLogo = "";
-                            if (response.leagues && response.leagues[0] && response.leagues[0].logos && response.leagues[0].logos[0]) {
-                                leagueLogo = response.leagues[0].logos[0].href;
-                            }
-                            const events = (response.events || []).map(e => {
-                                e.leagueName = entry.name;
-                                e.sportCategory = entry.sport;
-                                e.leagueLogo = leagueLogo;
-                                return e;
-                            });
-                            collectedEvents = collectedEvents.concat(events);
-                        } catch (e) {
-                            error = "Parse error";
-                        }
-                    }
-                    if (pendingRequests === 0) {
-                        loading = false;
-                        processGames(collectedEvents);
-                    }
+            for (let j = 0; j < datesToFetch.length; j++) {
+                urlItems.push({
+                    url: `https://site.api.espn.com/apis/site/v2/sports/${entry.sport}/${entry.league}/scoreboard?dates=${datesToFetch[j]}`,
+                    name: entry.name,
+                    sport: entry.sport
+                });
+            }
+        }
+
+        fetchProc.exec(["python3", "-c",
+`import sys,json,urllib.request as ur,concurrent.futures as cf
+items=json.loads(sys.argv[1])
+res=[]
+seen=set()
+def fetch(i):
+    try:
+        with ur.urlopen(ur.Request(i['url']),timeout=10) as r:
+            d=json.load(r)
+            ll=d.get('leagues',[{}])[0].get('logos',[])
+            logo=ll[0].get('href','') if ll else ''
+            return [(e,i['name'],i['sport'],logo) for e in d.get('events',[])]
+    except:
+        return []
+with cf.ThreadPoolExecutor(max_workers=6) as ex:
+    for evts in ex.map(fetch,items):
+        for e,name,sport,logo in evts:
+            if e['id'] not in seen:
+                seen.add(e['id'])
+                e['leagueName']=name
+                e['sportCategory']=sport
+                e['leagueLogo']=logo
+                res.append(e)
+print(json.dumps(res))`,
+            JSON.stringify(urlItems)]);
+    }
+
+    Process {
+        id: fetchProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                loading = false;
+                try {
+                    const events = JSON.parse(text);
+                    processGames(events);
+                } catch(e) {
+                    error = "Parse error";
                 }
-            };
-            xhr.send();
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                loading = false;
+                error = "Fetch error";
+            }
         }
     }
 
@@ -231,11 +263,19 @@ Item {
                         if (matchesFilter) break;
                     }
                 } else {
-                    const homeTeamName = (comp.competitors[0] && comp.competitors[0].team ? (comp.competitors[0].team.shortDisplayName || comp.competitors[0].team.name || "") : "").toLowerCase();
-                    const awayTeamName = (comp.competitors[1] && comp.competitors[1].team ? (comp.competitors[1].team.shortDisplayName || comp.competitors[1].team.name || "") : "").toLowerCase();
+                    const homeNames = [
+                        comp.competitors[0]?.team?.shortDisplayName,
+                        comp.competitors[0]?.team?.displayName,
+                        comp.competitors[0]?.team?.name
+                    ].filter(Boolean).map(n => n.toLowerCase());
+                    const awayNames = [
+                        comp.competitors[1]?.team?.shortDisplayName,
+                        comp.competitors[1]?.team?.displayName,
+                        comp.competitors[1]?.team?.name
+                    ].filter(Boolean).map(n => n.toLowerCase());
                     for (let j = 0; j < teamsToMatch.length; j++) {
                         const t = teamsToMatch[j];
-                        if (homeTeamName.includes(t) || awayTeamName.includes(t)) {
+                        if (homeNames.some(n => n === t) || awayNames.some(n => n === t)) {
                             matchesFilter = true;
                             break;
                         }
@@ -324,6 +364,7 @@ Item {
                     id: event.id,
                     name: event.name,
                     league: event.leagueName,
+                    date: event.date,
                     status: (comp.status && comp.status.type && comp.status.type.state === "pre")
                         ? formatMatchTime(event.date)
                         : ((comp.status && comp.status.type && comp.status.type.state === "in")
@@ -337,6 +378,16 @@ Item {
             }
         }
 
+        function sortByStateAndDate(a, b) {
+            const order = { "in": 0, "pre": 1, "post": 2 };
+            const stateA = order[a.state] ?? 3;
+            const stateB = order[b.state] ?? 3;
+            if (stateA !== stateB) return stateA - stateB;
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return a.state === "post" ? dateB - dateA : dateA - dateB;
+        }
+
         if (customOrder && customOrder.length > 0) {
             validGames.sort((a, b) => {
                 let idxA = customOrder.indexOf(a.id);
@@ -346,14 +397,10 @@ Item {
                 }
                 if (idxA !== -1) return -1;
                 if (idxB !== -1) return 1;
-                const order = { "in": 0, "pre": 1, "post": 2 };
-                return (order[a.state] || 3) - (order[b.state] || 3);
+                return sortByStateAndDate(a, b);
             });
         } else {
-            validGames.sort((a, b) => {
-                const order = { "in": 0, "pre": 1, "post": 2 };
-                return (order[a.state] || 3) - (order[b.state] || 3);
-            });
+            validGames.sort(sortByStateAndDate);
         }
 
         let nextIndex = 0;
@@ -374,6 +421,33 @@ Item {
             }
         } else if (currentGameIndex < validGames.length) {
             nextIndex = currentGameIndex;
+        }
+
+        for (let gi = 0; gi < validGames.length; gi++) {
+            const game = validGames[gi];
+            if (game.state !== "in") continue;
+            const newHome = parseInt(game.home.score) || 0;
+            const newAway = parseInt(game.away.score) || 0;
+            const prev = previousScores[game.id];
+            if (prev !== undefined && Config.options.bar.sports.goalNotifications) {
+                const score = `${game.home.name} ${newHome} – ${newAway} ${game.away.name}`;
+                const scorer = game.lastPlay ? `${game.lastPlay}\n` : "";
+                if (newHome > prev.home) {
+                    const homeIcon = `/tmp/qs_goal_${game.id}_home.png`;
+                    Quickshell.execDetached(["bash", "-c",
+                        `curl -fsSL "$1" -o "$4" 2>/dev/null; notify-send -i "$4" "$2" "$3" -a Shell`,
+                        "--", game.home.logo, "⚽ Goal!", `${scorer}${score}`, homeIcon]);
+                    Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
+                }
+                if (newAway > prev.away) {
+                    const awayIcon = `/tmp/qs_goal_${game.id}_away.png`;
+                    Quickshell.execDetached(["bash", "-c",
+                        `curl -fsSL "$1" -o "$4" 2>/dev/null; notify-send -i "$4" "$2" "$3" -a Shell`,
+                        "--", game.away.logo, "⚽ Goal!", `${scorer}${score}`, awayIcon]);
+                    Quickshell.execDetached(["mpv", "--no-video", "--really-quiet", `${Directories.assetsPath}/sounds/goal.mp3`]);
+                }
+            }
+            previousScores[game.id] = { home: newHome, away: newAway };
         }
 
         allGames = validGames;

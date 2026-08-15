@@ -158,6 +158,8 @@ get_best_codec() {
         echo "h264_vaapi"
     elif ffmpeg -encoders 2>/dev/null | grep -q "h264_amf" && test_encoder "h264_amf"; then
         echo "h264_amf"
+    elif ffmpeg -encoders 2>/dev/null | grep -q "h264_nvenc"; then
+        echo "h264_nvenc"
     else
         echo "libx264"
     fi

@@ -136,11 +136,11 @@ hl.config({
     },
     general = {
         -- Gaps and border
-        gaps_in = 10,
-        gaps_out = 11,
+        gaps_in = 4,
+        gaps_out = 5,
         gaps_workspaces = 50,
 
-        border_size = 3,
+        border_size = 1,
 
         col = {
             active_border = "rgba(f61680FF)",
@@ -160,7 +160,7 @@ hl.config({
     decoration = {
         -- 2 = circle, higher = squircle, 4 = very obvious squircle
         -- Fuck clearly visible squircles. 100% Apple brainrot.
-        rounding_power = 4,
+        rounding_power = 2.5,
         rounding = 18,
 
         blur = {
@@ -184,7 +184,7 @@ hl.config({
             enabled = true,
             range = 20,
             offset = {0, 2},
-            render_power = 10,
+            render_power = 4,
             color = "rgba(00000020)"
 
         },
@@ -305,8 +305,8 @@ hl.animation({
 hl.animation({
     leaf = "fadeLayersIn",
     enabled = true,
-    speed = 2.7,
-    bezier = "stall"
+    speed = 0.5,
+    bezier = "menu_decel"
 })
 hl.animation({
     leaf = "fadeLayersOut",
@@ -389,8 +389,7 @@ hl.config({
         zoom_factor = 1,
         zoom_rigid = false,
         zoom_disable_aa = true,
-        hotspot_padding = 1,
-        no_hardware_cursors = true
+        hotspot_padding = 1
     },
 
     xwayland = {

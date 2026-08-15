@@ -15,7 +15,7 @@ Singleton {
 
     Process {
         id: listThemesProcess
-        command: ["bash", "-c", "ls -d /usr/share/icons/*/ ~/.local/share/icons/*/ ~/.icons/*/ 2>/dev/null | xargs -n1 basename | sort -u"]
+        command: ["bash", "-c", "IFS=: read -ra _dd <<< \"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}\"; { for d in \"${_dd[@]}\" \"$HOME/.local/share\"; do ls -d \"$d/icons\"/*/ 2>/dev/null; done; ls -d \"$HOME/.icons\"/*/ 2>/dev/null; } | xargs -n1 basename | sort -u"]
 
         stdout: StdioCollector {
             id: themeCollector

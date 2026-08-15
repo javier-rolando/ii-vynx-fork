@@ -1,1 +1,3 @@
--- Put custom variables here
+terminal = "kitty"
+fileManager = "dolphin"
+browser = "zen"

@@ -355,14 +355,41 @@ PanelWindow {
     }
 
     onMediaModeOpenChanged: {
+        if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme") && !Config.options.background.useWallpaperEngine) {
+            bgRoot.applyCurrentWallpaper();
+            LyricsService.shellColorChanged = false;
+            // Only restore colors if they were changed during media mode.
+            // Use --noswitch to regenerate palette from current wallpaper
+            // without re-setting it at the compositor level (avoids visual glitch
+            // of wallpaper being re-applied on top of widgets).
+            // Run only on the focused monitor to avoid duplicate script launches.
+            if (Config.options.appearance.palette.type.startsWith("scheme")
+                    && LyricsService.mediaModeOpenCount <= 0
+                    && bgRoot.isMonitorFocused) {
+                Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", Appearance.m3colors.darkmode ? "dark" : "light"]);
+            }
+        }
+        // Force widgets window to re-stack after our layer transition from
+        // WlrLayer.Overlay → WlrLayer.Bottom. Without this, the compositor
+        // re-stacks us at the top of the Bottom layer, covering the widgets
+        // PanelWindow with the wallpaper image.
+        // Must fire unconditionally (not guarded by WPE/palette checks) since the
+        // layer transition happens regardless of wallpaper engine or color scheme.
         if (!mediaModeOpen) {
-            // Force widgets window to re-stack after our layer transition from
-            // WlrLayer.Overlay → WlrLayer.Bottom. Without this, the compositor
-            // re-stacks us at the top of the Bottom layer, covering the widgets
-            // PanelWindow with the wallpaper image.
             Qt.callLater(function() {
                 GlobalStates.widgetReStackTrigger++;
             });
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onScreenLockedChanged() {
+            if (GlobalStates.screenLocked) {
+                Qt.callLater(function() {
+                    GlobalStates.widgetReStackTrigger++;
+                });
+            }
         }
     }
 

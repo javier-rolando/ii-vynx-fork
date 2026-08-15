@@ -102,6 +102,7 @@ Scope {
                 id: mouseArea
                 enabled: !cornerPanelWindow.fullscreen
                 anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 hoverEnabled: true
                 onPositionChanged: {
                     if (Config.options.sidebar.cornerOpen.clickless || !Config.options.sidebar.cornerOpen.clicklessCornerEnd)
@@ -117,7 +118,12 @@ Scope {
                     if (Config.options.sidebar.cornerOpen.clickless)
                         screenCorners.openActionForCorner[cornerPanelWindow.corner]();
                 }
-                onPressed: {
+                onPressed: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        if (Config.options.sidebar.cornerOpen.valueScroll && !cornerPanelWindow.isLeft)
+                            Audio.toggleMute();
+                        return;
+                    }
                     console.info("[ScreenCorners] Mouse pressed corner:", cornerPanelWindow.corner);
                     screenCorners.actionForCorner[cornerPanelWindow.corner]();
                 }

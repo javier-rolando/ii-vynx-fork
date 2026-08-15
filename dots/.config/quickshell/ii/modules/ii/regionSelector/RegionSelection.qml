@@ -755,7 +755,7 @@ PanelWindow {
         asynchronous: false
 
         focus: root.visible && !root.inlineEditorActive
-        Keys.onPressed: event => { // Esc to close
+        Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
                 root.dismiss();
             }

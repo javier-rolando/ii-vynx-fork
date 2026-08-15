@@ -6,12 +6,12 @@ input_path = '~/.config/matugen/templates/colors.json'
 output_path = '~/.local/state/quickshell/user/generated/colors.json'
 
 [templates.hyprland]
-input_path = '~/.config/matugen/templates/hyprland/colors.conf'
-output_path = '~/.config/hypr/hyprland/colors.conf'
+input_path = '~/.config/matugen/templates/hyprland/colors.lua'
+output_path = '~/.local/state/quickshell/user/generated/hyprland/colors.lua'
 
 [templates.hyprlock]
 input_path = '~/.config/matugen/templates/hyprland/hyprlock-colors.conf'
-output_path = '~/.config/hypr/hyprlock/colors.conf'
+output_path = '~/.local/state/quickshell/user/generated/hyprlock/colors.conf'
 
 [templates.fuzzel]
 input_path = '~/.config/matugen/templates/fuzzel/fuzzel_theme.ini'
@@ -32,3 +32,76 @@ output_path = '~/.local/state/quickshell/user/generated/color.txt'
 [templates.wallpaper]
 input_path = '~/.config/matugen/templates/wallpaper.txt'
 output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
+
+[templates.vesktop]
+input_path = "~/.config/matugen/templates/apps/Material-Discord.theme.css"
+output_path = "~/.config/vesktop/themes/Material-Discord.theme.css"
+
+[templates.btop]
+input_path = "~/.config/matugen/templates/apps/btop.theme"
+output_path = "~/.config/btop/themes/matugen.theme"
+
+[templates.vesktop_midnight]
+input_path = "~/.config/matugen/templates/apps/midnight-discord.css"
+output_path = "~/.config/vesktop/themes/midnight.theme.css"
+
+[templates.spicetify]
+input_path = "~/.config/matugen/templates/apps/spicetify.ini"
+output_path = "~/nixos-config/themes/matugen-spicetify/color.ini"
+
+[templates.yazi]
+input_path = "~/.config/matugen/templates/apps/yazi-theme.toml"
+output_path = "~/.config/yazi/theme.toml"
+
+[templates.millennium]
+input_path = "~/.config/matugen/templates/apps/millennium.css"
+output_path = "~/.steam/steam/steamui/skins/Material-Theme/css/main/colors/matugen.css"
+
+[templates.elecwhat]
+input_path = "~/.config/matugen/templates/apps/elecwhat.css"
+output_path = "~/.config/elecwhat/user-css/style.css"
+
+[templates.zenlogo]
+input_path = "~/.config/matugen/templates/apps/zenLogo.svg"
+output_path = "~/.zen/cwbhpa62.Default Profile/chrome/zen-logo.svg"
+
+[templates.zencolors]
+input_path = "~/.config/matugen/templates/apps/zenColors.css"
+output_path = "~/.zen/cwbhpa62.Default Profile/chrome/userChrome.css"
+
+[templates.zencontent]
+input_path = "~/.config/matugen/templates/apps/zenContent.css"
+output_path = "~/.zen/cwbhpa62.Default Profile/chrome/userContent.css"
+
+[templates.zenlogo2]
+input_path = "~/.config/matugen/templates/apps/zenLogo.svg"
+output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/zen-logo.svg"
+
+[templates.zencolors2]
+input_path = "~/.config/matugen/templates/apps/zenColors.css"
+output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/userChrome.css"
+
+[templates.zencontent2]
+input_path = "~/.config/matugen/templates/apps/zenContent.css"
+output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/userContent.css"
+
+[templates.betterbirdColors]
+input_path = "~/.config/matugen/templates/apps/betterbirdColors.css"
+output_path = "~/.thunderbird/yjakaiu9.default-default/chrome/userChrome.css"
+
+[templates.betterbirdContent]
+input_path = "~/.config/matugen/templates/apps/betterbirdContent.css"
+output_path = "~/.thunderbird/yjakaiu9.default-default/chrome/userContent.css"
+
+[templates.kitty]
+input_path = "~/.config/matugen/templates/apps/kitty-colors.conf"
+output_path = "~/.local/state/quickshell/user/generated/kitty/kitty-colors.conf"
+
+[templates.starship]
+input_path = "~/.config/matugen/templates/apps/starship.toml"
+output_path = "~/starship-test.toml"
+
+[templates.cursor]
+input_path = "~/.config/matugen/templates/cursors.json"
+output_path = "~/.config/colors.json"
+post_hook = "~/.local/state/quickshell/user/generated/material-bibata-cursor/cursor_matugen.sh"
