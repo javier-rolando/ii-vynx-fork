@@ -56,6 +56,21 @@ Singleton {
         }
     ]
 
+    // Maps window title regex → stable appId, for apps with empty class
+    property var titleAppIdSubstitutions: [
+        { "regex": /^RPCS3/, "appId": "rpcs3" }
+    ]
+
+    function getAppIdFromTitle(title) {
+        if (!title)
+            return "";
+        for (let i = 0; i < titleAppIdSubstitutions.length; i++) {
+            if (titleAppIdSubstitutions[i].regex.test(title))
+                return titleAppIdSubstitutions[i].appId;
+        }
+        return "";
+    }
+
     // Deduped list to fix double icons, pre-sorted alphabetically to avoid sorting on every query.
     // Deduped through a Set rather than findIndex per entry: this rebuilds on every
     // desktop entry rescan, and the quadratic version made each rescan a visible hitch.
@@ -207,9 +222,13 @@ Singleton {
 
     property var _iconCache: ({})
 
-    function guessIcon(str) {
-        if (!str || str.length == 0)
+    function guessIcon(str, title = "") {
+        if (!str || str.length == 0) {
+            const syntheticId = getAppIdFromTitle(title);
+            if (syntheticId)
+                return guessIcon(syntheticId);
             return "image-missing";
+        }
         if (_iconCache[str] !== undefined)
             return _iconCache[str];
         
