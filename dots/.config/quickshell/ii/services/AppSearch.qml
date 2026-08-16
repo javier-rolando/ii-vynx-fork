@@ -23,7 +23,6 @@ Singleton {
         "wps": "wps-office2019-kprometheus",
         "wpsoffice": "wps-office2019-kprometheus",
         "footclient": "foot",
-        "zen": "zen-browser",
         "brave-browser": "brave-desktop",
         "net.lutris.lutris": "net.lutris.Lutris",
         "org.gnome.texteditor": "org.gnome.TextEditor",
@@ -248,8 +247,11 @@ Singleton {
         if (str.includes("android-studio") && iconExists("android-studio"))
             return "android-studio";
         if (str.includes("zen")) {
-            if (iconExists("zen-browser")) return "zen-browser";
+            // "zen" matches the app's own Icon= name; recolor_icons.py can leave a
+            // generic placeholder under "zen-browser" when it finds no source icon
+            // for that alias, so try the real one first.
             if (iconExists("zen")) return "zen";
+            if (iconExists("zen-browser")) return "zen-browser";
         }
         if (str.includes("prism")) {
             if (iconExists("prismlauncher")) return "prismlauncher";

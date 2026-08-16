@@ -87,7 +87,16 @@ MaterialShape { // App icon
                 fillMode: Image.PreserveAspectCrop
                 cache: true
                 antialiasing: true
-                asynchronous: !source.toString().startsWith("image://icon/")
+                asynchronous: true
+
+                layer.enabled: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: notifImage.size
+                        height: notifImage.size
+                        radius: Appearance.rounding.full
+                    }
+                }
             }
             Loader {
                 id: notifImageAppIconLoader
