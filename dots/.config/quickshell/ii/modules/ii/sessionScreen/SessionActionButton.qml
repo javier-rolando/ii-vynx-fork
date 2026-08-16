@@ -119,7 +119,13 @@ RippleButton {
         anchors.fill: parent
         color: button.colText
         horizontalAlignment: Text.AlignHCenter
-        iconSize: 45
+        // Grow the actual glyph size instead of letting the button's hover/press
+        // `scale` stretch an already-rasterized NativeRendering bitmap, which is
+        // what blurred the icon on hover (see MaterialSymbol.qml's NativeRendering
+        // comment). The offsetting scale cancels the parent's transform so only
+        // the iconSize change is visible.
+        iconSize: 45 * button.scale
+        scale: 1 / button.scale
         text: buttonIcon
     }
 
