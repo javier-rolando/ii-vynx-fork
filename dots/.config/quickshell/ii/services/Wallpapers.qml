@@ -231,12 +231,10 @@ Singleton {
         background.zoomOutEnabled = false;
         background.zoomOutStyle = 1;
         background.windowZoomOnOverview = false;
-        background.windowZoomLiveCapture = false;
         background.cheatsheetZoomOut = false;
         background.overviewZoomOut = false;
         background.workspaceBlur = false;
 
-        parallax.vertical = false;
         parallax.autoVertical = false;
         parallax.enableWorkspace = false;
         parallax.enableSidebar = false;
