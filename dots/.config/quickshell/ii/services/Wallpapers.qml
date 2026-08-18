@@ -290,7 +290,10 @@ Singleton {
     }
     
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode, lockscreen = false) {
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         let args = [
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -315,7 +318,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -332,7 +338,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -354,7 +363,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
