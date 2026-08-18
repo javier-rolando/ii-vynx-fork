@@ -10,6 +10,10 @@ QuickToggleModel {
     toggled: !confOpt.value
     icon: "gamepad"
 
+    // Forces every window opaque so custom opacity rules (kitty/code/etc.) stop applying.
+    readonly property string opaqueRule: 'hl.window_rule({name="shell:game-mode-opaque",match={class=".*"},opacity="1.0 override 1.0 override 1.0 override",opaque=true})'
+    readonly property string opaqueRuleMarker: "shell:game-mode-opaque"
+
     mainAction: () => {
         root.toggled = !root.toggled;
         if (root.toggled) {
