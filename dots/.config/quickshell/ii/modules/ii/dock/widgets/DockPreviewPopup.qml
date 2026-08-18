@@ -248,8 +248,12 @@ PopupWindow {
         implicitHeight: previewRowLayout.implicitHeight + padding * 2
         implicitWidth: previewRowLayout.implicitWidth + padding * 2
 
-        layer.enabled: true
+        // Only route through the offscreen layer while a blur is actually in effect.
+        // Leaving layer.enabled permanently true resamples the title text through the
+        // blur texture even at radius 0, softening it noticeably on scaled displays.
+        layer.enabled: blurEffect.radius > 0
         layer.effect: FastBlur {
+            id: blurEffect
             radius: previewPopup.show ? 0 : 16
             Behavior on radius {
                 NumberAnimation {
