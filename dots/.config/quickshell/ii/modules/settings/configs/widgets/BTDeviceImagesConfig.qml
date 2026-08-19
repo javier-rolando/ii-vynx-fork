@@ -107,7 +107,7 @@ ContentPage {
                 onStreamFinished: {
                     let path = text.trim();
                     if (path.length > 0 && btImagesSection.pendingMac !== "") {
-                        copyProc.exec([btImagesSection.manageScript, "copy", path, btImagesSection.pendingMac]);
+                        copyProc.exec(["bash", btImagesSection.manageScript, "copy", path, btImagesSection.pendingMac]);
                     }
                 }
             }
@@ -260,7 +260,7 @@ ContentPage {
                         Layout.alignment: Qt.AlignHCenter
                         materialIcon: "add_photo_alternate"
                         mainText: Translation.tr("Upload Artwork")
-                        onClicked: pickerProc.exec([btImagesSection.manageScript, "pick"])
+                        onClicked: pickerProc.exec(["bash", btImagesSection.manageScript, "pick"])
                     }
                 }
             }

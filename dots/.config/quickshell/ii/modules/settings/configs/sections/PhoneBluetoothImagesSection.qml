@@ -70,7 +70,7 @@ ContentSection {
             onStreamFinished: {
                 const path = text.trim();
                 if (path.length > 0 && root.pendingMac !== "")
-                    copyProc.exec([root.manageScript, "copy", path, root.pendingMac]);
+                    copyProc.exec(["bash", root.manageScript, "copy", path, root.pendingMac]);
             }
         }
     }
@@ -233,7 +233,7 @@ ContentSection {
                     Layout.alignment: Qt.AlignHCenter
                     materialIcon: "add_photo_alternate"
                     mainText: Translation.tr("Upload Artwork")
-                    onClicked: pickerProc.exec([root.manageScript, "pick"])
+                    onClicked: pickerProc.exec(["bash", root.manageScript, "pick"])
                 }
             }
         }
