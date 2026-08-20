@@ -6,6 +6,6 @@
 // highlight-pseudo-element cascade), so this is the only reliable way to
 // theme text selection color on regular web pages.
 user_pref("ui.highlight", "{{colors.primary.default.hex}}");
-user_pref("ui.highlighttext", "{{colors.surface.default.hex}}");
+user_pref("ui.highlighttext", "{{colors.on_primary.default.hex}}");
 user_pref("ui.selecteditem", "{{colors.primary.default.hex}}");
 user_pref("ui.selecteditemtext", "{{colors.on_primary.default.hex}}");

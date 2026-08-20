@@ -8,7 +8,7 @@
 @define-color accent_fg_color {{colors.on_primary.default.hex}};
 @define-color accent_bg_color {{colors.primary.default.hex}};
 @define-color theme_selected_bg_color {{colors.primary.default.hex}};
-@define-color theme_selected_fg_color {{colors.surface.default.hex}};
+@define-color theme_selected_fg_color {{colors.on_primary.default.hex}};
 @define-color destructive_bg_color {{colors.error_container.default.hex}};
 @define-color destructive_fg_color {{colors.on_error_container.default.hex}};
 @define-color destructive_color {{colors.error.default.hex}};
