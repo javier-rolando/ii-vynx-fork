@@ -73,6 +73,10 @@ output_path = "~/.zen/cwbhpa62.Default Profile/chrome/userChrome.css"
 input_path = "~/.config/matugen/templates/apps/zenContent.css"
 output_path = "~/.zen/cwbhpa62.Default Profile/chrome/userContent.css"
 
+[templates.zenuserprefs]
+input_path = "~/.config/matugen/templates/apps/zenUserPrefs.js"
+output_path = "~/.zen/cwbhpa62.Default Profile/user.js"
+
 [templates.zenlogo2]
 input_path = "~/.config/matugen/templates/apps/zenLogo.svg"
 output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/zen-logo.svg"
@@ -84,6 +88,10 @@ output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/userChrome.css"
 [templates.zencontent2]
 input_path = "~/.config/matugen/templates/apps/zenContent.css"
 output_path = "~/.zen/Xsq04O6W.Profile 1/chrome/userContent.css"
+
+[templates.zenuserprefs2]
+input_path = "~/.config/matugen/templates/apps/zenUserPrefs.js"
+output_path = "~/.zen/Xsq04O6W.Profile 1/user.js"
 
 [templates.betterbirdColors]
 input_path = "~/.config/matugen/templates/apps/betterbirdColors.css"
