@@ -4,6 +4,15 @@
 //! `drm-total-cycles-<engine>` (a free-running reference clock shared by every
 //! client). The ratio of the two deltas is the client's share of that engine.
 //!
+//! Every other driver in practice — `amdgpu`, `i915`, nouveau — instead publishes
+//! `drm-engine-<engine>: <n> ns`, a monotonic count of nanoseconds this client's
+//! context spent active on that engine. Unlike `drm-cycles`, there is no shared
+//! reference clock to divide by: the unit is already wall time, so a client's
+//! share is its ns delta over the sampler's own interval instead. Summed across
+//! engines the same way `drm-cycles-*` is, so a client busy on several engines at
+//! once can read past 100% of the interval — `main.rs` clamps that the same way
+//! it already does for the cycles path.
+//!
 //! A DRM client can be visible through several file descriptors and several
 //! processes, so accounting is keyed on `(drm-pdev, drm-client-id)` rather than on
 //! fds — otherwise a browser's shared render context is counted once per tab.
@@ -15,6 +24,9 @@ pub struct Client {
     pub pid: u32,
     pub key: (String, u64),
     pub cycles: u64,
+    /// Sum of every `drm-engine-<engine>: n ns` field, for drivers that report
+    /// busy time this way instead of `drm-cycles-<engine>`.
+    pub engine_ns: u64,
 }
 
 pub struct Scan {
@@ -31,10 +43,11 @@ pub struct Scan {
     pub gpu_fds: HashMap<u32, Vec<u32>>,
 }
 
-fn parse_fdinfo(text: &str) -> Option<(String, u64, u64, HashMap<String, u64>)> {
+fn parse_fdinfo(text: &str) -> Option<(String, u64, u64, u64, HashMap<String, u64>)> {
     let mut pdev = String::new();
     let mut client_id = None;
     let mut cycles = 0u64;
+    let mut engine_ns = 0u64;
     let mut totals: HashMap<String, u64> = HashMap::new();
 
     for line in text.lines() {
@@ -52,11 +65,19 @@ fn parse_fdinfo(text: &str) -> Option<(String, u64, u64, HashMap<String, u64>)> 
             _ if k.starts_with("drm-cycles-") => {
                 cycles += v.parse::<u64>().unwrap_or(0);
             }
+            // drm-engine-capacity-<engine> is an instance count, not a duration —
+            // it never carries a " ns" suffix, so the strip_suffix rejects it too,
+            // but the prefix check keeps the intent obvious.
+            _ if k.starts_with("drm-engine-") && !k.starts_with("drm-engine-capacity-") => {
+                if let Some(ns) = v.strip_suffix(" ns") {
+                    engine_ns += ns.trim().parse::<u64>().unwrap_or(0);
+                }
+            }
             _ => {}
         }
     }
 
-    Some((pdev, client_id?, cycles, totals))
+    Some((pdev, client_id?, cycles, engine_ns, totals))
 }
 
 struct Acc {
@@ -74,7 +95,7 @@ fn read_fd(acc: &mut Acc, pid: u32, fd: u32) {
     if !text.contains("drm-client-id") {
         return;
     }
-    let Some((pdev, id, cycles, totals)) = parse_fdinfo(&text) else {
+    let Some((pdev, id, cycles, engine_ns, totals)) = parse_fdinfo(&text) else {
         return;
     };
 
@@ -86,7 +107,7 @@ fn read_fd(acc: &mut Acc, pid: u32, fd: u32) {
 
     let key = (pdev, id);
     if acc.seen.insert(key.clone()) {
-        acc.clients.push(Client { pid, key, cycles });
+        acc.clients.push(Client { pid, key, cycles, engine_ns });
     }
 }
 

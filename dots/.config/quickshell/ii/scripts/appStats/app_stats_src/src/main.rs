@@ -192,6 +192,9 @@ struct Tracker {
     prev_cpu: HashMap<(u32, u64), u64>,
     prev_gpu: HashMap<(String, u64), u64>,
     prev_gpu_total: u64,
+    /// Per-client ns-busy baseline for drivers without `drm-total-cycles-*`
+    /// (amdgpu, i915, nouveau) — see `gpu.rs`.
+    prev_gpu_ns: HashMap<(String, u64), u64>,
     gpu_fds: HashMap<u32, Vec<u32>>,
     ticks_since_full_gpu: u32,
     gpu_rescan_pending: bool,
@@ -234,6 +237,7 @@ impl Tracker {
             prev_cpu: HashMap::new(),
             prev_gpu: HashMap::new(),
             prev_gpu_total: 0,
+            prev_gpu_ns: HashMap::new(),
             gpu_fds: HashMap::new(),
             ticks_since_full_gpu: u32::MAX,
             gpu_rescan_pending: false,
@@ -558,6 +562,7 @@ impl Tracker {
         }
 
         let mut gpu_cycles_of_pid: HashMap<u32, u64> = HashMap::new();
+        let mut gpu_ns_of_pid: HashMap<u32, u64> = HashMap::new();
         for c in &scan.clients {
             let prev = self.prev_gpu.insert(c.key.clone(), c.cycles);
             // A DRM client's counter starts at zero when the client is created, so a
@@ -568,16 +573,31 @@ impl Tracker {
                 None => 0,
             };
             *gpu_cycles_of_pid.entry(c.pid).or_insert(0) += delta;
+
+            // Same bootstrap rule as the cycles counter above, kept separate because
+            // a client can carry one, the other, or (in principle) both.
+            let prev_ns = self.prev_gpu_ns.insert(c.key.clone(), c.engine_ns);
+            let delta_ns = match prev_ns {
+                Some(prev_ns) => c.engine_ns.saturating_sub(prev_ns),
+                None if self.warm => c.engine_ns,
+                None => 0,
+            };
+            *gpu_ns_of_pid.entry(c.pid).or_insert(0) += delta_ns;
         }
         if full_gpu {
             let seen: HashSet<(String, u64)> = scan.clients.iter().map(|c| c.key.clone()).collect();
             self.prev_gpu.retain(|k, _| seen.contains(k));
+            self.prev_gpu_ns.retain(|k, _| seen.contains(k));
         }
 
         let gpu_total_delta = scan.total_cycles.saturating_sub(self.prev_gpu_total);
         if scan.total_cycles > 0 {
             self.prev_gpu_total = scan.total_cycles;
         }
+        // Only meaningful when gpu_total_delta is unusable (no drm-total-cycles-*
+        // published this tick, the amdgpu/i915/nouveau case) — see the s_gpu fallback
+        // below. ns is already wall time, so the interval itself is the denominator.
+        let dt_ns = dt_ms.saturating_mul(1_000_000);
 
         // ---- shares ---------------------------------------------------------------
         let busy_delta = sweep.busy_ticks.saturating_sub(self.prev_busy);
@@ -615,6 +635,12 @@ impl Tracker {
             let cycles: u64 = a.pids.iter().filter_map(|p| gpu_cycles_of_pid.get(p)).sum();
             let s_gpu = if gpu_total_delta > 0 {
                 cycles as f64 / gpu_total_delta as f64
+            } else if dt_ns > 0 {
+                // No drm-total-cycles-* this tick: fall back to the ns-busy counters
+                // (amdgpu, i915, nouveau), where the sampler's own interval is the
+                // denominator instead of a shared reference clock.
+                let ns: u64 = a.pids.iter().filter_map(|p| gpu_ns_of_pid.get(p)).sum();
+                ns as f64 / dt_ns as f64
             } else {
                 0.0
             };
