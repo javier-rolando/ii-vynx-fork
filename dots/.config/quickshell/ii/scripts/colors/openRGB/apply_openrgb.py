@@ -108,13 +108,13 @@ for dev, idx in resolved:
             client.devices[idx].leds[0].colors[0].blue,
         ]
     dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
-    dev["_idx"] = idx
+    target_mode = dev.get("mode", 0)
+    if client.devices[idx].active_mode != target_mode:
+        client.devices[idx].set_mode(mode=target_mode)
 
 for i in range(INTERPOLATION_STEPS):
     t = i / (INTERPOLATION_STEPS - 1)
     for dev, idx in resolved:
         interp_color = [int(c) for c in dev["interpolation"](t)]
         client.devices[idx].set_color(RGBColor(*interp_color), True)
-        if client.devices[idx].active_mode != 0:
-            client.devices[idx].set_mode(mode=0)
     sleep(TRANSITION_DURATION/INTERPOLATION_STEPS)
