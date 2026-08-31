@@ -53,5 +53,5 @@ hl.plugin.hyprbars.add_button({
     fg_color = "rgb(000000)",
     size     = 15,
     icon     = "",
-    action   = "hyprctl eval \"local w = hl.get_active_window(); if w and w.workspace.name:match('^special') then hl.dispatch(hl.dsp.workspace.toggle_special(w.workspace.name:gsub('^special:', ''))) else hl.dispatch(hl.dsp.window.move({ workspace = 'special', follow = false })) end\"",
+    action   = "hyprctl eval \"local w = hl.get_active_window(); if w and w.workspace.name:match('^special') then special_toggle((w.workspace.name:gsub('^special:', ''))) else special_send_window('special') end\"",
 })

@@ -176,8 +176,10 @@ end
 
 -- Toggles a special workspace and keeps track of whether that toggle left one
 -- hidden, so ALT+Tab can restore it later regardless of which bind closed it
--- (its own dedicated bind, or ALT+Tab itself).
-local function special_toggle(name)
+-- (its own dedicated bind, ALT+Tab itself, or a hyprbars button running
+-- through `hyprctl eval` in a different file). Deliberately global (no
+-- `local`) so `hyprctl eval` can reach it from the shared Lua state.
+function special_toggle(name)
 	hl.dispatch(hl.dsp.workspace.toggle_special(name))
 	if hl.get_active_special_workspace() then
 		last_special = nil
@@ -186,6 +188,16 @@ local function special_toggle(name)
 		last_special = name
 		last_special_ws_id = hl.get_active_workspace().id
 	end
+end
+
+-- Sends the active window into a special workspace without revealing it
+-- (mirrors "SUPER + ALT + W"), and remembers it the same way special_toggle
+-- does, so ALT+Tab can bring up what was just stashed there. Global for the
+-- same reason as special_toggle above.
+function special_send_window(name)
+	hl.dispatch(hl.dsp.window.move({ workspace = "special:" .. name, follow = false }))
+	last_special = name
+	last_special_ws_id = hl.get_active_workspace().id
 end
 
 -- ALT+Tab:
