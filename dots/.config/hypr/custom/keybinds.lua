@@ -174,28 +174,37 @@ local function toggle_float_center()
 	end
 end
 
+-- Toggles a special workspace and keeps track of whether that toggle left one
+-- hidden, so ALT+Tab can restore it later regardless of which bind closed it
+-- (its own dedicated bind, or ALT+Tab itself).
+local function special_toggle(name)
+	hl.dispatch(hl.dsp.workspace.toggle_special(name))
+	if hl.get_active_special_workspace() then
+		last_special = nil
+		last_special_ws_id = nil
+	else
+		last_special = name
+		last_special_ws_id = hl.get_active_workspace().id
+	end
+end
+
 -- ALT+Tab:
 --  * If a special workspace is showing on the focused monitor, close it
 --    (like minimizing) instead of following "workspace previous", which
 --    otherwise jumps past the underlying regular workspace to whatever was
 --    active before it.
---  * If we just closed a special that way and haven't left its underlying
---    workspace since, pressing ALT+Tab again reopens it (a 2-way toggle).
+--  * If a special was left closed that way (by ALT+Tab or its own bind) and
+--    we haven't left its underlying workspace since, ALT+Tab reopens it.
 --  * Otherwise, fall back to normal "workspace previous" behavior.
 local function alt_tab_focus()
 	local sw = hl.get_active_special_workspace()
 	if sw then
-		last_special = (sw.name:gsub("^special:", ""))
-		last_special_ws_id = hl.get_active_workspace().id
-		hl.dispatch(hl.dsp.workspace.toggle_special(last_special))
+		special_toggle((sw.name:gsub("^special:", "")))
 		return
 	end
 
 	if last_special and hl.get_active_workspace().id == last_special_ws_id then
-		local name = last_special
-		last_special = nil
-		last_special_ws_id = nil
-		hl.dispatch(hl.dsp.workspace.toggle_special(name))
+		special_toggle(last_special)
 		return
 	end
 
@@ -402,16 +411,32 @@ hl.bind("SUPER + SHIFT + Z", hl.dsp.global("quickshell:mediaModeToggle"), { desc
 hl.bind("SUPER + SHIFT + V", hl.dsp.global("quickshell:screenTranslate"))
 
 -- Special workspaces
-hl.bind("SUPER + W", hl.dsp.workspace.toggle_special("special"))
-hl.bind("SUPER + M", hl.dsp.workspace.toggle_special("spotify"))
-hl.bind("SUPER + ALT + E", hl.dsp.workspace.toggle_special("yazi"))
-hl.bind("SUPER + ALT + T", hl.dsp.workspace.toggle_special("translate"))
-hl.bind("SUPER + ntilde", hl.dsp.workspace.toggle_special("term"))
-hl.bind("SUPER + ALT + B", hl.dsp.workspace.toggle_special("btop"))
+hl.bind("SUPER + W", function()
+	special_toggle("special")
+end)
+hl.bind("SUPER + M", function()
+	special_toggle("spotify")
+end)
+hl.bind("SUPER + ALT + E", function()
+	special_toggle("yazi")
+end)
+hl.bind("SUPER + ALT + T", function()
+	special_toggle("translate")
+end)
+hl.bind("SUPER + ntilde", function()
+	special_toggle("term")
+end)
+hl.bind("SUPER + ALT + B", function()
+	special_toggle("btop")
+end)
 hl.bind("SUPER + SHIFT + W", hl.dsp.window.move({ workspace = "special" }))
 hl.bind("SUPER + ALT + W", hl.dsp.window.move({ workspace = "special", follow = false }))
-hl.bind("SUPER + ALT + U", hl.dsp.workspace.toggle_special("update"))
-hl.bind("SUPER + SHIFT + M", hl.dsp.workspace.toggle_special("yt-music"))
+hl.bind("SUPER + ALT + U", function()
+	special_toggle("update")
+end)
+hl.bind("SUPER + SHIFT + M", function()
+	special_toggle("yt-music")
+end)
 
 -- Screenshot
 hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m output -m DP-2"))
