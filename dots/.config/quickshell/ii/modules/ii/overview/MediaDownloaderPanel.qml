@@ -74,7 +74,19 @@ Item {
         }
     }
 
-    function focusInput() { focusedControlIndex = 0 }
+    // -1 is "the caret is in the URL field", the same convention the
+    // translator panel uses. Focusing control 0 instead put the ring on the
+    // first type chip, so Enter re-picked that chip (a no-op) rather than
+    // starting the download, and Left/Right stopped moving the caret.
+    function focusInput() { focusedControlIndex = -1 }
+
+    // This is a flat panel — there is no sub-level to back out of. Without
+    // this, Backspace on an empty query falls through to
+    // SearchWidget.exitActivePanel() and kicks the user back to plain Search,
+    // so clearing the query to retype something silently exits the panel.
+    function navigateBack(): bool {
+        return true;
+    }
 
     function navigateDown() {
         if (focusedControlIndex === -1) {
@@ -133,6 +145,12 @@ Item {
     }
 
     function activateSelected() {
+        // Nothing in the panel is focused, so the caret is still in the URL
+        // field: Enter means "download this", the same as pressing the button.
+        if (focusedControlIndex === -1) {
+            startDownloadAction();
+            return;
+        }
         if (focusedControlIndex >= 0 && focusedControlIndex <= 2) {
             root.selectedType = root.typeOptions[focusedControlIndex].id;
         } else if (focusedControlIndex >= 3 && focusedControlIndex <= 8) {
@@ -751,7 +769,7 @@ Item {
                                         anchors.centerIn: parent
                                         text: modelData.label
                                         font.pixelSize: Appearance.font.pixelSize.small
-                                        font.weight: isSelected ? Font.SemiBold : Font.Normal
+                                        font.weight: isSelected ? Font.DemiBold : Font.Normal
                                         color: isSelected
                                                ? Appearance.colors.colOnTertiaryContainer
                                                : Appearance.colors.colOnSurface
@@ -798,7 +816,7 @@ Item {
                                         anchors.centerIn: parent
                                         text: modelData.label
                                         font.pixelSize: Appearance.font.pixelSize.small
-                                        font.weight: isSelected ? Font.SemiBold : Font.Normal
+                                        font.weight: isSelected ? Font.DemiBold : Font.Normal
                                         color: isSelected
                                                ? Appearance.colors.colOnTertiaryContainer
                                                : Appearance.colors.colOnSurface
@@ -1586,7 +1604,7 @@ Item {
                 implicitHeight: 48
                 buttonRadius: Appearance.rounding.large
                 colBackground: Appearance.colors.colSurfaceContainerHigh
-                colBackgroundHover: Appearance.colors.colSurfaceContainerHighHover
+                colBackgroundHover: Appearance.colors.colSurfaceContainerHighestHover
                 colRipple: Appearance.colors.colPrimary
 
                 HoverHandler { cursorShape: Qt.PointingHandCursor }

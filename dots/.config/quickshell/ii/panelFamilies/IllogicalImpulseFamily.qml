@@ -4,9 +4,12 @@ import qs
 import qs.services
 
 import qs.modules.common
+import qs.modules.common.panels.shellSwitcher
 import qs.modules.ii.background
+import qs.modules.ii.background.desktopMenu
 import qs.modules.ii.bar
 import qs.modules.ii.bluetoothConnectionPopup
+import qs.modules.ii.bluetoothPairing
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.dock
 import qs.modules.ii.lock
@@ -14,7 +17,7 @@ import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
 import qs.modules.ii.onScreenDisplay
 import qs.modules.ii.onScreenDisplay.minimalist
-import qs.modules.ii.onScreenKeyboard
+import qs.modules.common.onScreenKeyboard
 import qs.modules.ii.oledSaver
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
@@ -33,19 +36,23 @@ import qs.modules.ii.videoEditor
 import qs.modules.ii.localSendPopup
 import qs.modules.ii.scratchpadOverlay
 import qs.modules.ii.keyboardLayoutTransitionPopup
+import qs.modules.ii.keypressDisplay
 import qs.modules.ii.topLayer
 import qs.modules.ii.tilingAssistant
 import qs.modules.ii.usage
+import qs.modules.ii.modes
+import qs.modules.ii.modeFlashPopup
 import qs.modules.ii.alarmRingingPopup
 import qs.modules.ii.screenshotOverlay
 import qs.modules.ii.dynamicIsland
 import qs.modules.ii.touchGestures
+import qs.modules.ii.editMode
 
 Scope {
     property bool barExtraCondition: true
     readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3
-    readonly property bool barBot: Config.options.bar.bottom
-    readonly property bool barVert: Config.options.bar.vertical
+    readonly property bool barBot: BarPlacement.bottom
+    readonly property bool barVert: BarPlacement.vertical
 
     Component.onCompleted: Qt.callLater(() => updateBarExtraCondition())
     onUsingWrappedFrameChanged: updateBarExtraCondition()
@@ -60,7 +67,7 @@ Scope {
     }
 
     PanelLoader {
-        extraCondition: !Config.options.bar.vertical && barExtraCondition && !GlobalStates.connectModeActive
+        extraCondition: !BarPlacement.vertical && barExtraCondition && !GlobalStates.connectModeActive
         component: Bar {}
     }
     PanelLoader {
@@ -68,11 +75,31 @@ Scope {
         component: Background {}
     }
     PanelLoader {
+        // The desktop layout editor's chrome; nothing to edit without the background.
+        extraCondition: Config.options.background.enable
+        component: EditModeChrome {}
+    }
+    PanelLoader {
+        // The desktop's right-click menu; asked for by the background's surfaces.
+        extraCondition: Config.options.background.enable
+        component: DesktopMenu {}
+    }
+    PanelLoader {
         component: Cheatsheet {}
     }
     PanelLoader {
         extraCondition: Config.options.appStats.overlayEnabled
         component: Usage {}
+    }
+    PanelLoader {
+        extraCondition: Config.options.modes.overlayEnabled
+        component: ModesOverlay {}
+    }
+    // The mode start/end banner; the dynamic island draws it when a notch is on.
+    PanelLoader {
+        extraCondition: Config.ready && !Config.options.bar.floatingNotch.enable
+            && !Config.options.bar.floatingNotch.centerInBar
+        component: ModeFlashPopup {}
     }
     PanelLoader {
         extraCondition: Config.options.dock.enable
@@ -114,6 +141,12 @@ Scope {
         component: MinimalistOsd {}
     }
     PanelLoader {
+        // Kept loaded rather than gated on the service: the windows are empty
+        // and invisible until a recording or the quick toggle asks for them.
+        extraCondition: Config.ready
+        component: KeypressDisplay {}
+    }
+    PanelLoader {
         component: OnScreenKeyboard {}
     }
     PanelLoader {
@@ -134,6 +167,11 @@ Scope {
     PanelLoader {
         component: Polkit {}
     }
+    // Kept loaded rather than gated: the Scope decides on its own whether BlueZ
+    // is asking anything, and nothing is built until it is.
+    PanelLoader {
+        component: BluetoothPairing {}
+    }
     PanelLoader {
         component: RegionSelector {}
     }
@@ -149,6 +187,11 @@ Scope {
     PanelLoader {
         component: SessionScreen {}
     }
+    // Every family loads the chooser: a family that did not offer it would be one the
+    // user could switch into and never find the way out of.
+    PanelLoader {
+        component: ShellSwitcher {}
+    }
     PanelLoader {
         extraCondition: !GlobalStates.connectModeActive || GlobalStates.connectSidebarsSeparate
         component: SidebarPolicies {}
@@ -158,7 +201,7 @@ Scope {
         component: SidebarDashboard {}
     }
     PanelLoader {
-        extraCondition: Config.options.bar.vertical && barExtraCondition && !GlobalStates.connectModeActive
+        extraCondition: BarPlacement.vertical && barExtraCondition && !GlobalStates.connectModeActive
         component: VerticalBar {}
     }
     PanelLoader {

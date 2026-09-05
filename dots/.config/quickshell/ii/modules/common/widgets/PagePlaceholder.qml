@@ -9,11 +9,17 @@ Item {
 
     property bool shown: true
     property alias icon: shapeWidget.text
+    property alias iconSize: shapeWidget.iconSize
+    property alias iconPadding: shapeWidget.padding
     property alias title: widgetNameText.text
     property alias description: widgetDescriptionText.text
     property alias shape: shapeWidget.shape
     property alias descriptionHorizontalAlignment: widgetDescriptionText.horizontalAlignment
     property bool animateIconOnShow: false
+    // Touch hosts render the same placeholder larger without forking it.
+    property real sizeScale: 1.0
+    property real titlePixelSize: Appearance.font.pixelSize.larger
+    property real descriptionPixelSize: Appearance.font.pixelSize.small
 
     opacity: shown ? 1 : 0
     visible: opacity > 0
@@ -224,10 +230,17 @@ Item {
                 id: shapeWidget
                 anchors.centerIn: parent
                 padding: 12
-                iconSize: 56
-                FastBlur {
+                iconSize: Math.round(56 * root.sizeScale)
+                rotation: -30 * (1 - root.opacity)
+                
+                // Value holder for the entrance animation. This used to be a
+                // real FastBlur just to carry `radius`, which cost every
+                // placeholder a shader pass and an offscreen surface it never
+                // drew into. The blur that is actually applied is layer.effect.
+                QtObject {
                     id: iconBlur
-                    radius: 0
+                    property real radius: 0
+                    property bool enabled: false
                 }
 
                 layer.enabled: iconBlur.radius > 0
@@ -259,7 +272,7 @@ Item {
                 anchors.fill: parent
                 font {
                     family: Appearance.font.family.title
-                    pixelSize: Appearance.font.pixelSize.larger
+                    pixelSize: Math.round(root.titlePixelSize * root.sizeScale)
                     variableAxes: Appearance.font.variableAxes.title
                 }
                 color: Appearance.m3colors.m3outline
@@ -277,14 +290,15 @@ Item {
             visible: description !== ""
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: Appearance.font.pixelSize.small
+            font.pixelSize: Math.round(root.descriptionPixelSize * root.sizeScale)
             color: Appearance.m3colors.m3outline
             horizontalAlignment: root.descriptionHorizontalAlignment ?? Text.AlignHCenter
             wrapMode: Text.Wrap
 
-            FastBlur {
+            QtObject {
                 id: descBlur
-                radius: 0
+                property real radius: 0
+                property bool enabled: false
             }
 
             layer.enabled: descBlur.radius > 0
@@ -301,4 +315,3 @@ Item {
         }
     }
 }
-

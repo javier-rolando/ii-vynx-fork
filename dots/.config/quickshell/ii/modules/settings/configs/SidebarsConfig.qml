@@ -171,7 +171,7 @@ Item {
         }
 
         ContentSection {
-            title: Translation.tr("Right Control Sidebar")
+            title: Translation.tr("Sidebar Layout & Loading")
             icon: "view_sidebar"
 
             ConfigSwitch {
@@ -185,11 +185,26 @@ Item {
             }
 
             ConfigSwitch {
-                buttonIcon: "music_note"
-                text: Translation.tr("Show media player in volume dialog")
-                checked: Config.options.sidebar.volumeDialogMediaWidget
+                buttonIcon: "keep"
+                text: Translation.tr("Keep left sidebar loaded")
+                checked: Config.options.sidebar.keepLeftSidebarLoaded
                 onCheckedChanged: {
-                    Config.options.sidebar.volumeDialogMediaWidget = checked;
+                    if (Config.ready && checked !== Config.options.sidebar.keepLeftSidebarLoaded)
+                        Config.options.sidebar.keepLeftSidebarLoaded = checked;
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "animation"
+                text: Translation.tr("Dashboard entrance animations")
+                checked: Config.options.sidebar.dashboardEntranceAnimations
+                onCheckedChanged: {
+                    if (Config.ready && checked !== Config.options.sidebar.dashboardEntranceAnimations)
+                        Config.options.sidebar.dashboardEntranceAnimations = checked;
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Restores decorative staggered animations for the dashboard header, quick toggles, notifications, calendar, tasks, and timers. They begin with the sidebar opening request and may cost some opening performance.")
                 }
             }
 
@@ -227,14 +242,17 @@ Item {
         ContentSection {
             title: Translation.tr("Quick Toggles & Sliders")
             icon: "tune"
+            tooltip: Translation.tr("Configure quick toggle layout, Android columns and capsule sliders.")
 
-            ConfigSwitch {
-                buttonIcon: "tune"
-                text: Translation.tr("Quick toggles and slider settings")
-                checked: true
-                configPage: Qt.resolvedUrl("widgets/SidebarQuickTogglesConfig.qml")
-                StyledToolTip {
-                    text: Translation.tr("Click button text to configure quick toggle styles, column counts, 2x1 capsule sliders, and fixed sliders.")
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.sizes.elevationMargin / 2
+
+                ConfigSubpageRow {
+                    buttonIcon: "tune"
+                    title: Translation.tr("Quick toggles and slider settings")
+                    description: Translation.tr("Configure toggle styles, Android column count, capsule sliders, and fixed sliders")
+                    onClicked: sidebarsRoot.activeSubPage = Qt.resolvedUrl("widgets/SidebarQuickTogglesConfig.qml")
                 }
             }
         }
@@ -242,6 +260,7 @@ Item {
         ContentSection {
             title: Translation.tr("Screen Corners")
             icon: "mouse"
+            visible: Config.options.panelFamily !== "tablet"
 
             ConfigSwitch {
                 buttonIcon: "touch_app"
@@ -257,6 +276,22 @@ Item {
                 }
                 StyledToolTip {
                     text: Translation.tr("Toggle corner open activation. Click button text to configure hover trigger, vertical offset, and region bounds.")
+                }
+            }
+        }
+
+        ContentSection {
+            icon: "link"
+            title: Translation.tr("Related settings")
+
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+
+                RelatedChip {
+                    pageId: "profile"
+                    label: Translation.tr("Enable Sidebar Banner")
+                    sectionHighlight: Translation.tr("Right Sidebar Banner")
                 }
             }
         }

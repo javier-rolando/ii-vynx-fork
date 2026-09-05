@@ -37,6 +37,7 @@ Singleton {
             const cached = root._getCachedNotifications(root.activeDeviceId)
             if (cached.length > 0) root.notifications = cached
         }
+    root._probeAdbDeviceName()
     }
 
     property var devices: []
@@ -90,6 +91,34 @@ Singleton {
      *  quick actions (screenshot, power key, volume, am start). */
     property bool adbReachable: false
     property string resolvedAdbSerial: ""
+
+    /** Android's user-set device name (Settings → About phone → Device name),
+     *  read over ADB. KDE Connect reports the marketing model instead
+     *  ("Galaxy S24 Ultra"), which is not what the user named the phone.
+     *  Empty until the probe lands, and left in place when ADB drops so the
+     *  header does not flip back to the model on every reconnect. */
+    property string adbDeviceName: ""
+
+    /** Device the cached adbDeviceName was read for. The ADB target follows
+     *  the active device, so a name must never leak onto a different one. */
+    property string _adbDeviceNameFor: ""
+    property string _adbDeviceNameTarget: ""
+
+    /** What the UI should call the active device: its own name when ADB
+     *  could supply one, the KDE Connect model string otherwise. */
+    readonly property string activeDeviceDisplayName: {
+        if (root.activeDeviceId !== "" && root._adbDeviceNameFor === root.activeDeviceId
+            && root.adbDeviceName !== "")
+            return root.adbDeviceName
+        return root.activeDevice ? root.activeDevice.name : ""
+    }
+
+    /** How many devices `adb devices` reports in the "device" state. When
+     *  there is exactly one, every consumer omits `-s` entirely: Android
+     *  re-rolls its wireless-debugging port often enough that a serial can
+     *  go stale between resolving it and the command reaching the phone,
+     *  and "the only device" cannot go stale. */
+    property int adbDeviceCount: 0
 
     /** Live wireless ADB target ("ip:port") the next scrcpy launch will use.
      *  In auto mode this tracks KDE Connect's reported reachable address so
@@ -1082,6 +1111,7 @@ Singleton {
                 // network target so a plugged-in phone always wins.
                 "SERIAL=$(adb devices | awk '$2==\"device\" {print $1}' | grep -v ':' | head -n1); " +
                 "if [ -z \"$SERIAL\" ]; then SERIAL=$(adb devices | awk '$2==\"device\" {print $1}' | head -n1); fi; " +
+                "echo \"COUNT:$(adb devices | awk '$2==\"device\"' | wc -l)\"; " +
                 "if [ -n \"$SERIAL\" ]; then echo \"SERIAL:$SERIAL\"; exit 0; fi; " +
                 "exit 1"]
         }
@@ -1091,11 +1121,14 @@ Singleton {
                 const lines = this.text.split("\n")
                 let serial = ""
                 let mdns = ""
+                let count = 0
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim()
                     if (line.startsWith("SERIAL:")) serial = line.substring(7).trim()
                     else if (line.startsWith("MDNS:")) mdns = line.substring(5).trim()
+                    else if (line.startsWith("COUNT:")) count = parseInt(line.substring(6).trim()) || 0
                 }
+                root.adbDeviceCount = count
                 // Assign unconditionally: leaving the previous serial in place
                 // when the probe finds nothing is what made a changed port
                 // stick forever, since adbTargetArgs() prefers it over the
@@ -1126,6 +1159,33 @@ Singleton {
         adbProbeProc.running = false
         root._adbProbeRestarting = false
         adbProbeProc.running = true
+    }
+
+    onAdbReachableChanged: if (root.adbReachable) root._probeAdbDeviceName()
+
+    // KDE Connect only ever hands out the marketing model, so the phone's
+    // real name has to come from Android itself.
+    Process {
+        id: adbDeviceNameProc
+        running: false
+        command: ["adb"].concat(root.adbTargetArgs())
+            .concat(["shell", "settings", "get", "global", "device_name"])
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const name = this.text.trim()
+                // Devices that never had the setting written answer "null".
+                if (name === "" || name === "null") return
+                root.adbDeviceName = name
+                root._adbDeviceNameFor = root._adbDeviceNameTarget
+            }
+        }
+    }
+
+    function _probeAdbDeviceName() {
+        if (!root.adbReachable || root.activeDeviceId === "") return
+        root._adbDeviceNameTarget = root.activeDeviceId
+        adbDeviceNameProc.running = false
+        adbDeviceNameProc.running = true
     }
 
     // ─── On-demand ADB target resolution ──────────────────────────
@@ -1552,6 +1612,11 @@ Singleton {
      * ip:port target. The short `-s` form is accepted by both adb and scrcpy.
      */
     function adbTargetArgs() {
+        // With a single attached device, naming it is pure downside: adb
+        // already targets it implicitly, and a wireless serial resolved a
+        // moment ago may point at a port the phone has since re-rolled.
+        if (root.adbDeviceCount === 1)
+            return []
         if (root.resolvedAdbSerial)
             return ["-s", root.resolvedAdbSerial]
         const scrcpyConfig = Config.options?.phone?.scrcpy

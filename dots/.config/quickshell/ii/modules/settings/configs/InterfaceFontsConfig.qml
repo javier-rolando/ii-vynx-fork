@@ -20,9 +20,54 @@ Item {
         forceWidth: false
         opacity: subPageOverlay.slideProgress
 
+        /**
+         * Which shell you get.
+         *
+         * The three families were reachable only by a keybind, an IPC call, a touch
+         * gesture or the floating bubble — and the bubble is a tablet surface, so a
+         * desktop user had no path to the other two at all. Three shells nobody can
+         * choose between is one shell with two dead code paths.
+         *
+         * Here rather than on its own page because it is a preference, not a mode: it
+         * takes one tap and it is the first thing on the page about how the interface
+         * looks.
+         */
         ContentSection {
-            title: Translation.tr("System Rounding")
-            icon: "rounded_corner"
+            title: Translation.tr("Shell family")
+            icon: "space_dashboard"
+
+            ConfigSelectionArray {
+                currentValue: PanelFamily.current
+                onSelected: newValue => PanelFamily.select(newValue)
+                options: PanelFamily.available.map(family => ({
+                    value: family.id,
+                    icon: family.icon,
+                    displayName: Translation.tr(family.name)
+                }))
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                Layout.topMargin: 2
+                Layout.leftMargin: 4
+                Layout.rightMargin: 4
+                text: Translation.tr(PanelFamily.entry(PanelFamily.current)?.description ?? "")
+                wrapMode: Text.WordWrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+
+            NoticeBox {
+                Layout.fillWidth: true
+                Layout.topMargin: 6
+                materialIcon: "info"
+                text: Translation.tr("Switching rebuilds every surface, so the screen goes briefly blank. Your settings are kept — each family simply draws a different set of them.")
+            }
+        }
+
+        ContentSection {
+            title: Translation.tr("Motion & Shape")
+            icon: "motion_photos_on"
 
             ConfigSlider {
                 buttonIcon: "rounded_corner"
@@ -39,11 +84,6 @@ Item {
                     Config.options.appearance.sharpMode = (value === 0);
                 }
             }
-        }
-
-        ContentSection {
-            title: Translation.tr("Animations")
-            icon: "motion_photos_on"
 
             ConfigSlider {
                 buttonIcon: "speed"
@@ -62,7 +102,7 @@ Item {
 
             ConfigSwitch {
                 buttonIcon: "speed"
-                text: Translation.tr("Performance mode")
+                text: Translation.tr("Reduce settings animations")
                 checked: Config.options.appearance.settingsPerformanceMode
                 onCheckedChanged: {
                     Config.options.appearance.settingsPerformanceMode = checked;
@@ -70,6 +110,15 @@ Item {
 
                 StyledToolTip {
                     text: Translation.tr("Disables animations and expensive effects inside Settings.")
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "colors"
+                text: Translation.tr("Colorful scrollbar")
+                checked: Config.options.appearance.colorfulScrollbar
+                onCheckedChanged: {
+                    Config.options.appearance.colorfulScrollbar = checked;
                 }
             }
         }
@@ -82,83 +131,15 @@ Item {
                 buttonIcon: "magic_button"
                 text: Translation.tr("Themed icons (Experimental)")
                 checked: Config.options.appearance.icons.enableThemed
+                configPage: Qt.resolvedUrl("widgets/ThemedIconsConfig.qml")
                 onCheckedChanged: {
                     Config.options.appearance.icons.enableThemed = checked;
                 }
 
                 StyledToolTip {
-                    text: Translation.tr("When enabled, uses the dynamic Matugen generated icon pack. Fallbacks to Tint Icons.")
+                    text: Translation.tr("When enabled, uses the dynamic Matugen generated icon pack. Click button text to configure base icon theme.")
                 }
             }
-
-            ContentSubsection {
-                visible: Config.options.appearance.icons.enableThemed
-                title: Translation.tr("Base icon theme")
-                icon: "palette"
-                Layout.fillWidth: true
-                tooltip: Translation.tr("Select the base icon theme to be recolored by Matugen.\nRequires generating colors again to apply.")
-
-                StyledComboBox {
-                    buttonIcon: "category"
-                    textRole: "displayName"
-                    model: IconThemes.availableThemes.map((theme) => {
-                        return {
-                            "displayName": theme,
-                            "value": theme,
-                            "icon": "category"
-                        };
-                    })
-                    currentIndex: {
-                        const index = model.findIndex(item => item.value === Config.options.appearance.iconTheme);
-                        return index !== -1 ? index : 0;
-                    }
-                    onActivated: index => {
-                        Config.options.appearance.iconTheme = model[index].value;
-                    }
-                }
-            }
-
-            RippleButtonWithIcon {
-                visible: Config.options.appearance.icons.enableThemed
-                materialIcon: "magic_button"
-                mainText: Translation.tr("Apply Theme")
-                centerContent: true
-                buttonRadius: Appearance.rounding.normal
-                useDynamicRadius: false
-                implicitHeight: 44
-                Layout.fillWidth: true
-                colBackground: Appearance.colors.colPrimaryContainer
-                colBackgroundHover: Appearance.colors.colPrimaryContainerHover
-                colRipple: Appearance.colors.colPrimaryContainerActive
-                colText: Appearance.colors.colOnPrimaryContainer
-                onClicked: {
-                    IconThemes.applyTheme(false);
-                }
-            }
-
-            ConfigSwitch {
-                buttonIcon: "restart_alt"
-                text: Translation.tr("Auto restart Quickshell on theme change")
-                checked: Config.options.appearance.wallpaperTheming.autoRestartQuickshell
-                onCheckedChanged: {
-                    Config.options.appearance.wallpaperTheming.autoRestartQuickshell = checked;
-                }
-            }
-        }
-
-        ContentSection {
-            title: Translation.tr("Details")
-            icon: "auto_awesome"
-
-            ConfigSwitch {
-                buttonIcon: "colors"
-                text: Translation.tr("Colorful scrollbar")
-                checked: Config.options.appearance.colorfulScrollbar
-                onCheckedChanged: {
-                    Config.options.appearance.colorfulScrollbar = checked;
-                }
-            }
-
         }
 
         ContentSection {

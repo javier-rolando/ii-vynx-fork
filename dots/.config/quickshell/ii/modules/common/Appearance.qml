@@ -187,6 +187,10 @@ Singleton {
         property color colOnTertiaryContainer: m3colors.m3onTertiaryContainer
         // Surface
         property color colBackgroundSurfaceContainer: ColorUtils.transparentize(m3colors.m3surfaceContainer, root.backgroundTransparency)
+        property color colBackgroundSurfaceContainerAccent: ColorUtils.transparentize(
+            ColorUtils.mix(m3colors.m3surfaceContainer, m3colors.m3primaryContainer,
+                           1.0 - (Config.options.search.appearance.accentPanels ? Config.options.search.appearance.accentStrength : 0.0)),
+            root.backgroundTransparency)
         property color colSurfaceContainerLow: ColorUtils.solveOverlayColor(m3colors.m3background, m3colors.m3surfaceContainerLow, 1 - root.contentTransparency)
         property color colSurfaceContainer: ColorUtils.solveOverlayColor(m3colors.m3surfaceContainerLow, m3colors.m3surfaceContainer, 1 - root.contentTransparency)
         property color colSurfaceContainerHigh: ColorUtils.solveOverlayColor(m3colors.m3surfaceContainer, m3colors.m3surfaceContainerHigh, 1 - root.contentTransparency)
@@ -196,8 +200,8 @@ Singleton {
         property color colOnSurface: m3colors.m3onSurface
         property color colOnSurfaceVariant: m3colors.m3onSurfaceVariant
         // Misc
-        property color colTooltip: m3colors.m3inverseSurface
-        property color colOnTooltip: m3colors.m3inverseOnSurface
+        property color colTooltip: m3colors.m3surfaceContainerHigh
+        property color colOnTooltip: m3colors.m3onSurface
         property color colScrim: ColorUtils.transparentize(m3colors.m3scrim, 0.5)
         property color colShadow: ColorUtils.transparentize(m3colors.m3shadow, 0.7)
         property color colOutline: m3colors.m3outline
@@ -314,7 +318,7 @@ Singleton {
             var a = root.ignoreAlpha;
             var barA = root.barIgnoreAlpha;
             var script = "";
-            script += "hl.layer_rule({ match = { namespace = 'quickshell(:(bar|dock|topLayer|sidebar.*|popup|.*[pP]opup|cheatsheet|usage|session|overview|mediaControls|notificationPopup|floatingNotch|onScreenDisplay|osk|wStartMenu|wTaskView|wNotificationCenter|wOnScreenDisplay|actionCenter))?' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
+            script += "hl.layer_rule({ match = { namespace = 'quickshell.*' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
             script += "hl.layer_rule({ match = { namespace = 'quickshell:.*[pP]opup' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
             script += "hl.layer_rule({ match = { namespace = 'quickshell:(bar|floatingNotch)' }, blur = true, ignore_alpha = " + barA + " }) ";
             script += "hl.layer_rule({ match = { namespace = 'quickshell:background' }, blur = false }) ";
@@ -394,7 +398,7 @@ Singleton {
         var a = root.ignoreAlpha;
         var barA = root.barIgnoreAlpha;
         var bs = "";
-        bs += "hl.layer_rule({ match = { namespace = 'quickshell(:(bar|dock|topLayer|sidebar.*|popup|.*[pP]opup|cheatsheet|usage|session|overview|mediaControls|notificationPopup|floatingNotch|onScreenDisplay|osk|wStartMenu|wTaskView|wNotificationCenter|wOnScreenDisplay|actionCenter))?' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
+        bs += "hl.layer_rule({ match = { namespace = 'quickshell.*' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
         bs += "hl.layer_rule({ match = { namespace = 'quickshell:.*[pP]opup' }, blur = true, blur_popups = true, ignore_alpha = " + a + " }) ";
         bs += "hl.layer_rule({ match = { namespace = 'quickshell:(bar|floatingNotch)' }, blur = true, ignore_alpha = " + barA + " }) ";
         bs += "hl.layer_rule({ match = { namespace = 'quickshell:background' }, blur = false }) ";
@@ -508,6 +512,9 @@ Singleton {
 
     // Global animation speed multiplier — driven by Config.options.appearance.animationMultiplier
     readonly property real animMultiplier: Config.options?.appearance?.animationMultiplier ?? 1.0
+    // Below this the shell skips animations outright rather than running them absurdly fast (the
+    // sidebars' own convention); Edit Mode reads it as one flag instead of repeating the test.
+    readonly property bool reducedMotion: root.animMultiplier <= 0.25
 
     animationCurves: QtObject {
         readonly property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.90, 1, 1] // Default, 350ms
@@ -646,6 +653,64 @@ Singleton {
             }
         }
 
+        // Every size change that happens *inside* the bar reads from here: the
+        // widgets and the island backgrounds that wrap them have to reach their
+        // new size at the same instant, and they only do that if they share one
+        // duration and one curve. A widget that animates its own implicitWidth
+        // faster than the island around it makes the island look like it is
+        // chasing the content (and vice versa).
+        // 280ms is the duration the Dynamic Island already used; the fast
+        // spatial curve keeps its slight overshoot without the OutBack tail.
+        property QtObject barResize: QtObject {
+            property int duration: Math.round(280 * root.animMultiplier)
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.expressiveFastSpatial
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    duration: root.animation.barResize.duration
+                    easing.type: root.animation.barResize.type
+                    easing.bezierCurve: root.animation.barResize.bezierCurve
+                }
+            }
+        }
+
+        // Dashboard indicators use a staged transition: the slot changes size
+        // before/after the icon pop. Keep these slower and softer than the
+        // global barResize clock without slowing every other responsive widget.
+        property QtObject dashboardIndicatorResize: QtObject {
+            property int duration: Math.round(420 * root.animMultiplier)
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.standard
+        }
+
+        property QtObject dashboardIndicatorPop: QtObject {
+            property int enterDuration: Math.round(360 * root.animMultiplier)
+            property int exitDuration: Math.round(280 * root.animMultiplier)
+            property int cueDelay: Math.round(90 * root.animMultiplier)
+            property int exitHoldDuration: Math.round(220 * root.animMultiplier)
+            property int enterType: Easing.OutBack
+            property real enterOvershoot: 1.18
+            property int exitType: Easing.BezierSpline
+            property list<real> exitCurve: animationCurves.emphasizedAccel
+        }
+
+        // The bar and the wrapped frame leaving the screen together: a
+        // fullscreen window taking over, media mode, or a placement swap. The
+        // exit accelerates away and the entrance decelerates in, so a swap does
+        // not read as two halves of the same easing.
+        property QtObject shellEdgeSlide: QtObject {
+            property int exitDuration: Math.round(260 * root.animMultiplier)
+            property int enterDuration: Math.round(420 * root.animMultiplier)
+            property int swapHold: Math.round(90 * root.animMultiplier)
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    duration: root.animation.shellEdgeSlide.enterDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: root.animationCurves.emphasized
+                }
+            }
+        }
+
         property QtObject clickBounce: QtObject {
             property int duration: Math.round(400 * root.animMultiplier)
             property int type: Easing.BezierSpline
@@ -703,6 +768,13 @@ Singleton {
             property int duration: Math.round(200 * root.animMultiplier)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: root.animationCurves.standardDecel
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    duration: root.animation.scroll.duration
+                    easing.type: root.animation.scroll.type
+                    easing.bezierCurve: root.animation.scroll.bezierCurve
+                }
+            }
         }
 
         property QtObject menuDecel: QtObject {
@@ -712,14 +784,63 @@ Singleton {
     }
 
     sizes: QtObject {
-        property real baseBarHeight: Config.options.bar.sizes.height
-        property real barHeight: Config.options.bar.cornerStyle === 1 ? (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
+        // A finger needs a bigger target than a cursor. A touch-first family raises the
+        // bar's FLOOR rather than replacing the value: a bar the user configured taller
+        // than this stays taller, and the stored preference is never rewritten.
+        //
+        // This is deliberately here and not a per-window scale. Scaling the bar window was
+        // tried and reverted — every widget inside sizes itself off barHeight, so the window
+        // grew while the content did not, and backgrounds, hit targets and popup anchors all
+        // measured against a bar that was not the one on screen.
+        // Material's minimum touch target, and the Pixel Tablet's status bar height.
+        property real minimumTouchTarget: 48
+
+        // Snap step for desktop widgets and icons on the wallpaper canvas.
+        //
+        // Ten pixels is a fine-positioning aid for a mouse: it takes the jitter out of a
+        // drag without really constraining where something lands. A finger cannot place
+        // anything that precisely, and a home screen is supposed to look laid out on a
+        // grid rather than merely tidy — so a touch-first family snaps to a step coarse
+        // enough to read as cells, the way Android's home screen does.
+        // What this family wants when nothing is configured. Kept separate from the
+        // resolved value below so a settings control can offer it as the fallback without
+        // reading a property that depends on the very key it writes — that was a binding
+        // loop, and the page it was on rendered empty.
+        readonly property real familyWidgetGridStep: PanelFamily.touchFirst ? 40 : 10
+
+        property real widgetGridStep: {
+            const configured = Config.options?.background?.widgets?.gridStep ?? 0;
+            return configured > 0 ? configured : root.sizes.familyWidgetGridStep;
+        }
+        property real baseBarHeight: PanelFamily.touchFirst
+            ? Math.max(root.sizes.minimumTouchTarget, Config.options.bar.sizes.height)
+            : Config.options.bar.sizes.height
+        property real barHeight: BarInteraction.cornerStyle === 1 ? (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
+        // Bar widgets were drawn against a 40px horizontal bar and a 44px vertical one, and
+        // most of them size their outer plate off the bar while leaving the glyph inside at
+        // the number it was drawn with. On a touch-first family the bar is taller than that
+        // by definition, so those widgets became big plates around small icons. Scaling the
+        // insides by the same ratio is a no-op at the default and correct everywhere else.
+        readonly property real barReferenceHeight: 40
+        readonly property real barReferenceWidth: 44
+        readonly property real barContentScale: root.sizes.baseBarHeight / root.sizes.barReferenceHeight
+        readonly property real verticalBarContentScale: root.sizes.verticalBarWidth / root.sizes.barReferenceWidth
+
         property real barCenterSideModuleWidth: Config.options?.bar.verbose ? 360 : 140
         property real barCenterSideModuleWidthShortened: 280
         property real barCenterSideModuleWidthHellaShortened: 190
         property real barShortenScreenWidthThreshold: 1200 // Shorten if screen width is at most this value
         property real barHellaShortenScreenWidthThreshold: 1000 // Shorten even more...
         property real elevationMargin: 10
+        // The M3 toolbar's height: one number the toolbar and the band Edit Mode reserves for it
+        // both read.
+        property real toolbarHeight: 52
+        // Edit Mode's viewport: the gap between the shrunk desktop and what surrounds it, the
+        // tighter gap between the chrome and the usable area's edge, and the width the widget
+        // drawer opens into (reserved from the first frame so the desktop never resizes mid-edit).
+        property real editModeMargin: 24
+        property real editModeEdgeMargin: 12
+        property real editModeDrawerWidth: 380
         property real fabShadowRadius: 5
         property real fabHoveredShadowRadius: 7
         property real hyprlandGapsOut: 5
@@ -733,7 +854,7 @@ Singleton {
         property real sidebarWidthExtended: 750
         property real baseVerticalBarWidth: Config.options.bar.sizes.width
         property real verticalBarWidth: baseVerticalBarWidth
-        property real verticalBarWindowWidth: Config.options.bar.cornerStyle === 1 ? (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
+        property real verticalBarWindowWidth: BarInteraction.cornerStyle === 1 ? (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
         property real wallpaperSelectorWidth: 1200
         property real wallpaperSelectorHeight: 690
         property real wallpaperSelectorSidebarWidth: 180

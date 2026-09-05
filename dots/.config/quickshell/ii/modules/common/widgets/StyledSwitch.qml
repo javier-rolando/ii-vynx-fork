@@ -7,7 +7,9 @@ import QtQuick.Controls
  */
 Switch {
     id: root
-    property real sizeScale: 0.75 // Default in m3 spec is huge af
+    // The M3 default is oversized for a pointer, hence the 0.75. But this control is
+    // dragged directly, not only tapped, so a finger needs the spec size back.
+    property real sizeScale: PanelFamily.touchFirst ? 1.0 : 0.75
     implicitHeight: 32 * root.sizeScale
     implicitWidth: 52 * root.sizeScale
     property color activeColor: Appearance?.colors.colPrimary ?? "#685496"
@@ -30,13 +32,8 @@ Switch {
         height: parent.height
         radius: Appearance?.rounding.full ?? 9999
         color: root.checked ? root.activeColor : root.inactiveColor
-        border.width: 2 * root.sizeScale
-        border.color: root.checked ? root.activeColor : Appearance.m3colors.m3outline
 
         Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
-        }
-        Behavior on border.color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
     }

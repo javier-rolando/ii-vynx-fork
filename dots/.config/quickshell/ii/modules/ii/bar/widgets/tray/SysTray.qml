@@ -10,8 +10,8 @@ import qs.modules.common.widgets
 
 Item {
     id: sysTrayRoot
-    implicitWidth: gridLayout.implicitWidth
-    implicitHeight: gridLayout.implicitHeight
+    implicitWidth: hasItems ? gridLayout.implicitWidth : 0
+    implicitHeight: hasItems ? gridLayout.implicitHeight : 0
     property bool vertical: false
     property bool invertSide: false
     property bool trayOverflowOpen: false
@@ -30,7 +30,7 @@ Item {
             closeOverflowMenu();
     }
 
-    readonly property var overflowWindow: trayOverflowLayout.QsWindow ? trayOverflowLayout.QsWindow.window : null
+    readonly property var overflowWindow: overflowPopup.item ?? (trayOverflowLayout.QsWindow ? trayOverflowLayout.QsWindow.window : null)
 
     function grabFocus() {
         focusGrab.wanted = true;
@@ -52,16 +52,26 @@ Item {
     }
 
     function releaseFocus() {
-        focusGrab.wanted = false;
+        if (!sysTrayRoot.trayOverflowOpen)
+            focusGrab.wanted = false;
     }
 
     function closeOverflowMenu() {
+        sysTrayRoot.closeActiveMenu();
+        sysTrayRoot.trayOverflowOpen = false;
         focusGrab.wanted = false;
     }
 
     onTrayOverflowOpenChanged: {
         if (sysTrayRoot.trayOverflowOpen) {
             sysTrayRoot.grabFocus();
+            if (overflowPopup)
+                overflowPopup._clickActive = true;
+        } else {
+            sysTrayRoot.closeActiveMenu();
+            if (overflowPopup)
+                overflowPopup.close();
+            focusGrab.wanted = false;
         }
     }
 
@@ -123,10 +133,10 @@ Item {
                 id: overflowPopup
                 hoverTarget: trayOverflowButton
                 forceClick: true
-                // We run our own focus grab below, which also has to cover the tray menu
-                // window. A second grab from the popup would clear ours and snap it shut.
+                touchToggle: false
                 selfDismiss: false
-                active: sysTrayRoot.trayOverflowOpen && sysTrayRoot.unpinnedItems.length > 0
+                _clickActive: sysTrayRoot.trayOverflowOpen
+                active: sysTrayRoot.unpinnedItems.length > 0 && (_computedActive || _isClosing)
 
                 GridLayout {
                     id: trayOverflowLayout
