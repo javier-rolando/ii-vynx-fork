@@ -59,8 +59,14 @@ Item {
                 text: Translation.tr("Vertical movement")
                 checked: Config.options.background.parallax.vertical
                 onCheckedChanged: {
-                    HyprlandSettings.changeAnimation("workspaces", checked ? "slidevert" : "slide");
+                    // HyprlandSettings.changeAnimation() hardcodes speed=7, fighting with
+                    // Appearance.qml's applyHyprlandRules() (speed=3.5) for the same
+                    // workspace animation. Go through applyHyprlandRules() instead so
+                    // speed and style always come from the same place, and save right
+                    // away so the toggle survives a reload even if it happens quickly.
                     Config.options.background.parallax.vertical = checked;
+                    Config.saveOptionsNow();
+                    Appearance.applyHyprlandRules();
                 }
             }
 

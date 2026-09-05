@@ -430,7 +430,7 @@ switch() {
                 wpe_nofullscreenpause=$(jq -r '.background.wpeNoFullscreenPause' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "false")
 
                 # Determine assets directory and build restore options array
-                local wpe_restore_opts=(--layer background)
+                local wpe_restore_opts=()
                 if [[ -n "$wpe_assets" && -d "$wpe_assets" ]]; then
                     wpe_restore_opts+=(--assets-dir "$wpe_assets")
                 fi

@@ -236,7 +236,6 @@ Singleton {
         background.overviewZoomOut = false;
         background.workspaceBlur = false;
 
-        parallax.vertical = false;
         parallax.autoVertical = false;
         parallax.enableWorkspace = false;
         parallax.enableSidebar = false;
@@ -254,27 +253,39 @@ Singleton {
         id: applyProc
     }
 
+    property bool _startupRestoreDone: false
+
+    // Connections' onReadyChanged only fires on the false→true transition. If Config
+    // was already ready by the time this Connections finished binding (a real race:
+    // this file grew heavy enough that Config can win the race now), the signal
+    // fires before anything is listening and the startup restore silently never runs.
+    // Component.onCompleted below covers that case by checking the current state directly.
+    function _restoreOnStartup() {
+        if (root._startupRestoreDone || !Config.ready) return;
+        root._startupRestoreDone = true;
+        root.loadSortOptions();
+        if (Config.options.background.useWallpaperEngine) {
+            if (Config.options.background.wallpaperEngineId) {
+                root.apply(Config.options.background.wallpaperEngineId, Appearance.m3colors.darkmode);
+            }
+        } else if (root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) {
+            root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
+        }
+        root.enforceVideoWallpaperConstraints();
+        // Pre-generate lockscreen colors if configured but missing
+        if (Config.options.background.useSeparateLockscreenWallpaper) {
+            const lockPath = Config.options.background.lockscreenWallpaperPath;
+            const deskPath = Config.options.background.wallpaperPath;
+            if (lockPath && lockPath !== "" && lockPath !== deskPath) {
+                lockscreenColorsCheckProc.exec(["test", "-f", Directories.lockscreenColorsPath]);
+            }
+        }
+    }
+
     Connections {
         target: Config
         function onReadyChanged() {
-            if (!Config.ready) return;
-            root.loadSortOptions();
-            if (Config.options.background.useWallpaperEngine) {
-                if (Config.options.background.wallpaperEngineId) {
-                    root.apply(Config.options.background.wallpaperEngineId, Appearance.m3colors.darkmode);
-                }
-            } else if (root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) {
-                root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
-            }
-            root.enforceVideoWallpaperConstraints();
-            // Pre-generate lockscreen colors if configured but missing
-            if (Config.options.background.useSeparateLockscreenWallpaper) {
-                const lockPath = Config.options.background.lockscreenWallpaperPath;
-                const deskPath = Config.options.background.wallpaperPath;
-                if (lockPath && lockPath !== "" && lockPath !== deskPath) {
-                    lockscreenColorsCheckProc.exec(["test", "-f", Directories.lockscreenColorsPath]);
-                }
-            }
+            root._restoreOnStartup();
         }
     }
 
@@ -290,7 +301,10 @@ Singleton {
     }
     
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode, lockscreen = false) {
-        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         let args = [
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -315,7 +329,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -332,7 +349,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -354,7 +374,10 @@ Singleton {
         }
         Config.saveOptionsNow();
         const requestSeq = ++root._wallpaperRequestSeq;
-        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin`;
+        // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
+        // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
+        // /usr/bin or /bin, silently breaking every wallpaper apply.
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -592,6 +615,7 @@ Singleton {
 
     Component.onCompleted: {
         root.loadColorCache();
+        root._restoreOnStartup();
     }
 
     // Checks if lockscreen_colors.json exists; if not, generates it in background
