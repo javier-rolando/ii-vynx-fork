@@ -117,34 +117,47 @@ if args.color is not None:
     new_color = hexToRGB(args.color)
 
 try:
+    # Build name→index map for name-based lookup
+    name_to_idx = {d.name: i for i, d in enumerate(client.devices)}
+
+    resolved = []
     for dev in devices:
-        if dev.get("enabled", False) and dev.get("id") is not None:
-            dev_id = dev["id"]
-            if dev_id >= len(client.devices):
+        if not dev.get("enabled", False):
+            continue
+        name = dev.get("name")
+        if name:
+            idx = name_to_idx.get(name)
+            if idx is None:
+                print(f"Warning: device '{name}' not found, skipping")
                 continue
-            if client.devices[dev_id].active_mode == 1:  # 1 = Off
-                old_color = [0, 0, 0]
-            else:
-                old_color = [
-                    client.devices[dev_id].leds[0].colors[0].red,
-                    client.devices[dev_id].leds[0].colors[0].green,
-                    client.devices[dev_id].leds[0].colors[0].blue,
-                ]
-            dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
+        elif dev.get("id") is not None:
+            idx = dev["id"]
+            if idx >= len(client.devices):
+                print(f"Warning: device id {idx} out of range, skipping")
+                continue
+        else:
+            continue
+        resolved.append((dev, idx))
+
+    for dev, idx in resolved:
+        if client.devices[idx].active_mode == 1:  # 1 = Off
+            old_color = [0, 0, 0]
+        else:
+            old_color = [
+                client.devices[idx].leds[0].colors[0].red,
+                client.devices[idx].leds[0].colors[0].green,
+                client.devices[idx].leds[0].colors[0].blue,
+            ]
+        dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
+        target_mode = dev.get("mode", 0)
+        if client.devices[idx].active_mode != target_mode:
+            client.devices[idx].set_mode(mode=target_mode)
 
     for i in range(INTERPOLATION_STEPS):
         t = i / (INTERPOLATION_STEPS - 1) if INTERPOLATION_STEPS > 1 else 1.0
-
-        for dev in devices:
-            if dev.get("enabled", False) and dev.get("id") is not None and "interpolation" in dev:
-                dev_id = dev["id"]
-                if dev_id >= len(client.devices):
-                    continue
-                interp_color = [int(val) for val in dev["interpolation"](t)]
-                client.devices[dev_id].set_color(RGBColor(*interp_color), True)
-                if client.devices[dev_id].active_mode != 0:
-                    client.devices[dev_id].set_mode(mode=0)
-
+        for dev, idx in resolved:
+            interp_color = [int(val) for val in dev["interpolation"](t)]
+            client.devices[idx].set_color(RGBColor(*interp_color), True)
         sleep(TRANSITION_DURATION / INTERPOLATION_STEPS)
 except Exception:
     pass
