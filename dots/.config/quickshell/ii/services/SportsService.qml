@@ -262,12 +262,19 @@ Item {
             return;
         }
 
+        const now = new Date();
+        const fromDate = new Date(now.getTime() - Config.options.bar.sports.showAfterMinutes * 60 * 1000);
+        const toDate = new Date(now.getTime() + Config.options.bar.sports.showBeforeHours * 60 * 60 * 1000);
+        const fromKey = root.dayKey(fromDate);
+        const toKey = root.dayKey(toDate);
+        const dateParam = fromKey === toKey ? root.espnDate(fromKey) : `${root.espnDate(fromKey)}-${root.espnDate(toKey)}`;
+
         let pendingRequests = leaguesToFetch.length;
         let collectedEvents = [];
 
         for (let i = 0; i < leaguesToFetch.length; i++) {
             const entry = leaguesToFetch[i];
-            const url = `https://${root.apiHosts[0]}/apis/site/v2/sports/${encodeURIComponent(entry.sport)}/${encodeURIComponent(entry.league)}/scoreboard`;
+            const url = `https://${root.apiHosts[0]}/apis/site/v2/sports/${encodeURIComponent(entry.sport)}/${encodeURIComponent(entry.league)}/scoreboard?dates=${dateParam}`;
             const xhr = new XMLHttpRequest();
             xhr.open("GET", url);
             xhr.onreadystatechange = function () {
