@@ -86,8 +86,11 @@ MaterialShape { // App icon
                 // kick-live-watcher sends the bundled kick.webp via the
                 // image-path hint directly (not the "from kick" body-text
                 // this isKickNotification heuristic was written for), so
-                // also match on the image path itself.
-                : (root.isKickNotification || root.image === Quickshell.shellPath("assets/images/kick.webp"))
+                // also match on the image path itself. Quickshell resolves
+                // image-path hints through the image://icon/ provider, so
+                // root.image looks like "image://icon//abs/path/kick.webp"
+                // rather than a plain path — match by suffix, not equality.
+                : (root.isKickNotification || root.image.toString().endsWith("assets/images/kick.webp"))
                 ? (Config.options.appearance.icons.enableThemed
                     ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-kick.png`
                     : Quickshell.shellPath("assets/images/kick.webp"))

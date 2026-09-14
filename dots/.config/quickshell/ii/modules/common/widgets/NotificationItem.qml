@@ -29,7 +29,11 @@ Item { // Notification item area
     implicitHeight: background.implicitHeight
 
     property bool isTwitchNotification: (notificationObject.body || "").toLowerCase().includes("from twitch")
+    // kick-live-watcher sends its own notify-send calls (not "from kick"
+    // emails), identified by the bundled icon path instead of body text —
+    // same reasoning as the matching check in NotificationAppIcon.qml.
     property bool isKickNotification: (notificationObject.body || "").toLowerCase().includes("from kick")
+        || (notificationObject.image || "").toString().endsWith("assets/images/kick.webp")
 
     readonly property var streamerMap: {
       "夜巡ハナ": "hanayomeguri",
