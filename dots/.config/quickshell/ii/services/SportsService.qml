@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.modules.common
+import qs.services
 
 Item {
     id: sportsService
@@ -359,6 +360,14 @@ print(json.dumps(res))`,
 
                 if (!home.logo || home.logo === "") home.logo = event.leagueLogo || "";
                 if (!away.logo || away.logo === "") away.logo = event.leagueLogo || "";
+
+                // Recolor badges to match the wallpaper theme, same gradient as local
+                // app icons (see recolor_remote_image.py). Falls back to the original
+                // logo until the async tint finishes and gets cached.
+                if (Config.options?.bar?.sports?.monochromeIcons) {
+                    home.logo = TintedImageService.getTinted(home.logo);
+                    away.logo = TintedImageService.getTinted(away.logo);
+                }
 
                 validGames.push({
                     id: event.id,

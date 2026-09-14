@@ -2270,6 +2270,7 @@ Singleton {
                     property string activeGameId: ""
                     property list<var> customOrder: []
                     property bool goalNotifications: true
+                    property bool monochromeIcons: false
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property bool onlyShowOnSingleMonitor: false

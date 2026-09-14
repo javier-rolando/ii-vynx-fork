@@ -160,6 +160,22 @@ ContentPage {
             }
         }
 
+        ConfigSwitch {
+            enabled: Config.options.bar.sports.enable
+            buttonIcon: "palette"
+            text: Translation.tr("Tint team logos")
+            checked: Config.options.bar.sports.monochromeIcons
+            isFirst: false
+            isLast: true
+            onCheckedChanged: {
+                Config.options.bar.sports.monochromeIcons = checked;
+            }
+
+            StyledToolTip {
+                text: Translation.tr("Recolors club badges to match the wallpaper theme instead of their real colors.\nBadges are fetched live from ESPN, so they can't be pre-baked like app icons — this tints them at render time.")
+            }
+        }
+
         Item {
             Layout.preferredHeight: 16
         }
