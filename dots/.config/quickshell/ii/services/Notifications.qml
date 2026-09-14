@@ -34,7 +34,21 @@ Singleton {
         }
         property bool popup: false
         property bool isTransient: notification?.hints.transient ?? false
-        property string appIcon: notification?.appIcon ?? ""
+        property string appIcon: {
+            const rawIcon = notification?.appIcon ?? "";
+            const name = notification?.appName ?? "";
+            // Some senders (e.g. kitty, relaying terminal OSC notifications like
+            // Claude Code's) give an absolute path to their own bundled icon
+            // instead of a theme name, which bypasses DynamicTheme recoloring
+            // entirely. Prefer the icon-theme lookup by appName when it
+            // actually resolves to something real.
+            if (name && rawIcon.startsWith("/")) {
+                const byName = Quickshell.iconPath(name, "");
+                if (byName && !byName.toString().includes("image-missing"))
+                    return name;
+            }
+            return rawIcon;
+        }
         property string appName: notification?.appName ?? ""
         property string body: notification?.body ?? ""
         property string image: notification?.image ?? ""

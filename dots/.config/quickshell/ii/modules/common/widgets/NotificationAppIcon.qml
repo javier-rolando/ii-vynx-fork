@@ -80,7 +80,9 @@ MaterialShape { // App icon
                 readonly property int size: parent.width
 
                 source: root.isTwitchNotification
-                ? Quickshell.shellPath("assets/images/twitch.jpg")
+                ? (Config.options.appearance.icons.enableThemed
+                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-twitch.png`
+                    : Quickshell.shellPath("assets/images/twitch.jpg"))
                 : root.isKickNotification
                 ? Quickshell.shellPath("assets/images/kick.webp")
                 : root.image

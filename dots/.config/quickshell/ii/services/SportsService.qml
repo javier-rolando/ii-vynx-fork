@@ -493,4 +493,36 @@ print(json.dumps(res))`,
         }
     }
 
+    // Badge tinting resolves asynchronously (see TintedImageService); when a
+    // tint finishes after games are already displayed, patch it into the
+    // existing data in place instead of waiting for the next full refetch.
+    Connections {
+        target: TintedImageService
+        function onRevisionChanged() {
+            if (!Config.options?.bar?.sports?.monochromeIcons || allGames.length === 0)
+                return;
+
+            let changed = false;
+            const retint = (logo) => {
+                if (typeof logo === "string" && logo.startsWith("http")) {
+                    const tinted = TintedImageService.getTinted(logo);
+                    if (tinted !== logo)
+                        changed = true;
+                    return tinted;
+                }
+                return logo;
+            };
+
+            const updated = allGames.map(g => Object.assign({}, g, {
+                home: Object.assign({}, g.home, { logo: retint(g.home.logo) }),
+                away: Object.assign({}, g.away, { logo: retint(g.away.logo) })
+            }));
+
+            if (changed) {
+                allGames = updated;
+                currentGame = allGames[currentGameIndex] ?? currentGame;
+            }
+        }
+    }
+
 }
