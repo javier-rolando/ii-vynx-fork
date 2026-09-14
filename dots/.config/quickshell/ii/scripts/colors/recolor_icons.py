@@ -48,6 +48,7 @@ DOCK_ASSET_ICON_NAMES = {
 NOTIF_IMAGES_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "images"))
 NOTIF_RASTER_ASSET_NAMES = {
     "twitch.jpg": "vynx-notif-twitch",
+    "kick.webp": "vynx-notif-kick",
 }
 
 def _xdg_data_dirs():

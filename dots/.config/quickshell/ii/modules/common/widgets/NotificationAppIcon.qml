@@ -83,8 +83,14 @@ MaterialShape { // App icon
                 ? (Config.options.appearance.icons.enableThemed
                     ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-twitch.png`
                     : Quickshell.shellPath("assets/images/twitch.jpg"))
-                : root.isKickNotification
-                ? Quickshell.shellPath("assets/images/kick.webp")
+                // kick-live-watcher sends the bundled kick.webp via the
+                // image-path hint directly (not the "from kick" body-text
+                // this isKickNotification heuristic was written for), so
+                // also match on the image path itself.
+                : (root.isKickNotification || root.image === Quickshell.shellPath("assets/images/kick.webp"))
+                ? (Config.options.appearance.icons.enableThemed
+                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-kick.png`
+                    : Quickshell.shellPath("assets/images/kick.webp"))
                 : root.image
                 fillMode: Image.PreserveAspectCrop
                 cache: true
