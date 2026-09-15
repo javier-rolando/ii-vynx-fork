@@ -288,13 +288,24 @@ MouseArea { // Notification group area
                 Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: false
                 implicitSize: 38 * root.zoom
-                image: root?.multipleNotifications ? "" : notificationGroup?.notifications[0]?.image ?? ""
+                // Groups are already partitioned by appName (see
+                // groupsForList() in Notifications.qml), so every
+                // notification in this group is from the same app already —
+                // there's no "mixed apps" case to guard against by blanking
+                // this when there's more than one.
+                // root.notifications (not notificationGroup?.notifications
+                // directly) — notificationGroup itself goes briefly
+                // undefined during group updates, and `notificationGroup?.notifications.map(...)`
+                // still throws in that window (the ?. doesn't guard the
+                // trailing .map/[...] access). root.notifications is
+                // already safely defaulted to [] above.
+                image: root.notifications[0]?.image ?? ""
                 appIcon: root.notificationGroup?.appIcon
-                summary: root.notificationGroup?.notifications[root.notificationCount - 1]?.summary
-                urgency: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? 
+                summary: root.notifications[root.notificationCount - 1]?.summary
+                urgency: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ?
                     NotificationUrgency.Critical : NotificationUrgency.Normal
-                body: notificationGroup?.notifications[root.notificationCount - 1]?.body
-                    notificationBodies: notificationGroup?.notifications.map(n => n.body || "")
+                body: root.notifications[root.notificationCount - 1]?.body
+                notificationBodies: root.notifications.map(n => n.body || "")
             }
 
             ColumnLayout { // Content

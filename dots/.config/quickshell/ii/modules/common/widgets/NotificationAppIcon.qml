@@ -30,6 +30,13 @@ MaterialShape { // App icon
 
     property bool isTwitchNotification: lowerBodies().length > 0 && lowerBodies().every(b => b.includes("from twitch"))
     property bool isKickNotification: lowerBodies().length > 0 && lowerBodies().every(b => b.includes("from kick"))
+    // kick-live-watcher sends the bundled kick.svg via the image-path hint
+    // directly (not the "from kick" body-text isKickNotification above was
+    // written for), identified the same way as elsewhere in this file:
+    // Quickshell resolves image-path hints through the image://icon/
+    // provider, so root.image looks like "image://icon//abs/path/kick.svg"
+    // rather than a plain path — match by suffix, not equality.
+    readonly property bool isKickImageAsset: root.image.toString().endsWith("assets/icons/kick.svg")
 
     implicitSize: 38 * scale
     property list<var> urgentShapes: [
@@ -41,7 +48,11 @@ MaterialShape { // App icon
     color: isUrgent ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
     Loader {
         id: materialSymbolLoader
-        active: root.appIcon == "" && root.image == ""
+        // Twitch/Kick notifications often carry no appIcon/image hint at
+        // all (e.g. a plain Betterbird "from Twitch" text notification) —
+        // without this exclusion this Loader and appIconLoader below were
+        // BOTH active simultaneously and painted on top of each other.
+        active: root.appIcon == "" && root.image == "" && !root.isTwitchNotification && !root.isKickImageAsset
         anchors.fill: parent
         sourceComponent: MaterialSymbol {
             text: {
@@ -59,18 +70,38 @@ MaterialShape { // App icon
     }
     Loader {
         id: appIconLoader
-        active: root.image == "" && root.appIcon != ""
+        // Twitch/Kick get routed here (a small badge icon) instead of
+        // notifImageLoader below (a big cropped photo) — neither has a
+        // proper image of their own to crop that way, just a logo.
+        active: root.isTwitchNotification || root.isKickImageAsset || (root.image == "" && root.appIcon != "")
         anchors.centerIn: parent
         sourceComponent: IconImage {
             id: appIconImage
             implicitSize: root.appIconSize
             asynchronous: false
-            source: Quickshell.iconPath(root.appIcon, "image-missing")
+            // Betterbird's own notification for a "from Twitch" email
+            // carries its own (mail-client) appIcon, not a Twitch one —
+            // override it. Neither Twitch nor Kick have a logo in the
+            // installed icon theme we're happy with, so both are bundled
+            // assets (recolored into DynamicTheme by
+            // recolor_notif_svg_assets() in recolor_icons.py) instead of a
+            // theme-name lookup.
+            source: root.isTwitchNotification
+                ? (Config.options.appearance.icons.enableThemed
+                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-twitch.svg`
+                    : Quickshell.shellPath("assets/icons/twitch.svg"))
+                : root.isKickImageAsset
+                ? (Config.options.appearance.icons.enableThemed
+                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-kick.svg`
+                    : Quickshell.shellPath("assets/icons/kick.svg"))
+                : Quickshell.iconPath(root.appIcon, "image-missing")
         }
     }
     Loader {
         id: notifImageLoader
-        active: root.image != "" || root.isTwitchNotification || root.isKickNotification
+        // Excludes our own Kick asset — that's handled by appIconLoader
+        // above instead (see isKickImageAsset).
+        active: root.image != "" && !root.isKickImageAsset
         anchors.fill: parent
         sourceComponent: Item {
             anchors.fill: parent
@@ -79,22 +110,7 @@ MaterialShape { // App icon
                 anchors.fill: parent
                 readonly property int size: parent.width
 
-                source: root.isTwitchNotification
-                ? (Config.options.appearance.icons.enableThemed
-                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-twitch.png`
-                    : Quickshell.shellPath("assets/images/twitch.jpg"))
-                // kick-live-watcher sends the bundled kick.webp via the
-                // image-path hint directly (not the "from kick" body-text
-                // this isKickNotification heuristic was written for), so
-                // also match on the image path itself. Quickshell resolves
-                // image-path hints through the image://icon/ provider, so
-                // root.image looks like "image://icon//abs/path/kick.webp"
-                // rather than a plain path — match by suffix, not equality.
-                : (root.isKickNotification || root.image.toString().endsWith("assets/images/kick.webp"))
-                ? (Config.options.appearance.icons.enableThemed
-                    ? `${Directories.home}/.local/share/icons/DynamicTheme/notif-images/vynx-notif-kick.png`
-                    : Quickshell.shellPath("assets/images/kick.webp"))
-                : root.image
+                source: root.image
                 fillMode: Image.PreserveAspectCrop
                 cache: true
                 antialiasing: true
@@ -111,7 +127,7 @@ MaterialShape { // App icon
             }
             Loader {
                 id: notifImageAppIconLoader
-                active: root.appIcon != "" && !root.isTwitchNotification && !root.isKickNotification
+                active: root.appIcon != ""
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 sourceComponent: IconImage {

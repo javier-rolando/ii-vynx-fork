@@ -40,15 +40,15 @@ DOCK_ASSET_ICON_NAMES = {
     "gemini.svg": "vynx-dock-gemini",
 }
 
-# assets/images/*.jpg|webp shown directly (not via icon-theme lookup) by
-# NotificationAppIcon.qml for Twitch/Kick notifications (e.g. Betterbird
-# forwarding a Twitch email) — same "bypasses theming" problem as above,
-# but raster, so it's recolored with the same LUT as local raster icons
-# instead of the hex-substitution used for SVGs.
-NOTIF_IMAGES_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "images"))
-NOTIF_RASTER_ASSET_NAMES = {
-    "twitch.jpg": "vynx-notif-twitch",
-    "kick.webp": "vynx-notif-kick",
+# assets/images/*.svg shown directly (not via icon-theme lookup) by
+# NotificationAppIcon.qml — same "bypasses theming" problem as the
+# assets/dock/*.svg case above, for services with no real logo in the
+# installed icon theme (unlike Twitch, which uses Papirus's own
+# gnome-twitch.svg via a normal theme-name lookup instead).
+NOTIF_IMAGES_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "icons"))
+NOTIF_SVG_ASSET_NAMES = {
+    "kick.svg": "vynx-notif-kick",
+    "twitch.svg": "vynx-notif-twitch",
 }
 
 def _xdg_data_dirs():
@@ -688,69 +688,26 @@ def recolor_dock_assets(colors):
             print(f"  Failed to recolor dock asset {filename}: {e}")
 
 
-def recolor_notif_raster_assets(colors):
+def recolor_notif_svg_assets(colors):
     """
-    Recolor repo-bundled raster notification images (e.g. assets/images/twitch.jpg)
-    into DynamicTheme, so they aren't stuck showing brand colors forever the way
-    ChatGPT/Gemini dock icons were before recolor_dock_assets() existed.
+    Recolor repo-bundled SVG notification icons (e.g. assets/icons/kick.svg)
+    into DynamicTheme using the same hex-substitution as recolor_dock_assets(),
+    so they aren't stuck showing brand colors forever.
     """
-    try:
-        from PIL import Image
-    except ImportError:
-        return
-
-    def get_luminance(rgb):
-        return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
-
-    raw_palette = [
-        hex_to_rgb(colors.get('on_primary', '#000000')),
-        hex_to_rgb(colors.get('on_secondary', '#111111')),
-        hex_to_rgb(colors.get('secondary_container', '#222222')),
-        hex_to_rgb(colors.get('primary_container', '#444444')),
-        hex_to_rgb(colors.get('secondary', '#888888')),
-        hex_to_rgb(colors.get('primary', '#ffffff'))
-    ]
-    raw_palette.sort(key=get_luminance)
-
-    r_lut, g_lut, b_lut = [], [], []
-    num_colors = len(raw_palette)
-    for i in range(256):
-        t = i / 255.0
-        scaled_t = t * (num_colors - 1)
-        idx = int(scaled_t)
-        if idx >= num_colors - 1:
-            c = raw_palette[-1]
-        else:
-            fraction = scaled_t - idx
-            c1 = raw_palette[idx]
-            c2 = raw_palette[idx + 1]
-            c = (
-                int(c1[0] + (c2[0] - c1[0]) * fraction),
-                int(c1[1] + (c2[1] - c1[1]) * fraction),
-                int(c1[2] + (c2[2] - c1[2]) * fraction)
-            )
-        r_lut.append(c[0])
-        g_lut.append(c[1])
-        b_lut.append(c[2])
-
     dest_dir = os.path.join(TARGET_THEME_PATH, "notif-images")
-    for filename, out_name in NOTIF_RASTER_ASSET_NAMES.items():
+    for filename, out_name in NOTIF_SVG_ASSET_NAMES.items():
         src_file = os.path.join(NOTIF_IMAGES_DIR, filename)
         if not os.path.isfile(src_file):
             continue
         try:
-            img = Image.open(src_file).convert("RGBA")
-            alpha = img.split()[3]
-            gray = img.convert("L")
-            r = gray.point(r_lut)
-            g = gray.point(g_lut)
-            b = gray.point(b_lut)
-            mapped = Image.merge("RGB", (r, g, b))
-            mapped.putalpha(alpha)
+            with open(src_file, 'r', errors='ignore') as f:
+                content = f.read()
+            new_content = recolor_svg(content, colors)
             os.makedirs(dest_dir, exist_ok=True)
-            mapped.save(os.path.join(dest_dir, out_name + ".png"), "PNG")
+            with open(os.path.join(dest_dir, out_name + ".svg"), 'w') as f:
+                f.write(new_content)
         except Exception as e:
-            print(f"  Failed to recolor notif asset {filename}: {e}")
+            print(f"  Failed to recolor notif SVG asset {filename}: {e}")
 
 
 def create_lowercase_symlinks(theme_path):
@@ -936,7 +893,7 @@ def _generate_locked():
     print(f"[Phase 1] Done! {base_count} base icons recolored.")
 
     recolor_dock_assets(colors)
-    recolor_notif_raster_assets(colors)
+    recolor_notif_svg_assets(colors)
 
     # ── Phase 2: Scavenge & recolor missing icons ────────────────────────
     print("[Phase 2] Scavenging missing icons from .desktop files...")
