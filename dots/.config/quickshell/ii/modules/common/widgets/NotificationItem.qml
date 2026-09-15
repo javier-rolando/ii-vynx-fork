@@ -34,6 +34,9 @@ Item { // Notification item area
     // same reasoning as the matching check in NotificationAppIcon.qml.
     property bool isKickNotification: (notificationObject.body || "").toLowerCase().includes("from kick")
         || (notificationObject.image || "").toString().endsWith("assets/images/kick.webp")
+    // youtube-live-watcher: identified by appName, not body text or a
+    // bundled image (its icon is a plain theme lookup, "im-youtube").
+    property bool isYoutubeNotification: (notificationObject.appName || "") === "YouTube"
 
     readonly property var streamerMap: {
       "夜巡ハナ": "hanayomeguri",
@@ -44,6 +47,24 @@ Item { // Notification item area
 
     function extractStreamer(body) {
       return body.split(" ")[0].toLowerCase();
+    }
+
+    // youtube-live-watcher prefixes the body with the full watch URL, whose
+    // video ID is case-sensitive — unlike extractStreamer() above, this
+    // must not lowercase it.
+    function extractFirstToken(body) {
+      return body.split(" ")[0];
+    }
+
+    // kick-live-watcher/youtube-live-watcher prefix the body with a token
+    // (channel slug / video URL) purely so extractStreamer()/
+    // extractFirstToken() above can read it back out — it shouldn't show
+    // up in the notification text itself, so strip it for display only.
+    readonly property string displayBody: {
+        const body = notificationObject.body || "";
+        if (!isKickNotification && !isYoutubeNotification) return body;
+        const idx = body.indexOf(" ");
+        return idx === -1 ? body : body.slice(idx + 1);
     }
 
     function destroyWithAnimation(left = undefined) {
@@ -224,7 +245,7 @@ Item { // Notification item area
                     maximumLineCount: 1
                     textFormat: Text.StyledText
                     text: {
-                        return NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>");
+                        return NotificationUtils.processNotificationBody(root.displayBody, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>");
                     }
                 }
             }
@@ -247,7 +268,7 @@ Item { // Notification item area
                     elide: Text.ElideRight
                     textFormat: Text.RichText
                     text: {
-                        return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` + `${NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`;
+                        return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` + `${NotificationUtils.processNotificationBody(root.displayBody, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`;
                     }
 
                     onLinkActivated: link => {
@@ -323,7 +344,7 @@ Item { // Notification item area
                                     id: notifAction
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    buttonText: (modelData.identifier === "default" && (isTwitchNotification || isKickNotification)) ? "View" : modelData.text
+                                    buttonText: (modelData.identifier === "default" && (isTwitchNotification || isKickNotification || isYoutubeNotification)) ? "View" : modelData.text
                                     urgency: notificationObject.urgency
                                     implicitHeight: 34 * root.zoom
                                     leftPadding: 15 * root.zoom
@@ -345,6 +366,10 @@ Item { // Notification item area
                                           const channel = extractStreamer(notificationObject.body);
                                           // Qt.openUrlExternally("https://kick.com/" + (channel || ""));
                                           Quickshell.execDetached(["zen", "--profile=/home/javier/.zen/cwbhpa62.Default Profile", "https://kick.com/" + (channel || "")]);
+                                          Notifications.discardNotification(notificationObject.notificationId);
+                                        } else if (isYoutubeNotification) {
+                                          const url = extractFirstToken(notificationObject.body);
+                                          Quickshell.execDetached(["zen", "--profile=/home/javier/.zen/cwbhpa62.Default Profile", url]);
                                           Notifications.discardNotification(notificationObject.notificationId);
                                         } else {
                                           Notifications.attemptInvokeAction(notificationObject.notificationId, modelData.identifier);
@@ -372,6 +397,8 @@ Item { // Notification item area
                                     } else if (isKickNotification) {
                                         const channel = extractStreamer(notificationObject.body)
                                         Quickshell.clipboardText = "https://kick.com/" + (channel || "")
+                                    } else if (isYoutubeNotification) {
+                                        Quickshell.clipboardText = extractFirstToken(notificationObject.body)
                                     } else {
                                         Quickshell.clipboardText = notificationObject.body
                                     }
