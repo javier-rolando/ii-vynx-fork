@@ -33,7 +33,7 @@ Item { // Notification item area
     // emails), identified by the bundled icon path instead of body text —
     // same reasoning as the matching check in NotificationAppIcon.qml.
     property bool isKickNotification: (notificationObject.body || "").toLowerCase().includes("from kick")
-        || (notificationObject.image || "").toString().endsWith("assets/images/kick.webp")
+        || (notificationObject.image || "").toString().endsWith("assets/icons/kick.svg")
     // youtube-live-watcher: identified by appName, not body text or a
     // bundled image (its icon is a plain theme lookup, "im-youtube").
     property bool isYoutubeNotification: (notificationObject.appName || "") === "YouTube"
