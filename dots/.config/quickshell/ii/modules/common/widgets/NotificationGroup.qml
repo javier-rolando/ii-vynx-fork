@@ -299,7 +299,14 @@ MouseArea { // Notification group area
                 // still throws in that window (the ?. doesn't guard the
                 // trailing .map/[...] access). root.notifications is
                 // already safely defaulted to [] above.
-                image: root.notifications[0]?.image ?? ""
+                //
+                // Same index as summary/body below (notificationCount - 1,
+                // the newest) — NOT [0]. An app like Kick only ever has one
+                // "identity" per group so any index looked the same, but an
+                // app that groups messages from different people (e.g. a
+                // chat app) would show one contact's photo next to another
+                // contact's name/text if these ever used different indices.
+                image: root.notifications[root.notificationCount - 1]?.image ?? ""
                 appIcon: root.notificationGroup?.appIcon
                 summary: root.notifications[root.notificationCount - 1]?.summary
                 urgency: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ?
