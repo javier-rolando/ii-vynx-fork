@@ -291,7 +291,7 @@ Singleton {
         // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
         // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
         // /usr/bin or /bin, silently breaking every wallpaper apply.
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         let args = [
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -319,7 +319,7 @@ Singleton {
         // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
         // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
         // /usr/bin or /bin, silently breaking every wallpaper apply.
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -339,7 +339,7 @@ Singleton {
         // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
         // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
         // /usr/bin or /bin, silently breaking every wallpaper apply.
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -364,7 +364,7 @@ Singleton {
         // Extend, don't replace: a hardcoded PATH here previously made "env" unable to
         // find "bash" itself on systems (e.g. NixOS) where core tools don't live under
         // /usr/bin or /bin, silently breaking every wallpaper apply.
-        const envBinPath = `${Directories.home}/.local/bin:${Directories.home}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
+        const envBinPath = `${FileUtils.trimFileProtocol(Directories.home)}/.local/bin:${FileUtils.trimFileProtocol(Directories.home)}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:${Quickshell.env("PATH") ?? ""}`;
         Quickshell.execDetached([
             "env", "-u", "LD_LIBRARY_PATH", "-u", "PYTHONHOME", "-u", "PYTHONPATH",
             `PATH=${envBinPath}`, "bash", Directories.wallpaperSwitchScriptPath,
@@ -372,31 +372,6 @@ Singleton {
             "--request-seq", String(requestSeq)
         ]);
         root.changed();
-    }
-
-    Connections {
-        target: GlobalStates
-        ignoreUnknownSignals: true
-        function onScreenLockedChanged() {
-            console.log("[Wallpapers] onScreenLockedChanged fired, screenLocked=", GlobalStates.screenLocked);
-            if (!Config.options || !Config.options.background) return;
-            const useSeparate = Config.options.background.useSeparateLockscreenWallpaper;
-            console.log("[Wallpapers] useSeparate=", useSeparate);
-            if (!useSeparate) return;
-            const lockPath = Config.options.background.lockscreenWallpaperPath;
-            const deskPath = Config.options.background.wallpaperPath;
-            console.log("[Wallpapers] lockPath=", lockPath, "deskPath=", deskPath);
-            if (!lockPath || lockPath === "" || lockPath === deskPath) return;
-
-            // Atomic swap: just copy pre-generated JSON, no matugen runtime cost
-            if (GlobalStates.screenLocked) {
-                console.log("[Wallpapers] Calling swap lock");
-                Quickshell.execDetached(["bash", Directories.swapLockscreenColorsScriptPath, "lock"]);
-            } else {
-                console.log("[Wallpapers] Calling swap unlock");
-                Quickshell.execDetached(["bash", Directories.swapLockscreenColorsScriptPath, "unlock"]);
-            }
-        }
     }
 
     Connections {
