@@ -173,7 +173,7 @@ Item {
         showStatus: true
         primaryHint: ({ label: root.selectedTask?.done ? Translation.tr("Reopen") : Translation.tr("Complete"), actionId: "activate", keys: ["↵"] })
         hints: [
-            { label: Translation.tr("New from query"), actionId: "create", keys: ["Ctrl", "N"] },
+            { label: Translation.tr("New from query"), actionId: "create", keys: ["Ctrl", "Shift", "A"] },
             { label: Translation.tr("Delete"), actionId: "delete", keys: ["⇧", "Del"] }
         ]
 

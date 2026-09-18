@@ -258,7 +258,7 @@ Item {
         primaryHint: ({ label: root.typedMinutes > 0 ? Translation.tr("Create") : (root.selectedRow?.action ?? Translation.tr("Run")), actionId: "activate", keys: ["↵"] })
         hints: [
             { label: Translation.tr("Reset"), actionId: "secondary", keys: ["Ctrl", "↵"] },
-            { label: Translation.tr("Create typed duration"), actionId: "create", keys: ["Ctrl", "N"] }
+            { label: Translation.tr("Create typed duration"), actionId: "create", keys: ["Ctrl", "Shift", "A"] }
         ]
 
         ColumnLayout {

@@ -267,7 +267,10 @@ Item {
         target: root.activePanelItem
         ignoreUnknownSignals: true
         function onRequestSetSearchQuery(query) {
-            root.setSearchingText(query);
+            const activePanel = root.activePanel;
+            const prefix = SearchPanelRegistry.prefixOf(activePanel);
+            const usePrefix = prefix.length > 0 && (root.prefixRoutedPanelId === activePanel?.id || root.searchingText.startsWith(prefix));
+            root.setSearchingText(usePrefix ? (prefix + query) : query);
         }
         function onRequestFocusSearchInput() {
             root.focusSearchInput();
@@ -1350,28 +1353,19 @@ Item {
             }
         }
 
-        // Ctrl+n (next item)
+        // Ctrl+n / Ctrl+p: same move as the arrow keys (Down/Up), routed through
+        // the same dispatch so it skips section header rows exactly like they
+        // do. A bare currentIndex++/-- here used to be able to land the
+        // selection on a header row, which has no clicked() — silently
+        // breaking Enter until an arrow key moved the selection again.
         if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_N) {
-          if (appResults.currentIndex < appResults.count - 1) {
-            appResults.currentIndex++;
-            const item = appResults.itemAtIndex(appResults.currentIndex);
-            if (item && item.forceActiveFocus) {
-              item.forceActiveFocus();
-            }
-          }
+          searchKeyRouter.dispatch("navigateDown");
           event.accepted = true;
           return;
         }
 
-        // Ctrl+p (previous item)
         if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_P) {
-          if (appResults.currentIndex > 0) {
-            appResults.currentIndex--;
-            const item = appResults.itemAtIndex(appResults.currentIndex);
-            if (item && item.forceActiveFocus) {
-              item.forceActiveFocus();
-            }
-          }
+          searchKeyRouter.dispatch("navigateUp");
           event.accepted = true;
           return;
         }

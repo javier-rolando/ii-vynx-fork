@@ -12,7 +12,7 @@ Item {
 
     readonly property var defaults: [
         { actionId: "actions", name: Translation.tr("Open actions"), keys: "Ctrl+K", icon: "bolt" },
-        { actionId: "favorite", name: Translation.tr("Toggle favorite"), keys: "Ctrl+P", icon: "star" },
+        { actionId: "favorite", name: Translation.tr("Toggle favorite"), keys: "Ctrl+Shift+P", icon: "star" },
         { actionId: "historyPrevious", name: Translation.tr("Previous history"), keys: "Up", icon: "history" },
         { actionId: "historyNext", name: Translation.tr("Next history"), keys: "Down", icon: "history" },
         { actionId: "secondary", name: Translation.tr("Run secondary action"), keys: "Ctrl+Enter", icon: "play_arrow" },
@@ -20,7 +20,7 @@ Item {
         { actionId: "save", name: Translation.tr("Save selected item"), keys: "Ctrl+S", icon: "save" },
         { actionId: "edit", name: Translation.tr("Edit selected item"), keys: "Ctrl+E", icon: "edit" },
         { actionId: "ocr", name: Translation.tr("Read image text"), keys: "Ctrl+O", icon: "document_scanner" },
-        { actionId: "create", name: Translation.tr("Create from search"), keys: "Ctrl+N", icon: "add" },
+        { actionId: "create", name: Translation.tr("Create from search"), keys: "Ctrl+Shift+A", icon: "add" },
         { actionId: "copyDispatch", name: Translation.tr("Copy window dispatch"), keys: "Ctrl+Shift+K", icon: "code" },
         { actionId: "delete", name: Translation.tr("Delete selected item"), keys: "Shift+Delete", icon: "delete" },
         { actionId: "section", name: Translation.tr("Switch panel section"), keys: "Tab", icon: "tab" },

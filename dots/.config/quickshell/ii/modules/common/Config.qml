@@ -1186,7 +1186,7 @@ Singleton {
                     },
                     {
                         actionId: "favorite",
-                        shortcut: "Ctrl+P"
+                        shortcut: "Ctrl+Shift+P"
                     },
                     {
                         actionId: "historyPrevious",
@@ -1217,8 +1217,12 @@ Singleton {
                         shortcut: "Ctrl+O"
                     },
                     {
+                        // Ctrl+N is the fork's own "next item" navigation
+                        // (SearchWidget.qml). Kept off Ctrl+N so the two never
+                        // collide inside panels (File Browser, Tasks, Timers,
+                        // Sports, Calendar all share this "create" action).
                         actionId: "create",
-                        shortcut: "Ctrl+N"
+                        shortcut: "Ctrl+Shift+A"
                     },
                     {
                         actionId: "copyDispatch",
@@ -5409,8 +5413,11 @@ Singleton {
                         shortcut: "Ctrl+K"
                     },
                     {
+                        // Ctrl+P is the fork's own "previous item" navigation
+                        // (SearchWidget.qml), predating this upstream shortcut.
+                        // Kept off Ctrl+P so the two never collide.
                         actionId: "favorite",
-                        shortcut: "Ctrl+P"
+                        shortcut: "Ctrl+Shift+P"
                     },
                     {
                         actionId: "historyPrevious",
@@ -5441,8 +5448,12 @@ Singleton {
                         shortcut: "Ctrl+O"
                     },
                     {
+                        // Ctrl+N is the fork's own "next item" navigation
+                        // (SearchWidget.qml). Kept off Ctrl+N so the two never
+                        // collide inside panels (File Browser, Tasks, Timers,
+                        // Sports, Calendar all share this "create" action).
                         actionId: "create",
-                        shortcut: "Ctrl+N"
+                        shortcut: "Ctrl+Shift+A"
                     },
                     {
                         actionId: "copyDispatch",

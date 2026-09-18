@@ -108,7 +108,7 @@ Item {
         statusText: root.statusText
         showStatus: true
         primaryHint: ({ label: Translation.tr("Select"), actionId: "activate", keys: ["↵"] })
-        hints: [{ label: Translation.tr("Remind"), actionId: "create", keys: ["Ctrl", "N"] }]
+        hints: [{ label: Translation.tr("Remind"), actionId: "create", keys: ["Ctrl", "Shift", "A"] }]
 
         ListView {
             id: gamesList

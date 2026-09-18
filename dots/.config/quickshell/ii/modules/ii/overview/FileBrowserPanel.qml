@@ -182,7 +182,8 @@ Item {
 
     function filterEntries(): var {
         const rows = Array.from(root.displayedEntries ?? []);
-        const terms = root.searchQuery.trim().toLocaleLowerCase().split(/\s+/).filter(term => term.length > 0);
+        const cleanQuery = root.searchQuery.trim().replace(/^\/+/, "");
+        const terms = cleanQuery.toLocaleLowerCase().split(/\s+/).filter(term => term.length > 0);
         if (terms.length === 0)
             return rows;
         const ranked = [];
@@ -221,7 +222,7 @@ Item {
             { id: "paste", label: Translation.tr("Paste here"), icon: "content_paste", actionId: "paste", keys: ["Ctrl", "V"], enabled: root.contentReady && !root.globalSearchMode && !backend.operating && root.stagedPaths.length > 0 },
             { id: "rename", label: Translation.tr("Rename"), icon: "drive_file_rename_outline", actionId: "edit", keys: ["Ctrl", "E"], enabled: canMutateEntry },
             { id: "duplicate", label: Translation.tr("Duplicate"), icon: "control_point_duplicate", actionId: "duplicate", keys: ["Ctrl", "D"], enabled: canMutateEntry },
-            { id: "new-file", label: Translation.tr("New file"), icon: "note_add", actionId: "create", keys: ["Ctrl", "N"], enabled: root.contentReady && !root.globalSearchMode && !backend.operating },
+            { id: "new-file", label: Translation.tr("New file"), icon: "note_add", actionId: "create", keys: ["Ctrl", "Shift", "A"], enabled: root.contentReady && !root.globalSearchMode && !backend.operating },
             { id: "new-folder", label: Translation.tr("New folder"), icon: "create_new_folder", actionId: "createFolder", keys: ["Ctrl", "Shift", "N"], enabled: root.contentReady && !root.globalSearchMode && !backend.operating },
             { id: "hidden", label: root.showHidden ? Translation.tr("Hide dotfiles") : Translation.tr("Show dotfiles"), icon: root.showHidden ? "visibility_off" : "visibility", actionId: "toggleHidden", keys: ["Ctrl", "H"], enabled: true },
             { id: "sort", label: Translation.tr("Change sort order"), icon: "sort", actionId: "sortFiles", keys: ["Ctrl", "Shift", "S"], enabled: true },
@@ -248,6 +249,8 @@ Item {
             return false;
         const query = root.searchQuery.trim();
         if (query.length === 0 || !query.startsWith("/") || !query.endsWith("/"))
+            return false;
+        if (query === "/" || query === "//")
             return false;
         root.consumingPathQuery = true;
         const target = query.startsWith("//") ? query.slice(1) : root.homePath + query;
