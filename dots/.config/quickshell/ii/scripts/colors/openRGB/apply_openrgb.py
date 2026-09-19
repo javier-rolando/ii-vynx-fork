@@ -1,79 +1,16 @@
 #!/usr/bin/env python3
 import sys
 import os
-from time import sleep
+import subprocess
 import argparse
-from subprocess import Popen
 import json
+import re
 
-try:
-    from openrgb import OpenRGBClient
-    from openrgb.utils import RGBColor
-    from scipy.interpolate import interp1d
-except ImportError as e:
-    # Exit gracefully if optional openrgb / scipy python packages are not installed yet
-    sys.exit(0)
-
-try:
-    import psutil
-except ImportError:
-    psutil = None
-
-parser = argparse.ArgumentParser(description="Apply color on OpenRGB devices with a smooth transition")
-parser.add_argument(
-    "--duration",
-    "-d",
-    type=float,
-    default=0.5,
-    help="Duration of color swap animation",
-)
-parser.add_argument(
-    "--interpolation-steps",
-    "-i",
-    type=int,
-    default=100,
-    help="Number of steps to swap the colors (lower=choppier, higher=smoother)",
-)
-parser.add_argument(
-    "--color",
-    "-c",
-    type=str,
-    help="HEX color to transition to",
-)
+parser = argparse.ArgumentParser(description="Apply color on OpenRGB devices")
+parser.add_argument("--duration", "-d", type=float, default=0.5, help="Unused, kept for compatibility")
+parser.add_argument("--interpolation-steps", "-i", type=int, default=100, help="Unused, kept for compatibility")
+parser.add_argument("--color", "-c", type=str, help="HEX color to apply")
 args = parser.parse_args()
-
-def hexToRGB(hexColor) -> list[int]:
-    hexColor = hexColor.removeprefix("#")
-    hexColor = [hexColor[i : i + 2] for i in range(0, 6, 2)]  # Split hex values
-    intColor = [int(hexValue, 16) for hexValue in hexColor]  # Convert to int
-    return intColor
-
-def is_openrgb_running() -> bool:
-    if psutil is not None:
-        try:
-            return any(p.name() == "openrgb" for p in psutil.process_iter())
-        except Exception:
-            pass
-    return False
-
-MAX_SERVER_START_ATTEMPTS = 5
-SERVER_START_RETRY_DELAY = 0.5
-
-def get_client(name: str = "quickshell"):
-    for attempt in range(MAX_SERVER_START_ATTEMPTS):
-        try:
-            return OpenRGBClient(name=name)
-        except Exception:
-            if not is_openrgb_running():
-                try:
-                    Popen(["openrgb", "--server", "--startminimized"])
-                except Exception:
-                    pass
-            sleep(SERVER_START_RETRY_DELAY)
-    return None
-
-TRANSITION_DURATION = args.duration
-INTERPOLATION_STEPS = args.interpolation_steps
 
 xdg_state_home = os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state"))
 xdg_config_home = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
@@ -82,7 +19,6 @@ state_dir = os.path.join(xdg_state_home, "quickshell")
 config_path = os.path.join(xdg_config_home, "illogical-impulse", "config.json")
 if not os.path.exists(config_path):
     config_path = os.path.join(xdg_config_home, "immaterial-impulse", "config.json")
-
 if not os.path.exists(config_path):
     sys.exit(0)
 
@@ -100,62 +36,46 @@ devices = openrgb_opts.get("devices", [])
 if not any(d.get("enabled", False) for d in devices):
     sys.exit(0)
 
-client = get_client()
-if client is None:
-    sys.exit(0)
-
-color_file = os.path.join(state_dir, "user", "generated", "color.txt")
-new_color = [255, 255, 255]
-if os.path.exists(color_file):
+color = args.color
+if color is None:
+    color_file = os.path.join(state_dir, "user", "generated", "color.txt")
+    if not os.path.exists(color_file):
+        sys.exit(0)
     try:
         with open(color_file, "r") as f:
-            new_color = hexToRGB(f.read().strip())
+            color = f.read().strip()
     except Exception:
-        pass
+        sys.exit(0)
 
-if args.color is not None:
-    new_color = hexToRGB(args.color)
+color = color.lstrip("#")
 
 try:
-    # Build name→index map for name-based lookup
-    name_to_idx = {d.name: i for i, d in enumerate(client.devices)}
-
-    resolved = []
-    for dev in devices:
-        if not dev["enabled"]:
-            continue
-        name = dev.get("name")
-        if name:
-            idx = name_to_idx.get(name)
-            if idx is None:
-                print(f"Warning: device '{name}' not found, skipping")
-                continue
-        else:
-            idx = dev["id"]
-            if idx >= len(client.devices):
-                print(f"Warning: device id {idx} out of range, skipping")
-                continue
-        resolved.append((dev, idx))
-
-    for dev, idx in resolved:
-        if client.devices[idx].active_mode == 1:  # 1 = Off
-            old_color = [0, 0, 0]
-        else:
-            old_color = [
-                client.devices[idx].leds[0].colors[0].red,
-                client.devices[idx].leds[0].colors[0].green,
-                client.devices[idx].leds[0].colors[0].blue,
-            ]
-        dev["interpolation"] = interp1d([0, 1], [old_color, new_color], axis=0)
-        target_mode = dev.get("mode", 0)
-        if client.devices[idx].active_mode != target_mode:
-            client.devices[idx].set_mode(mode=target_mode)
-
-    for i in range(INTERPOLATION_STEPS):
-        t = i / (INTERPOLATION_STEPS - 1) if INTERPOLATION_STEPS > 1 else 1.0
-        for dev, idx in resolved:
-            interp_color = [int(c) for c in dev["interpolation"](t)]
-            client.devices[idx].set_color(RGBColor(*interp_color), True)
-        sleep(TRANSITION_DURATION / INTERPOLATION_STEPS)
+    result = subprocess.run(["openrgb", "--list-devices"], capture_output=True, text=True, timeout=10)
+    name_to_id = {}
+    for line in result.stdout.splitlines():
+        m = re.match(r"^(\d+):\s+(.+)$", line.strip())
+        if m:
+            name_to_id[m.group(2).strip()] = int(m.group(1))
 except Exception:
-    pass
+    sys.exit(0)
+
+for dev in devices:
+    if not dev.get("enabled", False):
+        continue
+    name = dev.get("name")
+    mode = dev.get("mode", 1)
+    if name:
+        dev_id = name_to_id.get(name)
+        if dev_id is None:
+            print(f"Warning: device '{name}' not found, skipping")
+            continue
+    elif dev.get("id") is not None:
+        dev_id = dev["id"]
+    else:
+        continue
+
+    mode_name = "static" if mode == 1 else "direct"
+    subprocess.run(
+        ["openrgb", "--device", str(dev_id), "--mode", mode_name, "--color", color],
+        capture_output=True, timeout=10
+    )
