@@ -41,6 +41,13 @@ AbstractBackgroundWidget {
     readonly property string imageSource: {
         let customPath = options?.imagePath;
         if (customPath && customPath !== "") {
+            // recolor_icons.py's recolor_widget_photos() regenerates this
+            // whenever the theme changes, but only when the user opted in
+            // via recolorWithTheme (this path is an arbitrary user file, not
+            // a known flat-color asset like the notif icons).
+            if (options?.recolorWithTheme && Config.options.appearance.icons.enableThemed) {
+                return Directories.home + "/.local/share/icons/DynamicTheme/widget-photos/photo_1x1.png";
+            }
             const qIdx = customPath.indexOf("?");
             if (qIdx !== -1) customPath = customPath.substring(0, qIdx);
             return customPath.startsWith("file://") ? customPath : ("file://" + customPath);

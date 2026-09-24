@@ -3154,6 +3154,10 @@ Singleton {
                         property int widgetSize: 100
                         property string backgroundShape: "Cookie9Sided"
                         property string imagePath: ""
+                        // Off by default: recolor_icons.py's gradient-map
+                        // recolor is meant for flat-color logos, not photos —
+                        // applying it unconditionally would wreck a real photo.
+                        property bool recolorWithTheme: false
                     }
                     property JsonObject android_search_bar: JsonObject {
                         property bool enable: false

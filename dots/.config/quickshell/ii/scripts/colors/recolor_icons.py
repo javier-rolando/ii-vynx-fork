@@ -711,6 +711,34 @@ def recolor_notif_svg_assets(colors):
             print(f"  Failed to recolor notif SVG asset {filename}: {e}")
 
 
+def recolor_widget_photos(colors):
+    """
+    Recolor the desktop Photo widget's user-chosen image (e.g. a logo dropped
+    into the 1x1 photo widget) into DynamicTheme, gated behind a per-widget
+    "recolorWithTheme" opt-in — unlike the notif icons above this path is an
+    arbitrary user file, not a known-flat-color brand asset, so applying the
+    gradient-map to an actual photo would wreck it if it were unconditional.
+    """
+    entry = get_config().get("background", {}).get("widgets", {}).get("photo_1x1", {})
+    if not entry.get("recolorWithTheme"):
+        return
+    src_file = entry.get("imagePath", "")
+    if not src_file or not os.path.isfile(src_file):
+        return
+    luts = build_raster_luts(colors)
+    if luts is None:
+        print("  Pillow not installed, skipping photo widget recolor")
+        return
+    try:
+        from PIL import Image
+        dest_dir = os.path.join(TARGET_THEME_PATH, "widget-photos")
+        os.makedirs(dest_dir, exist_ok=True)
+        with Image.open(src_file) as img:
+            recolor_raster_image(img, luts).save(os.path.join(dest_dir, "photo_1x1.png"), "PNG")
+    except Exception as e:
+        print(f"  Failed to recolor photo widget image: {e}")
+
+
 def create_lowercase_symlinks(theme_path):
     """
     Scans the theme path and creates lowercase symlinks for all files containing
@@ -932,6 +960,7 @@ def _generate_locked():
 
     recolor_dock_assets(colors)
     recolor_notif_svg_assets(colors)
+    recolor_widget_photos(colors)
 
     # ── Phase 2: Scavenge & recolor missing icons ────────────────────────
     print("[Phase 2] Scavenging missing icons from .desktop files...")

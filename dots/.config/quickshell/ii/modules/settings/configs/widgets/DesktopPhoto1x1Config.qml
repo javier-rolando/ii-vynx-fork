@@ -110,6 +110,16 @@ ContentPage {
                 }
             }
 
+            ConfigSwitch {
+                buttonIcon: "palette"
+                text: Translation.tr("Recolor With Theme")
+                // Meant for a flat-color logo dropped into the widget, not an
+                // arbitrary real photo — recolor_icons.py's gradient-map
+                // recolor would wreck an actual photo, so this is opt-in.
+                checked: Config.options.background.widgets.photo_1x1.recolorWithTheme ?? false
+                onCheckedChanged: Config.options.background.widgets.photo_1x1.recolorWithTheme = checked
+            }
+
             // ── Material Shape Selection ─────────────────────────────────────
             ContentSubsectionLabel { text: Translation.tr("Material Shape") }
 
