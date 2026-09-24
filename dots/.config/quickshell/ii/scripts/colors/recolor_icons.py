@@ -711,6 +711,35 @@ def recolor_notif_svg_assets(colors):
             print(f"  Failed to recolor notif SVG asset {filename}: {e}")
 
 
+def recolor_quickshell_icon(colors):
+    """
+    Recolor Quickshell's own app icon (org.quickshell.svg) into DynamicTheme.
+    scavenge_missing_icons() never finds it: its .desktop file ships inside
+    quickshell's own nix store output, which isn't in XDG_DATA_DIRS (unlike
+    a normal installed app), so the icon lookup falls through DynamicTheme
+    straight to the untouched hicolor original — stuck green/white regardless
+    of theme. `qs`/`quickshell` on PATH is a tiny wrapper binary (not a
+    symlink `realpath` can follow) that just prefixes XDG_DATA_DIRS with the
+    real package's store path at exec time — glob for that package by
+    derivation name instead of hardcoding its hash, since that changes on
+    every quickshell update.
+    """
+    matches = glob.glob("/nix/store/*-quickshell-wrapped-*/share/icons/hicolor/scalable/apps/org.quickshell.svg")
+    if not matches:
+        return
+    src_file = matches[0]
+    try:
+        with open(src_file, 'r', errors='ignore') as f:
+            content = f.read()
+        new_content = recolor_svg(content, colors)
+        dest_dir = os.path.join(TARGET_THEME_PATH, "scalable/apps")
+        os.makedirs(dest_dir, exist_ok=True)
+        with open(os.path.join(dest_dir, "org.quickshell.svg"), 'w') as f:
+            f.write(new_content)
+    except Exception as e:
+        print(f"  Failed to recolor quickshell app icon: {e}")
+
+
 def recolor_widget_photos(colors):
     """
     Recolor the desktop Photo widget's user-chosen image (e.g. a logo dropped
@@ -960,6 +989,7 @@ def _generate_locked():
 
     recolor_dock_assets(colors)
     recolor_notif_svg_assets(colors)
+    recolor_quickshell_icon(colors)
     recolor_widget_photos(colors)
 
     # ── Phase 2: Scavenge & recolor missing icons ────────────────────────
