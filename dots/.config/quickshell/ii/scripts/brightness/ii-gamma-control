@@ -2,21 +2,27 @@
 set -euo pipefail
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-# Quickshell may run inside a read-only user namespace. Keep the generated
-# helper in the per-user runtime scratch area, which is writable in both the
-# normal session and that sandbox.
-cache_root=${TMPDIR:-/tmp}/quickshell-${USER}
+# Keep the compiled helper in a persistent cache so it survives reboots
+# (/tmp is wiped). Quickshell may run inside a read-only user namespace, so
+# fall back to the per-user runtime scratch area when the cache is not writable.
+cache_root=${XDG_CACHE_HOME:-${HOME}/.cache}/quickshell
+if ! mkdir -p -- "${cache_root}" 2>/dev/null || [[ ! -w ${cache_root} ]]; then
+    cache_root=${TMPDIR:-/tmp}/quickshell-${USER}
+fi
 build_dir=${cache_root}/ii-gamma-control
 binary=${build_dir}/ii-gamma-control
 xml_file=${script_dir}/hyprland-ctm-control-v1.xml
 source_file=${script_dir}/ii-gamma-control.cpp
 
-if [[ ! -x ${binary} || ${source_file} -nt ${binary} || ${xml_file} -nt ${binary} ]]; then
-    command -v c++ >/dev/null
-    command -v cc >/dev/null
-    command -v wayland-scanner >/dev/null
-    pkg-config --exists wayland-client
+have_toolchain() {
+    command -v c++ >/dev/null 2>&1 \
+        && command -v cc >/dev/null 2>&1 \
+        && command -v wayland-scanner >/dev/null 2>&1 \
+        && command -v pkg-config >/dev/null 2>&1 \
+        && pkg-config --exists wayland-client
+}
 
+build() {
     mkdir -p -- "${build_dir}"
     build_tmp=$(mktemp -d "${build_dir}/build.XXXXXX")
     trap 'rm -rf -- "${build_tmp}"' EXIT
@@ -29,6 +35,26 @@ if [[ ! -x ${binary} || ${source_file} -nt ${binary} || ${xml_file} -nt ${binary
         $(pkg-config --cflags --libs wayland-client) \
         -o "${build_tmp}/ii-gamma-control"
     mv -- "${build_tmp}/ii-gamma-control" "${binary}"
+    rm -rf -- "${build_tmp}"
+    trap - EXIT
+}
+
+if [[ ${1:-} == --build-only ]]; then
+    build
+    exit 0
+fi
+
+if [[ ! -x ${binary} || ${source_file} -nt ${binary} || ${xml_file} -nt ${binary} ]]; then
+    if have_toolchain; then
+        build
+    elif command -v nix-shell >/dev/null 2>&1; then
+        # NixOS usually has no compiler in PATH; fetch one just for the build
+        nix-shell -p gcc pkg-config wayland wayland-scanner \
+            --run "$(printf '%q' "$0") --build-only" >&2
+    else
+        echo "ii-gamma-control: missing build tools (c++, cc, wayland-scanner, pkg-config, wayland-client)" >&2
+        exit 1
+    fi
 fi
 
 # The shell owns the color controller. hyprsunset must release its CTM manager
