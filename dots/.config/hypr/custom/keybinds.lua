@@ -80,12 +80,20 @@ local function warp_dispatch(dispatch_fn)
 end
 
 -- Layout management
+-- Since 0.57 "name:N" no longer matches numbered workspaces, only the bare id does
+local function ws_selector(ws_name)
+	if ws_name:match("^%d+$") then
+		return ws_name
+	end
+	return "name:" .. ws_name
+end
+
 local function ws_layout(ws_name)
 	return ws_layouts[ws_name] or hl.get_config("general.layout")
 end
 
 local function count_tiled(ws_name)
-	local wins = hl.get_workspace_windows("name:" .. ws_name)
+	local wins = hl.get_workspace_windows(ws_selector(ws_name))
 	local n = 0
 	for _, w in ipairs(wins) do
 		if not w.floating then
@@ -97,10 +105,11 @@ end
 
 local function switch_layout(layout, ws_name)
 	ws_name = ws_name or hl.get_active_workspace().name
-	hl.workspace_rule({ workspace = "name:" .. ws_name, layout = layout })
+	local selector = ws_selector(ws_name)
+	hl.workspace_rule({ workspace = selector, layout = layout })
 	local gaps = layout == "dwindle" and { top = 5, right = 1360, bottom = 5, left = 1360 }
 		or { top = 5, right = 5, bottom = 5, left = 5 }
-	hl.workspace_rule({ workspace = "name:" .. ws_name .. " w[t1]f[-1]", gaps_out = gaps })
+	hl.workspace_rule({ workspace = selector .. " w[t1]f[-1]", gaps_out = gaps })
 	ws_layouts[ws_name] = layout
 end
 
@@ -133,7 +142,7 @@ end)
 local function grid_focus(dir)
 	local r = warp_dispatch(hl.dsp.focus({ direction = dir }))
 	if not r.ok then
-		local wins = hl.get_workspace_windows("name:" .. hl.get_active_workspace().name)
+		local wins = hl.get_workspace_windows(ws_selector(hl.get_active_workspace().name))
 		if #wins == 0 then
 			return
 		end
