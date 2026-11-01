@@ -42,6 +42,10 @@ hl.config({
 	decoration = {
 		dim_inactive = false,
 	},
+	render = {
+		-- Don't switch the monitor to HDR when a fullscreen app (e.g. mpv) requests it
+		cm_auto_hdr = 0,
+	},
 })
 
 -- Custom curves (additions to upstream)
