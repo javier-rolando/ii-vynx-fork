@@ -16,14 +16,10 @@ hl.config({
 		kb_options = "caps:swapescape",
 		accel_profile = "flat",
 	},
-	dwindle = {
-		special_scale_factor = 0.80,
-	},
 	master = {
 		mfact = 0.47142,
 		orientation = "center",
 		slave_count_for_center_master = 0,
-		special_scale_factor = 0.80,
 		smart_resizing = false,
 		focus_master_on_close = true,
 	},

@@ -28,44 +28,31 @@ hl.window_rule({ match = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture)(.
 -- hl.layer_rule({ match = { namespace = "^quickshell:onScreenDisplay.*" },    blur = false })
 
 -- Special workspaces
-hl.workspace_rule({ workspace = "special:term", ["on_created_empty"] = 'kitty --class "kitty-special"' })
-hl.workspace_rule({
-	workspace = "special:update",
-	["on_created_empty"] = 'kitty --class "kitty-update" -e fish -c "upd"',
-})
-hl.workspace_rule({
-	workspace = "special:install",
-	["on_created_empty"] = 'kitty --class "kitty-install" -e fish -c "pkginstall"',
-})
-hl.workspace_rule({
-	workspace = "special:uninstall",
-	["on_created_empty"] = 'kitty --class "kitty-uninstall" -e fish -c "pkgremove"',
-})
-hl.workspace_rule({
-	workspace = "special:yazi",
-	["on_created_empty"] = 'kitty --class "kitty-yazi" -e fish -c "yazi"',
-})
-hl.workspace_rule({
-	workspace = "special:btop",
-	["on_created_empty"] = 'kitty --class "kitty-btop" -e fish -c "btop"',
-})
-hl.workspace_rule({
-	workspace = "special:spotify-term",
-	["on_created_empty"] = 'kitty --class "kitty-spotify" -e spotify_player',
-})
-hl.workspace_rule({
-	workspace = "special:english",
-	["on_created_empty"] = 'kitty --class "kitty-english" -e fish -c "nvim /home/javier/Documents/ingles.txt"',
-})
-hl.workspace_rule({
-	workspace = "special:translate",
-	["on_created_empty"] = 'chromium --app="https://translate.google.com/?sl=en&tl=es&op=translate"',
-})
-hl.workspace_rule({ workspace = "special:spotify", ["on_created_empty"] = "spotify" })
-hl.workspace_rule({
-	workspace = "special:yt-music",
-	["on_created_empty"] = "youtube-music --enable-features=UseOzonePlatform --ozone-platform=wayland",
-})
+-- Replaces {master,dwindle}:special_scale_factor = 0.80 (deprecated in 0.57):
+-- 10% margin per side on 5120x1440
+hl.workspace_rule({ workspace = "s[true]", gaps_out = { top = 144, right = 512, bottom = 144, left = 512 } })
+
+-- Replaces on_created_empty (deprecated in 0.57)
+local special_launchers = {
+	["special:term"] = 'kitty --class "kitty-special"',
+	["special:update"] = 'kitty --class "kitty-update" -e fish -c "upd"',
+	["special:install"] = 'kitty --class "kitty-install" -e fish -c "pkginstall"',
+	["special:uninstall"] = 'kitty --class "kitty-uninstall" -e fish -c "pkgremove"',
+	["special:yazi"] = 'kitty --class "kitty-yazi" -e fish -c "yazi"',
+	["special:btop"] = 'kitty --class "kitty-btop" -e fish -c "btop"',
+	["special:spotify-term"] = 'kitty --class "kitty-spotify" -e spotify_player',
+	["special:english"] = 'kitty --class "kitty-english" -e fish -c "nvim /home/javier/Documents/ingles.txt"',
+	["special:translate"] = 'chromium --app="https://translate.google.com/?sl=en&tl=es&op=translate"',
+	["special:spotify"] = "spotify",
+	["special:yt-music"] = "youtube-music --enable-features=UseOzonePlatform --ozone-platform=wayland",
+}
+
+hl.on("workspace.created", function(ws)
+	local cmd = special_launchers[ws.name]
+	if cmd and ws.is_empty then
+		hl.exec_cmd(cmd)
+	end
+end)
 
 -- Workspace assignments
 hl.window_rule({ match = { class = "brave-browser" }, workspace = 1, fullscreen_state = "0 1" })
