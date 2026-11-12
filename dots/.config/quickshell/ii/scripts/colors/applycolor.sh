@@ -159,6 +159,7 @@ os.rename(tmp_path, output_path)
 }
 
 apply_term() {
+  : # terminal theming disabled
   # apply_anyterm &
   # apply_kitty &
 }

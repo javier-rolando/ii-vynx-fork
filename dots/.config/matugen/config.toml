@@ -134,14 +134,3 @@ output_path = "~/.config/colors.json"
 [templates.vscode]
 input_path = '~/.config/matugen/templates/vscode/ii-material-you.json'
 output_path = '~/.local/state/quickshell/user/generated/vscode/theme.json'
-
-# Kvantum theme for Qt apps (Dolphin); rebuild the templates with
-# quickshell/ii/scripts/kvantum/build_m3e_theme.py. Running apps keep the old
-# colours until restarted.
-[templates.kvantum_svg]
-input_path = '~/.config/matugen/templates/kvantum/MaterialYouExpressive.svg'
-output_path = '~/.config/Kvantum/MaterialYouExpressive/MaterialYouExpressive.svg'
-
-[templates.kvantum_kvconfig]
-input_path = '~/.config/matugen/templates/kvantum/MaterialYouExpressive.kvconfig'
-output_path = '~/.config/Kvantum/MaterialYouExpressive/MaterialYouExpressive.kvconfig'
