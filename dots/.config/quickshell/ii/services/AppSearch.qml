@@ -33,6 +33,8 @@ Singleton {
                 ? "vynx-dock-chatgpt" : Quickshell.shellPath("assets/dock/ChatGPT.svg"),
             "chrome-gemini.google.com__app-default": Config.options?.appearance.icons.enableThemed
                 ? "vynx-dock-gemini" : Quickshell.shellPath("assets/dock/gemini.svg"),
+            "chrome-claude.ai__-default": Config.options?.appearance.icons.enableThemed
+                ? "vynx-dock-claude" : Quickshell.shellPath("assets/dock/claude.svg"),
             "chrome-translate.google.com__-default": "google-translate",
             "kitty-yazi": "yazi",
             "kitty-btop": "btop"

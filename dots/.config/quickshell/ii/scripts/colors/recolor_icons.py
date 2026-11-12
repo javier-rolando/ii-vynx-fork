@@ -42,6 +42,7 @@ DOCK_ASSETS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
 DOCK_ASSET_ICON_NAMES = {
     "ChatGPT.svg": "vynx-dock-chatgpt",
     "gemini.svg": "vynx-dock-gemini",
+    "claude.svg": "vynx-dock-claude",
 }
 
 # assets/images/*.svg shown directly (not via icon-theme lookup) by
@@ -669,7 +670,7 @@ def _make_writable(path):
 
 def recolor_dock_assets(colors):
     """
-    Recolor the repo's own assets/dock/*.svg (ChatGPT, Gemini PWA icons) into
+    Recolor the repo's own assets/dock/*.svg (ChatGPT, Gemini, Claude PWA icons) into
     DynamicTheme under stable vynx-dock-* names, so AppSearch.qml can point at
     a themed version instead of the always-original bundled asset.
     """
