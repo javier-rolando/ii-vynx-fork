@@ -13,6 +13,7 @@ Item { // Notification item area
     id: root
     property var notificationObject
     property bool expanded: false
+    property bool popup: false
     property bool onlyNotification: false
     property real zoom: 1.0
     property real fontSize: Appearance.font.pixelSize.small * zoom
@@ -22,6 +23,8 @@ Item { // Notification item area
     property real dragConfirmThreshold: 70 // Drag further to discard notification
     property real dismissOvershoot: notificationIcon.implicitWidth + 20 // Account for gaps and bouncy animations
     property var qmlParent: root?.parent?.parent // There's something between this and the parent ListView
+    /** Notifications with buttons of their own: the icon-only pair only takes the whole row when they don't. */
+    readonly property bool hasActions: (notificationObject?.actions?.length ?? 0) > 0
     property var parentDragIndex: qmlParent?.dragIndex ?? -1
     property var parentDragDistance: qmlParent?.dragDistance ?? 0
     property var dragIndexDiff: Math.abs(parentDragIndex - index)
@@ -122,6 +125,9 @@ Item { // Notification item area
         anchors.fill: root
         anchors.leftMargin: root.expanded ? -notificationIcon.implicitWidth : 0
         interactive: expanded
+        // Same as the group: the popup dismisses horizontally, so the ListView must
+        // not take the gesture and drag the card vertically on a downward or upward pull.
+        preventStealing: root.popup
         minimumX: -Infinity
         maximumX: Infinity
         automaticallyReset: false
@@ -155,7 +161,7 @@ Item { // Notification item area
     NotificationAppIcon { // App icon
         id: notificationIcon
         implicitSize: 38 * root.zoom
-        opacity: (!onlyNotification && notificationObject.image != "" && expanded) ? 1 : 0
+        opacity: (!onlyNotification && (notificationObject?.image ?? "") != "" && expanded) ? 1 : 0
         visible: opacity > 0
 
         Behavior on opacity {
@@ -166,8 +172,8 @@ Item { // Notification item area
             }
         }
 
-        image: notificationObject.image
-        body: notificationObject.body
+        image: notificationObject?.image ?? ""
+        body: notificationObject?.body ?? ""
         anchors.right: background.left
         anchors.top: background.top
         anchors.rightMargin: 10
@@ -234,7 +240,7 @@ Item { // Notification item area
                     font.pixelSize: root.fontSize
                     color: Appearance.colors.colOnLayer3
                     elide: Text.ElideRight
-                    text: root.notificationObject.summary || ""
+                    text: root.notificationObject?.summary ?? ""
                 }
                 StyledText {
                     id: collapsedBodyText
@@ -255,7 +261,8 @@ Item { // Notification item area
                     maximumLineCount: 1
                     textFormat: Text.StyledText
                     text: {
-                        return NotificationUtils.processNotificationBody(root.displayBody, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>");
+                        if (!notificationObject) return "";
+                        return NotificationUtils.processNotificationBody(root.displayBody ?? "", notificationObject.appName || notificationObject.summary || "").replace(/\n/g, "<br/>");
                     }
                 }
             }
@@ -283,7 +290,8 @@ Item { // Notification item area
                     elide: Text.ElideRight
                     textFormat: Text.RichText
                     text: {
-                        return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` + `${NotificationUtils.processNotificationBody(root.displayBody, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`;
+                        if (!notificationObject) return "";
+                        return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` + `${NotificationUtils.processNotificationBody(root.displayBody ?? "", notificationObject.appName || notificationObject.summary || "").replace(/\n/g, "<br/>")}`;
                     }
 
                     onLinkActivated: link => {
@@ -339,14 +347,18 @@ Item { // Notification item area
                             Layout.alignment: Qt.AlignBottom
 
                             NotificationActionButton {
-                                Layout.fillWidth: true
+                                // Square while the notification brings its own buttons, half the
+                                // row when the two icon buttons are all there is.
+                                Layout.fillWidth: !root.hasActions
                                 buttonText: Translation.tr("Close")
-                                urgency: notificationObject.urgency
+                                urgency: notificationObject?.urgency ?? NotificationUrgency.Normal
                                 implicitHeight: 34 * root.zoom
-                                leftPadding: 15 * root.zoom
-                                rightPadding: 15 * root.zoom
+                                leftPadding: (root.hasActions ? 8 : 15) * root.zoom
+                                rightPadding: (root.hasActions ? 8 : 15) * root.zoom
                                 buttonRadius: Appearance.rounding.small * root.zoom
-                                implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
+                                implicitWidth: root.hasActions
+                                    ? implicitHeight
+                                    : (actionsFlickable.width - actionRowLayout.spacing) / 2
 
                                 onClicked: {
                                     root.destroyWithAnimation();
@@ -355,28 +367,34 @@ Item { // Notification item area
                                 contentItem: MaterialSymbol {
                                     iconSize: Appearance.font.pixelSize.larger * root.zoom
                                     horizontalAlignment: Text.AlignHCenter
-                                    color: (notificationObject.urgency == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
+                                    color: ((notificationObject?.urgency ?? NotificationUrgency.Normal) == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "close"
                                 }
                             }
 
                             Repeater {
                                 id: actionRepeater
-                                model: notificationObject.actions
+                                model: notificationObject?.actions ?? []
                                 NotificationActionButton {
                                     id: notifAction
                                     required property var modelData
-                                    Layout.fillWidth: true
+                                    /**
+                                     * An icon-only action (Open) is a square pill; the rest hug
+                                     * their label instead of sharing the row equally, which is
+                                     * what pushed the last one off the viewport.
+                                     */
+                                    readonly property bool iconOnlyAction: modelData.iconOnly === true
                                     buttonText: (modelData.identifier === "default" && (isTwitchNotification || isKickNotification || isYoutubeNotification)) ? "View" : modelData.text
-                                    urgency: notificationObject.urgency
+                                    iconOnly: iconOnlyAction
+                                    actionIcon: modelData.icon ?? ""
+                                    urgency: notificationObject?.urgency ?? NotificationUrgency.Normal
                                     implicitHeight: 34 * root.zoom
-                                    leftPadding: 15 * root.zoom
-                                    rightPadding: 15 * root.zoom
+                                    leftPadding: (iconOnlyAction ? 8 : 15) * root.zoom
+                                    rightPadding: (iconOnlyAction ? 8 : 15) * root.zoom
                                     buttonRadius: Appearance.rounding.small * root.zoom
+                                    implicitWidth: iconOnlyAction ? implicitHeight : (contentItem.implicitWidth + leftPadding + rightPadding)
                                     onClicked: {
                                       if (modelData.identifier.startsWith("__qs_")) {
-                                          Notifications.executeShellAction(notificationObject, modelData.identifier);
-                                          root.destroyWithAnimation();
                                           Notifications.executeShellAction(notificationObject, modelData.identifier);
                                           root.destroyWithAnimation();
                                       } else if (modelData.identifier === "default") {
@@ -405,13 +423,18 @@ Item { // Notification item area
                             }
 
                             NotificationActionButton {
-                                Layout.fillWidth: true
-                                urgency: notificationObject.urgency
+                                // A notification that brings its own file-copy action keeps only
+                                // that one: this button would sit right beside it as a second copy.
+                                visible: !(notificationObject?.hasFileCopyAction ?? false)
+                                Layout.fillWidth: !root.hasActions
+                                urgency: notificationObject?.urgency ?? NotificationUrgency.Normal
                                 implicitHeight: 34 * root.zoom
-                                leftPadding: 15 * root.zoom
-                                rightPadding: 15 * root.zoom
+                                leftPadding: (root.hasActions ? 8 : 15) * root.zoom
+                                rightPadding: (root.hasActions ? 8 : 15) * root.zoom
                                 buttonRadius: Appearance.rounding.small * root.zoom
-                                implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
+                                implicitWidth: root.hasActions
+                                    ? implicitHeight
+                                    : (actionsFlickable.width - actionRowLayout.spacing) / 2
 
                                 onClicked: {
                                     if (isTwitchNotification) {
@@ -423,7 +446,7 @@ Item { // Notification item area
                                     } else if (isYoutubeNotification) {
                                         Quickshell.clipboardText = extractFirstToken(notificationObject.body)
                                     } else {
-                                        Quickshell.clipboardText = notificationObject.body
+                                        Quickshell.clipboardText = notificationObject?.body ?? ""
                                     }
 
                                     copyIcon.text = "inventory"
@@ -443,8 +466,12 @@ Item { // Notification item area
                                     id: copyIcon
                                     iconSize: Appearance.font.pixelSize.larger * root.zoom
                                     horizontalAlignment: Text.AlignHCenter
-                                    color: (notificationObject.urgency == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
+                                    color: ((notificationObject?.urgency ?? NotificationUrgency.Normal) == NotificationUrgency.Critical) ? Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "content_copy"
+                                }
+
+                                StyledToolTip {
+                                    text: Translation.tr("Copy notification text to clipboard")
                                 }
                             }
                         }

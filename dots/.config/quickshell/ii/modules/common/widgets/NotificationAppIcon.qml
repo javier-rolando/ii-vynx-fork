@@ -8,12 +8,12 @@ import Quickshell.Services.Notifications
 
 MaterialShape { // App icon
     id: root
-    property var appIcon: ""
-    property var summary: ""
+    property string appIcon: ""
+    property string summary: ""
     property var body: ""
     property var urgency: NotificationUrgency.Normal
     property bool isUrgent: urgency === NotificationUrgency.Critical
-    property var image: ""
+    property string image: ""
     property var notificationBodies: []
     property real materialIconScale: 0.57
     property real appIconScale: 0.8
@@ -21,6 +21,11 @@ MaterialShape { // App icon
     property real materialIconSize: implicitSize * materialIconScale
     property real appIconSize: implicitSize * appIconScale
     property real smallAppIconSize: implicitSize * smallAppIconScale
+    // `notify-send -i <name>` arrives as an image-path hint, which the server turns into
+    // image://icon/<name>. Shell senders pass Material Symbol names there, which no icon
+    // theme has, so draw those as a glyph instead of the missing-icon checkerboard.
+    readonly property string themedImageName: image.startsWith("image://icon/") ? image.slice(13).split("?")[0] : ""
+    readonly property bool imageIsGlyph: themedImageName !== "" && Quickshell.iconPath(themedImageName, true) === ""
 
     function lowerBodies() {
       return notificationBodies.length > 0
@@ -52,10 +57,12 @@ MaterialShape { // App icon
         // all (e.g. a plain Betterbird "from Twitch" text notification) —
         // without this exclusion this Loader and appIconLoader below were
         // BOTH active simultaneously and painted on top of each other.
-        active: root.appIcon == "" && root.image == "" && !root.isTwitchNotification && !root.isKickImageAsset
+        active: ((root.appIcon == "" && root.image == "") || root.imageIsGlyph) && !root.isTwitchNotification && !root.isKickImageAsset
         anchors.fill: parent
         sourceComponent: MaterialSymbol {
             text: {
+                if (root.imageIsGlyph)
+                    return root.themedImageName;
                 const defaultIcon = NotificationUtils.findSuitableMaterialSymbol("")
                 const guessedIcon = NotificationUtils.findSuitableMaterialSymbol(root.summary)
                 return (root.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ?
@@ -101,7 +108,7 @@ MaterialShape { // App icon
         id: notifImageLoader
         // Excludes our own Kick asset — that's handled by appIconLoader
         // above instead (see isKickImageAsset).
-        active: root.image != "" && !root.isKickImageAsset
+        active: root.image != "" && !root.isKickImageAsset && !root.imageIsGlyph
         anchors.fill: parent
         sourceComponent: Item {
             anchors.fill: parent
@@ -112,7 +119,11 @@ MaterialShape { // App icon
 
                 source: root.image
                 fillMode: Image.PreserveAspectCrop
-                cache: true
+                // Notification images can be arbitrary screenshots or remote
+                // previews. Do not put every transient notification image in
+                // Qt's global image cache; sourceSize in StyledImage keeps the
+                // decoded surface bounded to this icon as well.
+                cache: false
                 antialiasing: true
                 asynchronous: !source.toString().startsWith("image://icon/")
 

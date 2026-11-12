@@ -16,6 +16,8 @@ require("hyprland.execs")
 require("hyprland.general")
 require("hyprland.rules")
 require("hyprland.keybinds")
+-- zscroll (lua:zscroll): before custom/ so general:layout can name it and custom binds win
+require("hyprland.layouts.zscroll")
 
 -- Custom configurations --
 if is_file_exists(HOME .. "/.config/hypr/custom/plugins.lua") then
