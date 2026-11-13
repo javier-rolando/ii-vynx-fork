@@ -3,10 +3,10 @@
 recolor_remote_image.py — Tint a remotely-fetched image (e.g. a sports team
 badge) with the same Material You gradient used for local app icons.
 
-Only imports get_icon_colors() from recolor_icons.py (unmodified, existing
-function) to read the current palette — the gradient LUT logic itself is
-duplicated here rather than shared, so this file never needs to touch
-recolor_icons.py and can't conflict with upstream changes to it.
+Self-contained on purpose: it reads the palette straight from the shell's
+generated colors.json and imports nothing from recolor_icons.py, so upstream
+rewrites of that script can't break it (an earlier version imported
+get_icon_colors(), which upstream removed).
 
 Results are cached on disk keyed by (url, colors hash) so repeated calls for
 the same badge/theme are instant.
@@ -23,10 +23,28 @@ import os
 import sys
 import urllib.request
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from recolor_icons import get_icon_colors
-
 CACHE_DIR = os.path.expanduser("~/.cache/quickshell/tinted-remote-images")
+COLORS_JSON = os.path.expanduser("~/.local/state/quickshell/user/generated/colors.json")
+
+
+def get_colors():
+    """The palette the shell is currently using ({role: "#rrggbb"}), or None."""
+    try:
+        with open(COLORS_JSON) as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    # Flat today; also accept matugen's nested {"colors": {role: {"dark": ...}}} dump.
+    data = data.get("colors", data)
+    colors = {}
+    for role, value in data.items():
+        if isinstance(value, dict):
+            value = value.get("dark", value.get("default", value))
+            if isinstance(value, dict):
+                value = value.get("color") or value.get("hex")
+        if isinstance(value, str) and value.startswith("#"):
+            colors[role] = value
+    return colors or None
 
 
 def hex_to_rgb(hex_color):
@@ -76,7 +94,7 @@ def main():
         return
     url = sys.argv[1]
 
-    colors = get_icon_colors()
+    colors = get_colors()
     if not colors:
         print(url)
         return
