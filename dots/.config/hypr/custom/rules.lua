@@ -1,6 +1,8 @@
 -- Workspace defaults
-hl.workspace_rule({ workspace = "1", monitor = "DP-2", default = true })
+-- r[1-99] must come first: since 0.57 a rule with an existing selector is merged in place,
+-- so switch_layout's "1" rule would otherwise land before r[1-99] and get overridden
 hl.workspace_rule({ workspace = "r[1-99]", layout = "master" })
+hl.workspace_rule({ workspace = "1", monitor = "DP-2", default = true })
 
 -- Global
 hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize" })
